@@ -1,4 +1,4 @@
-TOP=..
+TOP=.
 
 # Select the architecture
 ARCH=attiny3224
@@ -7,7 +7,9 @@ ARCH=attiny3224
 BIN := relay
 
 # -I throughout (C and C++)
-INCLUDE_DIRS = src
+INCLUDE_DIRS = conf src
+
+ASX_USE = modbus_rtu
 
 # Project own files
 SRCS = \
@@ -21,7 +23,7 @@ SRCS += \
 endif
 
 # Inlude the actual build rules
-include $(TOP)/make/rules.mak
+include asx/make/rules.mak
 
 # Add dependency to generate the datagram from the config
 main.cpp : conf/datagram.hpp
