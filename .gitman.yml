@@ -1,0 +1,6 @@
+location: .
+sources:
+  - name: asx
+    repo: https://github.com/adarwoo/asx
+    rev: main
+

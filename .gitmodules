@@ -1,6 +1,0 @@
-[submodule "asx"]
-	path = asx
-	url = https://github.com/adarwoo/asx
-[submodule "libstdc++"]
-	path = libstdc++
-	url = https://github.com/modm-io/avr-libstdcpp.git
