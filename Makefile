@@ -4,7 +4,7 @@ TOP=.
 ARCH=attiny3224
 
 # Name of the binary to produce
-BIN := relay
+BIN := modbus_relay
 
 # -I throughout (C and C++)
 INCLUDE_DIRS = conf src

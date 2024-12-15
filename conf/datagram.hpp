@@ -12,7 +12,7 @@ namespace relay {
     void on_read_coils(uint8_t addr, uint8_t qty);
     void on_set_single(uint8_t addr, uint16_t operation);
     void on_set_multiple(uint8_t operation);
-    void on_read_version();
+    void on_read_info(uint8_t addr, uint8_t qty);
 
     // All states to consider
     enum class state_t : uint8_t {
@@ -35,8 +35,9 @@ namespace relay {
         DEVICE_44_WRITE_MULTIPLE_COILS_from_qty_count__ON_SET_MULTIPLE__CRC,
         RDY_TO_CALL__ON_SET_MULTIPLE,
         DEVICE_44_READ_HOLDING_REGISTERS,
-        DEVICE_44_READ_HOLDING_REGISTERS__ON_READ_VERSION__CRC,
-        RDY_TO_CALL__ON_READ_VERSION
+        DEVICE_44_READ_HOLDING_REGISTERS_1,
+        DEVICE_44_READ_HOLDING_REGISTERS_1__ON_READ_INFO__CRC,
+        RDY_TO_CALL__ON_READ_INFO
     };
 
     class Datagram {
@@ -236,23 +237,35 @@ namespace relay {
                 if ( cnt == 4 ) {
                     auto c = ntoh(cnt-2);
 
-                    if ( c == 1 ) {
-                        state = state_t::DEVICE_44_READ_HOLDING_REGISTERS__ON_READ_VERSION__CRC;
+                    if ( c <= 2 ) {
+                        state = state_t::DEVICE_44_READ_HOLDING_REGISTERS_1;
                     } else {
                         error = error_t::illegal_data_value;
                         state = state_t::ERROR;
                     };
                 }
                 break;
-            case state_t::DEVICE_44_READ_HOLDING_REGISTERS__ON_READ_VERSION__CRC:
+            case state_t::DEVICE_44_READ_HOLDING_REGISTERS_1:
                 if ( cnt == 6 ) {
-                    state = state_t::RDY_TO_CALL__ON_READ_VERSION;
+                    auto c = ntoh(cnt-2);
+
+                    if ( c >= 1 and c <= 3 ) {
+                        state = state_t::DEVICE_44_READ_HOLDING_REGISTERS_1__ON_READ_INFO__CRC;
+                    } else {
+                        error = error_t::illegal_data_value;
+                        state = state_t::ERROR;
+                    };
+                }
+                break;
+            case state_t::DEVICE_44_READ_HOLDING_REGISTERS_1__ON_READ_INFO__CRC:
+                if ( cnt == 8 ) {
+                    state = state_t::RDY_TO_CALL__ON_READ_INFO;
                 }
                 break;
             case state_t::RDY_TO_CALL__ON_READ_COILS:
             case state_t::RDY_TO_CALL__ON_SET_SINGLE:
             case state_t::RDY_TO_CALL__ON_SET_MULTIPLE:
-            case state_t::RDY_TO_CALL__ON_READ_VERSION:
+            case state_t::RDY_TO_CALL__ON_READ_INFO:
             default:
                 error = error_t::illegal_data_value;
                 state = state_t::ERROR;
@@ -262,7 +275,8 @@ namespace relay {
 
         static void reply_error( error_t err ) noexcept {
             buffer[1] |= 0x80;
-            buffer[3] = (uint8_t)err;
+            buffer[2] = (uint8_t)err;
+            cnt = 3;
         }
 
         template<typename T>
@@ -278,6 +292,10 @@ namespace relay {
                 buffer[cnt++] = value >> 8 & 0xff;
                 buffer[cnt++] = value & 0xff;
             }
+        }
+
+        static inline void set_size(uint8_t size) {
+            cnt = size;
         }
 
         /** Called when a T3.5 has been detected, in a good sequence */
@@ -302,7 +320,8 @@ namespace relay {
             case state_t::DEVICE_44_WRITE_MULTIPLE_COILS_from_qty_count:
             case state_t::DEVICE_44_WRITE_MULTIPLE_COILS_from_qty_count__ON_SET_MULTIPLE__CRC:
             case state_t::DEVICE_44_READ_HOLDING_REGISTERS:
-            case state_t::DEVICE_44_READ_HOLDING_REGISTERS__ON_READ_VERSION__CRC:
+            case state_t::DEVICE_44_READ_HOLDING_REGISTERS_1:
+            case state_t::DEVICE_44_READ_HOLDING_REGISTERS_1__ON_READ_INFO__CRC:
                 error = error_t::illegal_data_value;
             case state_t::ERROR:
                 buffer[1] |= 0x80; // Mark the error
@@ -318,8 +337,8 @@ namespace relay {
             case state_t::RDY_TO_CALL__ON_SET_MULTIPLE:
                 on_set_multiple(buffer[7]);
                 break;
-            case state_t::RDY_TO_CALL__ON_READ_VERSION:
-                on_read_version();
+            case state_t::RDY_TO_CALL__ON_READ_INFO:
+                on_read_info(buffer[3], buffer[5]);
                 break;
             default:
                 break;
@@ -327,7 +346,8 @@ namespace relay {
 
             // If the cnt is 2 - nothing was changed in the buffer - return it as is
             if ( cnt == 2 ) {
-                cnt = frame_size; // Framesize includes the previous CRC which still holds valid
+                // Framesize includes the previous CRC which still holds valid
+                cnt = frame_size;
             } else {
                 // Add the CRC
                 crc.reset();

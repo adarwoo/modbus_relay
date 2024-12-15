@@ -4,6 +4,7 @@
 #include <logger.h>
 #include "modbus.hpp"
 #include "relay_ctrl.hpp"
+#include "conf_version.hpp"
 
 using namespace asx;
 
@@ -53,9 +54,23 @@ namespace relay {
          set( i, values & 1 );
          values >>= 1;
       }
+
+      // For the response, we need to shorten the frame
+      // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
+      Datagram::set_size(6);
    }
 
-   void on_read_version() {
-      Datagram::pack( uint16_t{0x0001} );
+   void on_read_info(uint8_t index, uint8_t qty) {
+      Datagram::pack<uint8_t>(qty*2);
+
+      while ( qty-- ) {
+         switch(index++) {
+         case 0: Datagram::pack( DEVICE_ID ); break;
+         case 1: Datagram::pack( HW_VERSION ); break;
+         case 2: Datagram::pack( FW_VERSION ); break;
+         default:
+            Datagram::reply_error(modbus::error_t::illegal_data_value);
+         }
+      }
    }
 } // End of namespace relay

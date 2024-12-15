@@ -9,7 +9,7 @@ Modbus({
         "on_read_coils":    [(u8, "addr"), (u8, "qty")],
         "on_set_single":    [(u8, "addr"), (u16, "operation")],
         "on_set_multiple":  [(u8, "operation")],
-        "on_read_version":  [],
+        "on_read_info":     [(u8, "addr"), (u8, "qty")],
     },
 
     "device@44": [
@@ -27,6 +27,6 @@ Modbus({
                                 u8(0, 7, alias="values"),
                                 "on_set_multiple"),
 
-        (READ_HOLDING_REGISTERS, u16(1), "on_read_version"),
+        (READ_HOLDING_REGISTERS, u16(0, 2), u16(1, 3), "on_read_info"),
     ]
 })
