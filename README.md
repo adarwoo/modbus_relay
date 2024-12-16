@@ -23,3 +23,15 @@ KiCAD schematic and PCB are available.
 Tested with QModMaster.
 
 I plan to add address and serial configuration modbus command (and eeprom persistence).
+
+## How to build ##
+You will need a Linux shell, or WSL shell in Windows.
+The tool 'gitman' is required as well as Docker. (docker-ce or else).
+
+### Steps ###
+1 - Clone this repo
+2 - $ cd modbus_relay
+3 - $ gitman update
+4 - $ make NDEBUG=1
+
+The binary modbus_relay.elf can be found in the directory
