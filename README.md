@@ -1,6 +1,6 @@
 # Modbus Relay #
 
-This project is a fully working MobBUS RTU Relay.
+This project is a fully working MODBUS RTU Relay.
 The project comes with schematic and PCB, as well as the firmware.
 
 The core of the relay is an AVR Tiny824.
@@ -50,7 +50,7 @@ The handling code is just as simple:
 ```
 
 <img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" alt="Alt Text" width="400">
-*Solder side of the board* 
+* Solder side of the board * 
 
 The relay supports the following modbus commands:
 - READ_COILS 1-3
