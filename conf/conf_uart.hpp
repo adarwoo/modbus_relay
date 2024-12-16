@@ -8,7 +8,7 @@ namespace board {
    using Uart =
       asx::uart::Uart<
          1,                            // We use UART1 with regular pin mux
-         9600,                       // Baudrate
+         115200,                       // Baudrate
          asx::uart::width::_8,         // Width standard 8 bits per frame
          asx::uart::parity::even,      // Even parity (standard for Modbus)
          asx::uart::stop::_1,          // Unique stop bit (standard in Modbus)
