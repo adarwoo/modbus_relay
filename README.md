@@ -1,4 +1,8 @@
+# Modbus Relay #
+
 This application implements a MobBUS RTU Relay.
+
+<img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" alt="Alt Text" width="400">
 
 The relay supports the following modbus commands:
 READ_COILS 1-3
@@ -13,6 +17,8 @@ If compiling using the supplied Dockerfile, the elf is 7KB in size, so a ATTiny8
 
 The device default address is 44 (Decimal).
 By default, it runs at 115200 8E1.
+
+KiCAD schematic and PCB are available.
 
 Tested with QModMaster.
 
