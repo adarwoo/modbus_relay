@@ -91,18 +91,28 @@ The binary modbus_relay.elf can be found in the directory
 ## Overview
 The Modbus Relay Device is a configurable relay controller with Modbus RTU communication. This document describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
----
+## Normal Operation
+In normal mode:
+- The device responds only to frames addressed to its **Device ID**.
+- The bus operated as configured
+- Relays operate based on the configured default positions and command inversion settings.
+- Regular coil commands do not respond in configuration mode to prevent mode mixing.
 
-## Default Configuration
-Upon boot, the device initializes with the following default settings:
-- **Baud Rate:** 115200
-- **Data Bits:** 8
-- **Parity:** Even
-- **Stop Bits:** 1
-- **Device ID:** 44
-- **Watchdog Timeout:** Disabled
-- **Relay Default Positions:** All open (0x0000)
-- **Relay Command Inversion:** Disabled
+### Supported Modbus Functions
+- **Read Coils (Function Code 1):**
+  - Addresses `0x0000` to `0x0002` for Relay 0, Relay 1, and Relay 2.
+- **Write Single Coil (Function Code 5):**
+  - Write `0xFF00` to turn on, `0x0000` to turn off, and `0x5500` to toggle a relay.
+- **Write Multiple Coils (Function Code 15):**
+  - Write a bit array to set relay states (1 = closed, 0 = open).
+- **Read Holding Registers (Function Code 3):**
+  - Register `0x0000`: Product ID (`0x3701`).
+  - Register `0x0001`: Device Hardware Version (`0xMMmm`, where MM = major, mm = minor).
+  - Register `0x0002`: Software Version (`0xMMmm`, where MM = major, mm = minor).
+
+### Note on Relay Command Inversion
+If the relay command inversion configuration is active (`0xFF00` in relevant registers):
+- A "close" command will be interpreted as "open" and vice versa.
 
 ---
 
@@ -142,13 +152,6 @@ The device enters configuration mode for **2 seconds** after boot. During this t
 
 ---
 
-## Normal Operation
-In normal mode:
-- The device responds only to frames addressed to its **Device ID**.
-- Relays operate based on the configured default positions and command inversion settings.
-- Regular coil commands do not respond in configuration mode to prevent mode mixing.
-
----
 
 ## Resetting the Device
 ### Reset via Register
