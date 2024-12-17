@@ -49,8 +49,8 @@ The handling code is just as simple:
    }
 ```
 
-<img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" alt="Alt Text" width="400">
-* Solder side of the board * 
+<img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" width="400">
+<b>Solder side of the board</b>
 
 The relay supports the following modbus commands:
 - READ_COILS 1-3
@@ -77,10 +77,12 @@ You will need a Linux shell, or WSL shell in Windows.
 The tool 'gitman' is required as well as Docker. (docker-ce or else).
 
 ### Steps ###
-
-1. Clone this repo</li>
-2. $ cd modbus_relay</li>
-3. $ gitman update</li>
-4. $ make NDEBUG=1</li>
+```bash
+# Clone this repo
+$ git clone https://https://github.com/adarwoo/modbus_relay.git
+$ cd modbus_relay
+$ gitman update
+$ make NDEBUG=1 # Optional, add ARCH=attiny1624 to suit you device
+```
 
 The binary modbus_relay.elf can be found in the directory
