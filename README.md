@@ -116,18 +116,43 @@ If the relay command inversion configuration is active (`0xFF00` in relevant reg
 
 ---
 
-## Configuration Mode
-The device enters configuration mode for **2 seconds** after boot. During this time:
-- The device listens for any valid Modbus broadcast frame (Address `0`) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
-- If a valid frame is received, the boot process halts, and the three relay LEDs flash at **10 Hz**, indicating the device is in configuration mode.
-- **Note**: The device does not reply to broadcast message. However, once the ID is programmed and known, the registers can be read at the device ID address.
+## Resetting the relay to factory default setttings
 
-### Configuration Registers
-| Register Address | Function                          | Values/Description                     | Factory Default |
-|------------------|-----------------------------------|----------------------------------------|-----------------|
+The relay can be reset to it's factory default using the following procedure.
+
+1- Power off the relay
+1- Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
+2- Ready the following message:
+
+| Field            | Value                      | Explanation                                     |
+|-------------------|----------------------------|------------------------------------------------|
+| **Slave ID**      | `0x00`                    | Broadcast address.                             |
+| **Function Code** | `0x10`                    | Write multiple holding registers.              |
+| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
+| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
+| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
+| **Data**          | `0x5AFE 0xDEAD`           | MSW = `0x5AFE`, LSW = `0xDEAD`.                |
+| **CRC**           | `0E9D4`                   | E4 D4                                          |
+
+4- Power on the relay. All LEDs turn RED for 2 seconds.
+5- During the first 2 seconds, send the 'Write multiple register' commmand
+6- If the relay receives the command, the LEDs will blink fast (10Hz) for 5 seconds, then turn all on indicating the device is reset
+7- Now the device is factory reset and can be reached at its address 44 (0x2C).
+
+## Configuring the device
+The factory default communication settings for the relay are:
+- Device address is 44
+- Baud rate is **9600**
+- **8 data bits**
+- **No parity**
+- **1 stop bit** (9600 8N1).
+
+### Configuration registers available
+| Register Address | Function                          | Values/Description                    | Factory Default |
+|------------------|-----------------------------------|---------------------------------------|-----------------|
 | 40001 (0x0000)   | Device ID                         | 1 to 247                              | 44              |
-| 40002 (0x0001)   | Baud Rate                         | 1200 to 115200 (e.g., 9600)           | 115200          |
-| 40003 (0x0002)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 2 (Even)        |
+| 40002 (0x0001)   | Baud Rate                         | 1200 to 115200 (e.g., 9600)           | 9600            |
+| 40003 (0x0002)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 0 (None)        |
 | 40004 (0x0003)   | Stop Bits                         | 1 or 2                                | 1               |
 | 40005 (0x0004)   | Watchdog Timeout (seconds)        | 0 = Disabled                          | 0               |
 | 40006 (0x0005)   | Relay 0 Default Position          | 0x0000 = Open, 0xFF00 = Closed        | 0x0000          |
@@ -136,19 +161,10 @@ The device enters configuration mode for **2 seconds** after boot. During this t
 | 40009 (0x0008)   | Relay Command Inversion (Relay 0) | 0x0000 = Normal, 0xFF00 = Inverted    | 0x0000          |
 | 40010 (0x0009)   | Relay Command Inversion (Relay 1) | Same as above                         | 0x0000          |
 | 40011 (0x000A)   | Relay Command Inversion (Relay 2) | Same as above                         | 0x0000          |
-| 40012 (0x000B)   | Reset Command                     | Write `0x1234` to reset device        | -               |
 
-### Steps to Configure the Device
-1. **Enter Configuration Mode:**
-   - Send any valid Modbus broadcast frame (Address `0`) during the first 2 seconds after boot.
-   - LEDs will flash at **10 Hz**, indicating configuration mode is active.
-2. **Set Parameters:**
-   - Write to the configuration registers using Modbus Function Code `16` (Preset Multiple Registers).
-3. **Confirm Settings (Optional):**
-   - Set a new Device ID in Register `40001`.
-   - Use the new ID to read back configuration values using Modbus Function Code `3` (Read Holding Registers).
-4. **Exit Configuration Mode:**
-   - Wait 2 seconds of inactivity, and the device will enter normal operation mode.
+### Using the watchdog
+
+### Holding registers
 
 ---
 
