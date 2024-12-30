@@ -121,8 +121,8 @@ If the relay command inversion configuration is active (`0xFF00` in relevant reg
 The relay can be reset to it's factory default using the following procedure.
 
 1- Power off the relay
-1- Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
-2- Ready the following message:
+2- Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
+3- Ready the following message:
 
 | Field            | Value                      | Explanation                                     |
 |-------------------|----------------------------|------------------------------------------------|
