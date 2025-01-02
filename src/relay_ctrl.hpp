@@ -7,5 +7,6 @@ namespace relay {
    void init();
    void set(uint8_t index, bool close=true);
    void clean_leds();
+   void flash_leds();
    bool status(uint8_t index);
 }

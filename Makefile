@@ -9,10 +9,12 @@ BIN := modbus_relay
 # -I throughout (C and C++)
 INCLUDE_DIRS = conf src
 
-ASX_USE = modbus_rtu
+ASX_USE = modbus_rtu eeprom
 
 # Project own files
 SRCS = \
+	src/stats.cpp \
+	src/config.cpp \
    src/modbus.cpp \
    src/relay_ctrl.cpp \
    src/main.cpp \
@@ -26,4 +28,4 @@ endif
 include asx/make/rules.mak
 
 # Add dependency to generate the datagram from the config
-main.cpp : conf/datagram.hpp
+main.cpp : conf/datagram.hpp conf/broadcast_datagram.hpp

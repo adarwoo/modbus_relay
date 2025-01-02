@@ -5,6 +5,7 @@
 #include "modbus.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
+#include <stats.hpp>
 
 using namespace asx;
 
@@ -40,10 +41,14 @@ namespace relay {
       LOG_TRACE("RELAY", "%d - %d", index, operation);
 
       switch ( operation ) {
-         case 0x0000: set(index, false); break;
-         case 0xFF00: set(index); break;
-         case 0x5500: set(index, !status(index)); break;
-         default:                        break;
+         case 0x0000: set(index, false);
+            break;
+         case 0xFF00: set(index);
+            break;
+         case 0x5500: set(index, !status(index));
+            break;
+         default:
+            break;
       }
    }
 
@@ -68,8 +73,34 @@ namespace relay {
          case 0: Datagram::pack( DEVICE_ID ); break;
          case 1: Datagram::pack( HW_VERSION ); break;
          case 2: Datagram::pack( FW_VERSION ); break;
+         case 3: Datagram::pack( 0 ); break;
+         case 4: Datagram::pack( get_config().baud ); break;
+         case 5: Datagram::pack( (uint16_t)get_config().parity ); break;
+         case 6: Datagram::pack( (uint16_t)get_config().stopbits ); break;
+         case 7: Datagram::pack( (uint16_t)get_config().watchdog ); break;
+
          default:
             Datagram::reply_error(modbus::error_t::illegal_data_value);
+         }
+      }
+   }
+
+   void on_read_running_time() {
+      Datagram::pack<uint8_t>(4);
+      Datagram::pack( stat::get_running_minutes() );
+   }
+
+   void on_read_relay_stats(uint8_t index, uint8_t qty) {
+      index -= 200;
+
+      if ( ( qty % 1 ) or ( ((qty/2) + index) > 3 ) ) {
+         Datagram::reply_error(modbus::error_t::illegal_data_value);
+      } else {
+         Datagram::pack<uint8_t>(qty*2);
+
+         while ( qty ) {
+            Datagram::pack( stat::get_op_count(index++) );
+            qty -= 2;
          }
       }
    }

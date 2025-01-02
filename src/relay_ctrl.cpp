@@ -2,6 +2,7 @@
 #include <asx/ioport.hpp>
 
 #include "relay_ctrl.hpp"
+#include "stats.hpp"
 
 
 namespace relay
@@ -26,35 +27,29 @@ namespace relay
       Pin(RELAY_A).init(value_t::low, dir_t::out);
       Pin(RELAY_B).init(value_t::low, dir_t::out);
       Pin(RELAY_C).init(value_t::low, dir_t::out);
-
-      // Reset the LEDs to the actual state after 2seconds
-      asx::reactor::bind(clean_leds).delay(2s);
    }
 
    void set(uint8_t index, bool close)
    {
-      switch (index)
-      {
-      case 0:
-         Pin(LED_A).set(close);
-         Pin(RELAY_A).set(close);
-         break;
-      case 1:
-         Pin(LED_B).set(close);
-         Pin(RELAY_B).set(close);
-         break;
-      case 2:
-         Pin(LED_C).set(close);
-         Pin(RELAY_C).set(close);
-         break;
-      default:
-         Pin(LED_A).set(close);
-         Pin(RELAY_A).set(close);
-         Pin(LED_B).set(close);
-         Pin(RELAY_B).set(close);
-         Pin(LED_C).set(close);
-         Pin(RELAY_C).set(close);
-         break;
+      // Read the status of the object to switch
+      const PinDef *pin;
+      const PinDef *led;
+
+      switch (index) {
+      case 0: pin = &RELAY_A; led = &LED_A; break;
+      case 1: pin = &RELAY_B; led = &LED_B; break;
+      case 2: pin = &RELAY_C; led = &LED_C; break;
+      default: return;
+      }
+
+      bool change = *Pin(*pin);
+      Pin(*pin).set(close);
+      Pin(*led).set(close);
+      change ^= *Pin(*pin);
+
+      // Increment the switiching count
+      if ( change ) {
+         stat::increment_op(index);
       }
    }
 
@@ -63,6 +58,13 @@ namespace relay
       Pin(LED_A).set(*Pin(RELAY_A));
       Pin(LED_B).set(*Pin(RELAY_B));
       Pin(LED_C).set(*Pin(RELAY_C));
+   }
+
+   void flash_leds()
+   {
+      Pin(LED_A).set(not *Pin(LED_A));
+      Pin(LED_B).set(not *Pin(LED_B));
+      Pin(LED_C).set(not *Pin(LED_C));
    }
 
    bool status(uint8_t index)
