@@ -1,16 +1,15 @@
 # Modbus Relay #
 
 This project is a fully working MODBUS RTU Relay.
-The project comes with schematic and PCB, as well as the firmware.
+The project comes with schematic and PCB, as well as the firmware of course!
 
-The core of the relay is an AVR Tiny824.
-Note: The code optimized with -Os is <6KB. The -Og used typically for debug is 11600 (so you would need a ATTiny1624).
-I always buy the largest device. Here the ATTiny3224.
-Simply edit the makefile to specify your device.
+The core of the relay is an AVR Tiny1624.
+Note: The code optimized with -Os is <16KB. The -Og used typically for debug is <32k. Therefore, for debugging, a 3224 device is required.
+Remembed to edit the makefile to specify your device.
 
-This project can be reused for other Modbus devices.
+This project can be reused for other Modbus devices. A modbus interface generated is provided and makes writting modbus commands very simple.
 
-The modbus slave code is created from an interface created in Python which generate the datagram decoder.
+Example of python configuration:
 
 ```python
 "device@44": [
@@ -89,12 +88,49 @@ The binary modbus_relay.elf can be found in the directory
 # Modbus Relay Device User Manual
 
 ## Overview
-The Modbus Relay Device is a configurable relay controller with Modbus RTU communication. This document describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
+The Modbus Relay Device is a configurable relay controller with Modbus RTU communication.
+This document describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
-## Normal Operation
+## Factory default settings
+The relay comes pre-configured with the following value:
+
+| Configuration     | Default value             | Explanation                                    |
+|-------------------|---------------------------|------------------------------------------------|
+| **Slave ID**      | `0x44`                    | The device address is 44 (decimal) by default  |
+| **Baud rate**     | `9600`                    | The device talks at 9600 by default            |
+| **Serial setup**  | `8N1`                     | 8bits, no parity and 1 stop bit                |
+| **Watchdog**      | `0` (off)                 | The watchdog feature is off by default         |
+
+
+## Resetting the relay to factory default setttings
+
+If the relay is un-responsive, it may have been mis-configured.
+The relay can be reset to it's factory default using the following procedure.
+
+1. Power off the relay
+2. Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
+3. Ready the following message:
+
+| Field            | Value                      | Explanation                                     |
+|-------------------|----------------------------|------------------------------------------------|
+| **Slave ID**      | `0x00`                    | Broadcast address.                             |
+| **Function Code** | `0x10`                    | Write multiple holding registers.              |
+| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
+| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
+| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
+| **Data**          | `0xDEAD 0x5AFE`           | MSW = `0xDEAD`, LSW = `0x5AFE`.                |
+| **CRC**           | `0E9D4`                   | E4 D4                                          |
+
+4. Power on the relay. All LEDs turn RED for 5 seconds.
+5. During that time, send the 'Write multiple register' commmand
+6. If the relay receives the command, the LEDs will blink fast for 5 seconds, then turn all on indicating the device was successfully reset
+7. Now the device is factory reset and can be reached at its address 44 (0x2C).
+
+## Simple relay operation
+
 In normal mode:
 - The device responds only to frames addressed to its **Device ID**.
-- The bus operated as configured
+- The bus operates as configured
 - Relays operate based on the configured default positions and command inversion settings.
 - Regular coil commands do not respond in configuration mode to prevent mode mixing.
 
@@ -116,29 +152,6 @@ If the relay command inversion configuration is active (`0xFF00` in relevant reg
 
 ---
 
-## Resetting the relay to factory default setttings
-
-The relay can be reset to it's factory default using the following procedure.
-
-1- Power off the relay
-2- Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
-3- Ready the following message:
-
-| Field            | Value                      | Explanation                                     |
-|-------------------|----------------------------|------------------------------------------------|
-| **Slave ID**      | `0x00`                    | Broadcast address.                             |
-| **Function Code** | `0x10`                    | Write multiple holding registers.              |
-| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
-| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
-| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
-| **Data**          | `0x5AFE 0xDEAD`           | MSW = `0x5AFE`, LSW = `0xDEAD`.                |
-| **CRC**           | `0E9D4`                   | E4 D4                                          |
-
-4- Power on the relay. All LEDs turn RED for 2 seconds.
-5- During the first 2 seconds, send the 'Write multiple register' commmand
-6- If the relay receives the command, the LEDs will blink fast (10Hz) for 5 seconds, then turn all on indicating the device is reset
-7- Now the device is factory reset and can be reached at its address 44 (0x2C).
-
 ## Configuring the device
 The factory default communication settings for the relay are:
 - Device address is 44
@@ -148,21 +161,37 @@ The factory default communication settings for the relay are:
 - **1 stop bit** (9600 8N1).
 
 ### Configuration registers available
+These can be accessed with a write single register command or the serial settings can be set with 1 write multiple command.
+
 | Register Address | Function                          | Values/Description                    | Factory Default |
 |------------------|-----------------------------------|---------------------------------------|-----------------|
 | 40001 (0x0000)   | Device ID                         | 1 to 247                              | 44              |
-| 40002 (0x0001)   | Baud Rate                         | 1200 to 115200 (e.g., 9600)           | 9600            |
+| 40002 (0x0001)   | Baud Rate                         | 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200  | 9600            |
 | 40003 (0x0002)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 0 (None)        |
 | 40004 (0x0003)   | Stop Bits                         | 1 or 2                                | 1               |
-| 40005 (0x0004)   | Watchdog Timeout (seconds)        | 0 = Disabled                          | 0               |
-| 40006 (0x0005)   | Relay 0 Default Position          | 0x0000 = Open, 0xFF00 = Closed        | 0x0000          |
-| 40007 (0x0006)   | Relay 1 Default Position          | Same as above                         | 0x0000          |
-| 40008 (0x0007)   | Relay 2 Default Position          | Same as above                         | 0x0000          |
-| 40009 (0x0008)   | Relay Command Inversion (Relay 0) | 0x0000 = Normal, 0xFF00 = Inverted    | 0x0000          |
-| 40010 (0x0009)   | Relay Command Inversion (Relay 1) | Same as above                         | 0x0000          |
-| 40011 (0x000A)   | Relay Command Inversion (Relay 2) | Same as above                         | 0x0000          |
+| 40005 (0x0004)   | Watchdog Timeout (seconds)        | 0 = Disabled, 1->65535                | 0               |
+
+### Reset the device
+The register at 0 can be written with 0xDEAD5AFE to reset the device remotely.
+This is usefull to apply any changes made to the settings.
+
+
+| Field            | Value                      | Explanation                                     |
+|-------------------|----------------------------|------------------------------------------------|
+| **Slave ID**      | `44` (or the configured address) | Device address.                             |
+| **Function Code** | `0x10`                    | Write multiple holding registers.              |
+| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
+| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
+| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
+| **Data**          | `0xDEAD 0x5AFE`           | MSW = `0xDEAD`, LSW = `0x5AFE`.                |
+| **CRC**           | `The CRC`                   | CRC to be added                              |
 
 ### Using the watchdog
+The relay has a command watchdog which will release the relays following a period of inactivity.
+Everytime a valid modbus command is received (including holding register read etc.), the watchdog is reset.
+This feature allow for the relays to be atomatically releases if the master was to fail.
+The period is given in seconds.
+A value of zero (default) turns off the feature.
 
 ### Holding registers
 
