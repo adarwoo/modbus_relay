@@ -47,8 +47,11 @@ The handling code is just as simple:
       }
    }
 ```
+<div style="display: flex; justify-content: space-between; align-items: center;">
+        <img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" width="400">
+        <img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/front.png" width="400">
+</div>
 
-<img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" width="400">
 <b>Solder side of the board</b>
 
 The relay supports the following modbus commands:
