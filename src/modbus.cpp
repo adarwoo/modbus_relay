@@ -2,6 +2,7 @@
  * Implement all modbus callback functions
  */
 #include <logger.h>
+
 #include "modbus.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
@@ -73,11 +74,6 @@ namespace relay {
          case 0: Datagram::pack( DEVICE_ID ); break;
          case 1: Datagram::pack( HW_VERSION ); break;
          case 2: Datagram::pack( FW_VERSION ); break;
-         case 3: Datagram::pack( 0 ); break;
-         case 4: Datagram::pack( get_config().baud ); break;
-         case 5: Datagram::pack( (uint16_t)get_config().parity ); break;
-         case 6: Datagram::pack( (uint16_t)get_config().stopbits ); break;
-         case 7: Datagram::pack( (uint16_t)get_config().watchdog ); break;
 
          default:
             Datagram::reply_error(modbus::error_t::illegal_data_value);
@@ -85,23 +81,39 @@ namespace relay {
       }
    }
 
-   void on_read_running_time() {
-      Datagram::pack<uint8_t>(4);
-      Datagram::pack( stat::get_running_minutes() );
+   void on_read_stats(uint8_t index, uint8_t qty) {
+      Datagram::pack<uint8_t>(qty*2);
+      index-=16; // Make it 0 based
+
+      while ( qty ) {
+         switch(index++) {
+         case 0: Datagram::pack( stat::get_running_minutes() ); break;
+         case 1: Datagram::pack( stat::get_op_count(0) ); break;
+         case 2: Datagram::pack( stat::get_op_count(1) ); break;
+         case 3: Datagram::pack( stat::get_op_count(2) ); break;
+         }
+         qty -= 2;
+      }
    }
 
-   void on_read_relay_stats(uint8_t index, uint8_t qty) {
-      index -= 200;
+   void on_read_config(uint8_t index, uint8_t qty) {
+      Datagram::pack<uint8_t>(qty*2);
+      index-=8; // Make it 0 based
 
-      if ( ( qty % 1 ) or ( ((qty/2) + index) > 3 ) ) {
-         Datagram::reply_error(modbus::error_t::illegal_data_value);
-      } else {
-         Datagram::pack<uint8_t>(qty*2);
-
-         while ( qty ) {
-            Datagram::pack( stat::get_op_count(index++) );
-            qty -= 2;
+      while ( qty-- ) {
+         switch(index++) {
+         case 0: Datagram::pack( (uint16_t)get_config().address ); break;
+         case 1: Datagram::pack( get_config().baud ); break;
+         case 2: Datagram::pack( (uint16_t)get_config().parity ); break;
+         case 3: Datagram::pack( (uint16_t)get_config().stopbits ); break;
+         case 4: Datagram::pack( (uint16_t)get_config().watchdog ); break;
          }
       }
    }
+
+   void on_read_reset() {
+      Datagram::pack<uint8_t>(4);
+      Datagram::pack<uint32_t>(0xDEAD5AFE);
+   }
+
 } // End of namespace relay

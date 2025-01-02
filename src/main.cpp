@@ -28,7 +28,8 @@ auto watchdog_count = uint16_t{0};
 
 namespace relay {
    void reset_device() {
-      ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
+      react_flash_leds_20times.repeat(50ms);
+      Datagram::set_size(6);
    }
 
    // Callback when a valid packet is recieved
@@ -60,13 +61,13 @@ void after_5_seconds() {
 }
 
 void flash_leds() {
-   static uint8_t count_down = 100;
+   static uint8_t count_down = 40;
 
    relay::flash_leds();
 
    if ( --count_down == 0 ) {
       // Reset the CPU!
-      relay::reset_device();
+      ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
    }
 }
 
@@ -80,7 +81,7 @@ namespace broadcast {
          relay::reset_config();
 
          // Flash the leds fast for 2 seconds (then reset)
-         react_flash_leds_20times.repeat(20ms);
+         react_flash_leds_20times.repeat(50ms);
    }
 }
 

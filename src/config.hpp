@@ -9,7 +9,7 @@ namespace relay {
       uint8_t address;
 
       // UART setup
-      uint16_t baud;
+      uint16_t baud; // 100th of the baudrate
       asx::uart::stop stopbits;
       asx::uart::parity parity;
 
@@ -34,7 +34,7 @@ namespace relay {
 
       static asx::uart::parity get_parity();
       static asx::uart::stop get_stop();
-      static size_t get_baud();
+      static uint32_t get_baud();
 
       static constexpr bool has(int options) {
          return (asx::uart::rs485 | asx::uart::onewire) & options;

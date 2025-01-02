@@ -7,18 +7,21 @@ Modbus({
     "on_received": "on_ready_reply",
 
     "callbacks": {
-        "on_read_coils":    [(u8, "addr"), (u8, "qty")],
-        "on_set_single":    [(u8, "addr"), (u16, "operation")],
-        "on_set_multiple":  [(u8, "operation")],
-        "on_read_info":     [(u8, "addr"), (u8, "qty")],
-        "on_read_running_time": [],
-        "on_read_relay_stats": [(u8, "addr"), (u8, "qty")],
-        "reset_device"       : [],
-        "set_baud"           : [(u16, "baud")],
-        "set_parity"         : [(u16, "parity")],
-        "set_stopbits"       : [(u16, "stopbits")],
-        "set_watchdog"       : [(u16, "watchdog")],
-        "set_config"         : [(u16, "baud"), (u16, "parity"), (u16, "stopbits")]
+        "on_read_coils"       : [(u8, "addr"), (u8, "qty")],
+        "on_set_single"       : [(u8, "addr"), (u16, "operation")],
+        "on_set_multiple"     : [(u8, "operation")],
+        "on_read_info"        : [(u8, "addr"), (u8, "qty")],
+        "on_read_config"      : [(u8, "addr"), (u8, "qty")],
+        "on_read_stats"       : [(u8, "addr"), (u8, "qty")],
+        "reset_device"        : [],
+        "set_device_id"       : [(u8, "device_id")],
+        "set_baud"            : [(u16, "baud")],
+        "set_parity"          : [(u16, "parity")],
+        "set_stopbits"        : [(u16, "stopbits")],
+        "set_watchdog"        : [(u16, "watchdog")],
+        "config_device"       : [(u8, "addr"), (u16, "baud"), (u8, "parity"), (u8, "stopbits"), (u16, "wd")],
+        "on_read_reset"       : [],
+
     },
 
     "device@44": [
@@ -36,32 +39,47 @@ Modbus({
                                 u8(0, 7, alias="values"),
                                 "on_set_multiple"),
 
-        (WRITE_SINGLE_REGISTER, u16(4), u16([1200,2400,4800,9600, 19200, 38400, 57600, 115200]), "set_baud"),
-        (WRITE_SINGLE_REGISTER, u16(5), u16([0,1,2]), "set_parity"),
-        (WRITE_SINGLE_REGISTER, u16(6), u16([0,1]), "set_stopbits"),
-        (WRITE_SINGLE_REGISTER, u16(7), u16(), "set_watchdog"),
+        # 0 (40001): (R)  Product ID
+        # 1 (40002): (R)  HW version
+        # 2 (40003): (R)  SW version
 
-        (WRITE_MULTIPLE_REGISTERS, u16(0), u16(2), u8(4), u32(0xDEAD5AFE), "reset_device"),
+        # 8 (40009): (RW) Device address
+        # 9 (40010): (RW) Baud rate selection
+        # 10(40011): (RW) Parity
+        # 11(40012): (RW) Stopbits
+        # 12(40013): (RW) Watchdog
 
-        (WRITE_MULTIPLE_REGISTERS, u16(4), u16(3), u8(6), u16(alias="baud"), u16(alias="parity"), u16(alias="stopbits"), "set_config"),
+        # 16(40017): (R)  Running minutes
+        # 18(40019): (R)  Relay 0 stats
+        # 20(40021): (R)  Relay 1 stats
+        # 22(40023): (R)  Relay 2 stats
 
-        # Holding registers maps:
-        # 0 - device into
-        # 1000 - configuration
-        # 2000 - relay stats
-        # Holding regs:
-        # 0 : device ID
-        # 1 : HW rev
-        # 2 : SW rev
-        # 3 : reserved - reads as 0
-        # 4 : baud - 1200, 2400, 4800, 9600, 19200, 38400, 56700, 115200
-        # 5 : Parity - 0 (None), 1 (Odd), 2 (even)
-        # 6 : Number of stop bits - 1 or 2
-        # 100 : Reset the device
+        # 99: (W) Reset
 
-        (READ_HOLDING_REGISTERS, u16(0, 7), u16(1, 8), "on_read_info"),
-        (READ_HOLDING_REGISTERS, u16(100), u16(2), "on_read_running_time"),
-        (READ_HOLDING_REGISTERS, u16(200, 202), u16(2, 6), "on_read_relay_stats"),
+        # 99: (W) Factory reset in broadcast mode
+
+        (READ_HOLDING_REGISTERS, u16(0, 2), u16(1, 3), "on_read_info"),
+        (READ_HOLDING_REGISTERS, u16(8, 12), u16(1, 5), "on_read_config"),
+        (READ_HOLDING_REGISTERS, u16(16, 22), u16([2,4,6,8]), "on_read_stats"),
+        (READ_HOLDING_REGISTERS, u16(99), u16(2), "on_read_reset"),
+
+
+        (WRITE_SINGLE_REGISTER, u16(8), u16(1,255), "set_device_id"),
+        (WRITE_SINGLE_REGISTER, u16(9), u16([12, 24, 48, 96, 192, 384, 576, 1152]), "set_baud"),
+        (WRITE_SINGLE_REGISTER, u16(10), u16(0,2), "set_parity"),
+        (WRITE_SINGLE_REGISTER, u16(11), u16([1, 2]), "set_stopbits"),
+        (WRITE_SINGLE_REGISTER, u16(12), u16(), "set_watchdog"),
+
+        (WRITE_MULTIPLE_REGISTERS, u16(8), u16(5), u8(10),
+            u16(1,255, alias="addr"),
+            u16([12, 24, 48, 96, 192, 384, 576, 1152], alias="baud"),
+            u16(0,2, alias="parity"),
+            u16([1,2], alias="stopbits"),
+            u16(alias="wd"),
+            "config_device"),
+
+        (WRITE_MULTIPLE_REGISTERS, u16(99), u16(2), u8(4), u32(0xDEAD5AFE), "reset_device"),
+
     ],
 
 })

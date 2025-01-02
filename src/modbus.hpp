@@ -12,4 +12,5 @@ namespace relay {
    // Our relay modbus rtu slave templated class
    using modbus_slave = asx::modbus::Slave<Datagram, Uart>;
 
+
 } // End of namespace relay

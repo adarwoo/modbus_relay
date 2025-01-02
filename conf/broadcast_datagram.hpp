@@ -113,7 +113,7 @@ namespace broadcast {
                 if ( cnt == 4 ) {
                     auto c = ntoh(cnt-2);
 
-                    if ( c == 0 ) {
+                    if ( c == 99 ) {
                         state = state_t::DEVICE_0_WRITE_MULTIPLE_REGISTERS_1;
                     } else {
                         error = error_t::illegal_data_value;
@@ -195,6 +195,7 @@ namespace broadcast {
         static void ready_reply() noexcept {
             frame_size = cnt; // Store the frame size
             cnt = 2; // Points to the function code
+            
 
             switch(state) {
             case state_t::IGNORE:
