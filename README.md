@@ -111,20 +111,20 @@ The relay can be reset to it's factory default using the following procedure.
 2. Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
 3. Ready the following message:
 
-| Field            | Value                      | Explanation                                     |
-|-------------------|----------------------------|------------------------------------------------|
+| Field             | Value                     | Explanation                                    |
+|-------------------|---------------------------|------------------------------------------------|
 | **Slave ID**      | `0x00`                    | Broadcast address.                             |
 | **Function Code** | `0x10`                    | Write multiple holding registers.              |
-| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
+| **Start Address** | `0x0063`                  | Address of the reset register (40100)          |
 | **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
 | **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
 | **Data**          | `0xDEAD 0x5AFE`           | MSW = `0xDEAD`, LSW = `0x5AFE`.                |
-| **CRC**           | `0E9D4`                   | E4 D4                                          |
+| **CRC**           | `0xBAE7`                  | CRC                                            |
 
 4. Power on the relay. All LEDs turn RED for 5 seconds.
 5. During that time, send the 'Write multiple register' commmand
 6. If the relay receives the command, the LEDs will blink fast for 5 seconds, then turn all on indicating the device was successfully reset
-7. Now the device is factory reset and can be reached at its address 44 (0x2C).
+7. Now the device is factory reset and can be reached at its address `44` (0x2C).
 
 ## Simple relay operation
 
@@ -142,13 +142,18 @@ In normal mode:
 - **Write Multiple Coils (Function Code 15):**
   - Write a bit array to set relay states (1 = closed, 0 = open).
 - **Read Holding Registers (Function Code 3):**
-  - Register `0x0000`: Product ID (`0x3701`).
-  - Register `0x0001`: Device Hardware Version (`0xMMmm`, where MM = major, mm = minor).
-  - Register `0x0002`: Software Version (`0xMMmm`, where MM = major, mm = minor).
-
-### Note on Relay Command Inversion
-If the relay command inversion configuration is active (`0xFF00` in relevant registers):
-- A "close" command will be interpreted as "open" and vice versa.
+  - Register `0x0000` (40001): Product ID (`0x3701`).
+  - Register `0x0001` (40002): Device Hardware Version (`0xMMmm`, where MM = major, mm = minor).
+  - Register `0x0002` (40003): Software Version (`0xMMmm`, where MM = major, mm = minor).
+  - Register `0x0008` (40009): Device address
+  - Register `0x0009` (40010): Baud rate selection (1/100th of the actual baud rate)
+  - Register `0x000A` (40011): Parity. 0=None, 1=Odd, 2=Even
+  - Register `0x000B` (40012): Number of stop bits. 1=1 stop bit, 2=2 stop bits
+  - Register `0x000C` (40013): Watchdog window size in seconds
+  - Register `0x0010` (40017 + 40019): Number of minutes in operation as a 32-bits
+  - Register `0x0014` (40019 + 40020): Number of relay 0 movements as a 32-bits
+  - Register `0x001A` (40021 + 40022): Number of relay 1 movements as a 32-bits
+  - Register `0x001C` (40023 + 40024): Number of relay 2 movements as a 32-bits
 
 ---
 
@@ -165,26 +170,18 @@ These can be accessed with a write single register command or the serial setting
 
 | Register Address | Function                          | Values/Description                    | Factory Default |
 |------------------|-----------------------------------|---------------------------------------|-----------------|
-| 40001 (0x0000)   | Device ID                         | 1 to 247                              | 44              |
-| 40002 (0x0001)   | Baud Rate                         | 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200  | 9600            |
-| 40003 (0x0002)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 0 (None)        |
-| 40004 (0x0003)   | Stop Bits                         | 1 or 2                                | 1               |
-| 40005 (0x0004)   | Watchdog Timeout (seconds)        | 0 = Disabled, 1->65535                | 0               |
+| 40009 (0x0008)   | Device ID                         | 1 to 247                              | 44              |
+| 40010 (0x0009)   | 1/100th of the baud Rate          | 12, 24, 48, 96, 192, 384, 576, 1152   | 96              |
+| 40011 (0x0010)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 0 (None)        |
+| 40012 (0x0011)   | Stop Bits                         | 1 or 2                                | 1               |
+| 40013 (0x0012)   | Watchdog Timeout (seconds)        | 0 = Disabled, 1->65535                | 0               |
+
+**Note**:  When writting the configuration with a multiple write, all 5 settings must be written in the same transaction.
 
 ### Reset the device
-The register at 0 can be written with 0xDEAD5AFE to reset the device remotely.
+The register at 0x63 (40100) can be written with 0xDEAD5AFE to reset the device remotely.
 This is usefull to apply any changes made to the settings.
-
-
-| Field            | Value                      | Explanation                                     |
-|-------------------|----------------------------|------------------------------------------------|
-| **Slave ID**      | `44` (or the configured address) | Device address.                             |
-| **Function Code** | `0x10`                    | Write multiple holding registers.              |
-| **Start Address** | `0x0000`                  | Address of the first register (reset).         |
-| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
-| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
-| **Data**          | `0xDEAD 0x5AFE`           | MSW = `0xDEAD`, LSW = `0x5AFE`.                |
-| **CRC**           | `The CRC`                   | CRC to be added                              |
+The command will reply, and the leds will flash fast for 2 seconds, then solid (the device is booting).
 
 ### Using the watchdog
 The relay has a command watchdog which will release the relays following a period of inactivity.
@@ -192,22 +189,6 @@ Everytime a valid modbus command is received (including holding register read et
 This feature allow for the relays to be atomatically releases if the master was to fail.
 The period is given in seconds.
 A value of zero (default) turns off the feature.
-
-### Holding registers
-
----
-
-
-## Resetting the Device
-### Reset via Register
-To reset the device to factory defaults:
-1. Write `0x1234` to Register `40012` (Reset Command) using Modbus Function Code `16`.
-2. The device will reboot and reinitialize with default settings.
-3. Configuration mode will be available for 2 seconds after the reset.
-
-### Reset Behavior
-- All LEDs will blink in sync at **2 Hz** for 2 seconds to indicate a reset.
-- The device will revert to the default configuration.
 
 ---
 
