@@ -46,11 +46,11 @@ The handling code is just as simple:
          }
       }
    }
+
 ```
-<div style="display: flex; justify-content: space-between; align-items: center;">
-![back](https://github.com/user-attachments/assets/79925dff-a78e-4289-a643-045d124ded2e)
+
 ![front](https://github.com/user-attachments/assets/d9050efe-2072-4eb5-82a6-fa03b56061c4)
-</div>
+![back](https://github.com/user-attachments/assets/93432889-79b6-4a08-bd2a-b309ec840141)
 
 <b>Solder side of the board</b>
 
