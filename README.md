@@ -48,8 +48,8 @@ The handling code is just as simple:
    }
 ```
 <div style="display: flex; justify-content: space-between; align-items: center;">
-        <img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/back.png" width="400">
-        <img src="https://github.com/adarwoo/modbus_relay/blob/main/hw/front.png" width="400">
+![back](https://github.com/user-attachments/assets/79925dff-a78e-4289-a643-045d124ded2e)
+![front](https://github.com/user-attachments/assets/d9050efe-2072-4eb5-82a6-fa03b56061c4)
 </div>
 
 <b>Solder side of the board</b>
