@@ -1,0 +1,396 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="14.0">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>7.0</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8.CPP</ToolchainName>
+    <ProjectGuid>dce6c7e3-ee26-4d79-826b-08594b9ad897</ProjectGuid>
+    <avrdevice>ATtiny3224</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>CPP</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>modbus_relay</AssemblyName>
+    <Name>modbus_relay</Name>
+    <RootNamespace>modbus_relay</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <CacheFlash>true</CacheFlash>
+    <ProgFlashFromRam>true</ProgFlashFromRam>
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
+    <UncachedRange />
+    <preserveEEPROM>true</preserveEEPROM>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <BootSegment>2</BootSegment>
+    <ResetRule>0</ResetRule>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <EraseKey />
+    <AsfFrameworkConfig>
+      <framework-data xmlns="">
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
+        </dependencies>
+      </framework-data>
+    </AsfFrameworkConfig>
+    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
+    <avrtoolserialnumber>J42700005355</avrtoolserialnumber>
+    <avrdeviceexpectedsignature>0x1E9528</avrdeviceexpectedsignature>
+    <avrtoolinterface>UPDI</avrtoolinterface>
+    <com_atmel_avrdbg_tool_atmelice>
+      <ToolOptions>
+        <InterfaceProperties>
+          <UpdiClock>500000</UpdiClock>
+        </InterfaceProperties>
+        <InterfaceName>UPDI</InterfaceName>
+      </ToolOptions>
+      <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
+      <ToolNumber>J42700005355</ToolNumber>
+      <ToolName>Atmel-ICE</ToolName>
+    </com_atmel_avrdbg_tool_atmelice>
+    <avrtoolinterfaceclock>500000</avrtoolinterfaceclock>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGccCpp>
+  <avrgcc.common.Device>-mmcu=attiny3224</avrgcc.common.Device>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>NDEBUG</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>NDEBUG</Value>
+    </ListValues>
+  </avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.PackStructureMembers>True</avrgcccpp.compiler.optimization.PackStructureMembers>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
+  <avrgcccpp.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcccpp.linker.libraries.Libraries>
+  <avrgcccpp.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcccpp.assembler.general.IncludePaths>
+</AvrGccCpp>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGccCpp>
+  <avrgcc.common.Device>-mmcu=attiny3224</avrgcc.common.Device>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.common.outputfiles.usersignatures>False</avrgcc.common.outputfiles.usersignatures>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>DEBUG</Value>
+    </ListValues>
+  </avrgcc.compiler.symbols.DefSymbols>
+  <avrgcc.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.level>Optimize debugging experience (-Og)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcccpp.compiler.symbols.DefSymbols>
+    <ListValues>
+      <Value>DEBUG</Value>
+    </ListValues>
+  </avrgcccpp.compiler.symbols.DefSymbols>
+  <avrgcccpp.compiler.directories.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcccpp.compiler.directories.IncludePaths>
+  <avrgcccpp.compiler.optimization.level>Optimize debugging experience (-Og)</avrgcccpp.compiler.optimization.level>
+  <avrgcccpp.compiler.optimization.PackStructureMembers>True</avrgcccpp.compiler.optimization.PackStructureMembers>
+  <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
+  <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
+  <avrgcccpp.linker.libraries.Libraries>
+    <ListValues>
+      <Value>libm</Value>
+    </ListValues>
+  </avrgcccpp.linker.libraries.Libraries>
+  <avrgcccpp.assembler.general.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\2.0.368\include\</Value>
+    </ListValues>
+  </avrgcccpp.assembler.general.IncludePaths>
+  <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
+</AvrGccCpp>
+    </ToolchainSettings>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>all</BuildTarget>
+    <CleanTarget>clean</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="asx\" />
+    <Folder Include="asx\include\" />
+    <Folder Include="asx\include\assembler\" />
+    <Folder Include="asx\include\asx\" />
+    <Folder Include="asx\include\bit_handling\" />
+    <Folder Include="asx\include\sim\" />
+    <Folder Include="asx\include\sim\avr\" />
+    <Folder Include="conf\" />
+    <Folder Include="src\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="asx\include\alert.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\assembler.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\assembler\gas.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\bitstore.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\chrono.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\debouncer.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\hw_timer.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\i2c_common.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\i2c_master.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\i2c_slave.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\ioport.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\modbus_rtu.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\pca9555.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\reactor.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\timer.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\uart.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\asx\utils.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\bit_handling\clz_ctz.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\board.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\builtin.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\ccp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\compiler.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\cpp.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\debug.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\digital_input.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\digital_output.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\interrupt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\ioport.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\mem.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\mrepeat.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\osc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\piezzo.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\preprocessor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\progmem.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\queue.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\reactor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\builtins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\interrupt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\io.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\pgmspace.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\sfr_defs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\sleep.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sim\avr\wdt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\status_codes.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\stringz.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\sysclk.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\timer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\tpaste.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\twim.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\twis.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\twi_common.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\include\typestring.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\conf_board.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\conf_clock.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\conf_uart.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\conf_version.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\datagram.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="conf\etl_profile.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\config.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\config.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\modbus.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\modbus.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\relay_ctrl.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\relay_ctrl.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\stats.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\test_relay.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="conf\datagram.conf.py">
+      <SubType>compile</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>
