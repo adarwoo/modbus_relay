@@ -3,13 +3,14 @@
 This project is a fully working MODBUS RTU Relay.
 The project comes with schematic and PCB, as well as the firmware of course!
 
-The core of the relay is an AVR Tiny1624.
+The core of the relay is an AVR Tiny1624, an automotive grade MPU designed for harsh environment.
 Note: The code optimized with -Os is <16KB. The -Og used typically for debug is <32k. Therefore, for debugging, a 3224 device is required.
 Remembed to edit the makefile to specify your device.
 
-This project can be reused for other Modbus devices. A modbus interface generated is provided and makes writting modbus commands very simple.
+This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
+The generator reads from a Python configuration file.
 
-Example of python configuration:
+Example of such configuration file:
 
 ```python
 "device@44": [
@@ -54,7 +55,7 @@ The handling code is just as simple:
 
 <b>Solder side of the board</b>
 
-The relay supports the following modbus commands:
+Out of the box, the relay supports the following modbus commands:
 - READ_COILS 1-3
 - WRITE_SINGLE_COIL Support for 0x5500 to toggle
 - WRITE_MULTIPLE_COILS 1-3
@@ -83,6 +84,8 @@ The tool 'gitman' is required as well as Docker. (docker-ce or else).
 # Clone this repo
 $ git clone https://https://github.com/adarwoo/modbus_relay.git
 $ cd modbus_relay
+# Optional - install gitman
+$ pipx install gitman
 $ gitman update
 $ make NDEBUG=1 # Optional, add ARCH=attiny1624 to suit you device
 ```
