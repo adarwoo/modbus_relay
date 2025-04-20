@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-from modbus_rtu_slave_rc import *  # Import everything from modbus_generator
+from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
+    "slave": True,
     "namespace": "broadcast",
     "callbacks": {"on_reset": []},
     "device@0": [

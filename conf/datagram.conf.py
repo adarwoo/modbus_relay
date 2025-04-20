@@ -1,10 +1,11 @@
 []#!/usr/bin/env python3
-from modbus_rtu_slave_rc import *  # Import everything from modbus_generator
+from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
     "buffer_size": 32,
     "namespace": "relay",
     "on_received": "on_ready_reply",
+    "slave": True,
 
     "callbacks": {
         "on_read_coils"       : [(u8, "addr"), (u8, "qty")],
