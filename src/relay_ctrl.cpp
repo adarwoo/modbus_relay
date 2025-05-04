@@ -47,7 +47,7 @@ namespace relay
       Pin(*led).set(close);
       change ^= *Pin(*pin);
 
-      // Increment the switiching count
+      // Increment the switching count
       if ( change ) {
          stat::increment_op(index);
       }
