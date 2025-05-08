@@ -7,8 +7,11 @@
 using namespace asx;
 
 namespace {
-   auto counter_minutes = eeprom::Counter(3);
+   // Use the banks 0, 1 and 2 for the 3 relays
    auto op_counters = std::array<eeprom::Counter, 3>{0,1,2};
+   
+   // Use bank 3 for the operational count
+   auto counter_minutes = eeprom::Counter(3);
 
    void on_minutes_elapsed() {
       counter_minutes.increment();
