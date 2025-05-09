@@ -1,8 +1,8 @@
 /**
- *@ingroup lib
- *@defgroup fft FFT API
- *@{
- *@file
+ * @ingroup lib
+ * @defgroup fft FFT API
+ * @{
+ * @file
  *****************************************************************************
  * Compute the FFT of a value progressively.
  * This code was written for a microcontroller with limited RAM space.
@@ -17,20 +17,20 @@
  * @author software@arreckx.com
  *****************************************************************************
  -*/
-
 #include <math.h>
 #include <string.h>
 
-#include "wgx.h"
 #include "fft.h"
+
+#include "conf_fft.h"
 
 // Check all constants required. These should be defined in the config.h file
 #ifndef FFT_M
-   #error "FFT_M must be defined in config.h"
+   #error "FFT_M must be defined in conf_fft.h"
 #endif
 
 #ifndef ADC_SAMPLE_FREQUENCY
-   #error "ADC_SAMPLE_FREQUENCY must be defined in config.h"
+   #error "ADC_SAMPLE_FREQUENCY must be defined in conf_fft.h"
 #endif
 
 
@@ -57,8 +57,7 @@ typedef uint8_t index_t;
 typedef int16_t sample_t;
 
 /** Define the complex type */
-typedef struct
-{
+typedef struct {
    /** Real part of the number */
    float real;
    /** Imaginary part of the number */
@@ -66,8 +65,7 @@ typedef struct
 } complex_t;
 
 /** Holds data and statefull fft information */
-typedef struct
-{
+typedef struct {
    /**
     *  Store the incomming data and computed data in a separate
     *  buffer, since the raw data is 2 bytes long and requires N
@@ -115,7 +113,7 @@ typedef struct
 
 // Include the twiddle coeffs locally.
 // This will make the data local and the code much more compact
-#include "twiddle.c"
+#include "twiddle.h"
 
 /** The one static fft structure */
 static fft_t fft;
@@ -123,44 +121,46 @@ static fft_t fft;
 /**
  * Forward declaration of internal methods
  */
-static void fftNewCycle(void);
+static void fft_new_cycle(void);
+
 
 /**
  * Prepares the fft.
  * This method computes which butterflies to compute during each pass to ready
  *  the desired bin.
+ * The center frequency is the frequency to measure. It is given in Hz.
+ *
+ * @param center_frequency The center frequency to measure
  */
-void fftInit(uint16_t centerFrequency)
-{
-   uint8_t binNumber;
+void fft_init(uint16_t center_frequency) {
+   uint8_t bin_number;
    index_t i;
 
    // Center frequency to measure. Given in Hz
-   binNumber = centerFrequency;
+   bin_number = center_frequency;
 
-   binNumber /= FFT_BIN_SIZE;
+   bin_number /= FFT_BIN_SIZE;
 
    // Compute path the bin
    fft.bin = 0;
-   for (i=0; i<FFT_M; ++i)
-   {
+
+   for (i = 0; i < FFT_M; ++i) {
       fft.bin <<= 1;
-      fft.bin |= (binNumber&1);
-      binNumber >>= 1;
+      fft.bin |= (bin_number & 1);
+      bin_number >>= 1;
    }
 
-   fftReset();
+   fft_reset();
 }
 
 
 /**
- * Restart the FFT measurement discaring any previous measurements.
- * Requires that fftInit has been called. Called by fftInit.
+ * Restart the FFT measurement discarding any previous measurements.
+ * Requires that fft_init has been called. Called by fft_init.
  */
-void fftReset(void)
-{
-   // Set wInc to zero to indicate that no real samples are stored yet
-   fft.wInc = 0;
+void fft_reset(void) {
+   // Set w_inc to zero to indicate that no real samples are stored yet
+   fft.w_inc = 0;
 
    // Use the index to store a whole buffer full of actual values
    fft.i = 0;
@@ -171,13 +171,12 @@ void fftReset(void)
  * Starts a new FFT cycle.
  * Internal method which zeros all counters
  */
-void fftNewCycle(void)
-{
-   fft.i      = 0;
-   fft.wIndex = 0;
-   fft.gCount = 0;
-   fft.wInc   = 1;
-   fft.gSize  = FFT_H;
+void fft_new_cycle(void) {
+   fft.i = 0;
+   fft.w_index = 0;
+   fft.g_count = 0;
+   fft.w_inc = 1;
+   fft.g_size = FFT_H;
 }
 
 
@@ -186,8 +185,7 @@ void fftNewCycle(void)
  *
  * @return The last computed result
  */
-float fftGetResult(void)
-{
+float fft_get_result(void) {
    return fft.result;
 }
 
@@ -199,118 +197,101 @@ float fftGetResult(void)
  * @return true if the computation has produced a result, 1 if a result
  *         is ready to collect
  */
-bool fftNext( int16_t sample )
-{
-   bool retval=false;
+bool fft_next(int16_t sample) {
+   bool retval = false;
 
-   if ( fft.wInc > 0 )
-   {
+   if (fft.w_inc > 0) {
+
       // Compute next value in-place
-      if ( fft.i != (FFT_N - 1) )
-      {
+      if (fft.i != (FFT_N - 1)) {
+
          // Compute next butterfly and storage location
-         index_t ii = fft.i + fft.gSize;
+         index_t ii = fft.i + fft.g_size;
          index_t jj = ii - FFT_H;
 
-
-         if ( fft.bin & fft.gSize ) // Binary AND here
-         {
+         if (fft.bin & fft.g_size) { // Binary AND here
             complex_t w;
 
             // Copy the correct twiddle factor in w
-            memcpy_P( &w, &fftTwiddle[fft.wIndex], sizeof(complex_t) );
+            memcpy(&w, &fft_twiddle[fft.w_index], sizeof(complex_t));
 
-            if ( fft.i < FFT_H ) // Reading values from the real buffer
-            {
+            if (fft.i < FFT_H) { // Reading values from the real buffer
                fft.x[jj].real =
                   ((float)fft.s[fft.i]) * w.real -
                   ((float)fft.s[ii]) * w.imag;
 
                fft.x[jj].imag = 0.0;
-            }
-            else  // Reading from the complex in place buffer
-            {
-               index_t k = fft.i-FFT_H;
-               float temp=fft.x[jj].real;
+            } else { // Reading from the complex in-place buffer
+               index_t k = fft.i - FFT_H;
+               float temp = fft.x[jj].real;
 
                fft.x[jj].real =
-                  w.real * ( fft.x[k].real - fft.x[jj].real ) -
-                  w.imag * ( fft.x[k].imag - fft.x[jj].imag );
+                  w.real * (fft.x[k].real - fft.x[jj].real) -
+                  w.imag * (fft.x[k].imag - fft.x[jj].imag);
 
                fft.x[jj].imag =
-                  w.real * ( fft.x[k].imag - fft.x[jj].imag ) +
-                  w.imag * ( fft.x[k].real - temp );
+                  w.real * (fft.x[k].imag - fft.x[jj].imag) +
+                  w.imag * (fft.x[k].real - temp);
             }
-         }
-         else // Simple butterfly
-         {
-            if ( fft.i < FFT_H ) // Reading values from the real buffer
-            {
+         } else { // Simple butterfly
+            if (fft.i < FFT_H) { // Reading values from the real buffer
                // Since the sample are 12bits long, sum as int, then convert
-               fft.x[jj].real = (float)( fft.s[fft.i] + fft.s[ii] );
+               fft.x[jj].real = (float)(fft.s[fft.i] + fft.s[ii]);
 
                fft.x[jj].imag = 0.0;
-            }
-            else
-            {
-               index_t k = fft.i-FFT_H;
+            } else {
+               index_t k = fft.i - FFT_H;
                fft.x[jj].real += fft.x[k].real;
                fft.x[jj].imag += fft.x[k].imag;
             }
          }
 
-         // Store the new incomming value
+         // Store the new incoming value
          fft.s[fft.i] = sample;
 
          // Move on
          ++fft.i;
-         ++fft.gCount;
-         fft.wIndex += fft.wInc;
+         ++fft.g_count;
+         fft.w_index += fft.w_inc;
 
          // Are we still computing within the same group
-         if ( fft.gCount == fft.gSize )
-         {
+         if (fft.g_count == fft.g_size) {
             // Double-up the group size
-            fft.gSize >>= 1;
-            fft.gCount = 0;
+            fft.g_size >>= 1;
+            fft.g_count = 0;
 
             // Next pass
-            fft.wIndex = 0;
-            fft.wInc <<= 1;
+            fft.w_index = 0;
+            fft.w_inc <<= 1;
          }
-      }
-      else // Last sample is different. No butterfly, but PSD calculation
-      {
-         // Store the new incomming value
+      } else { // Last sample is different. No butterfly, but PSD calculation
+         // Store the new incoming value
          fft.s[fft.i] = sample;
 
          // Last pass simply needs to return the result
          // Compute the power
          fft.result = sqrt(
             square(fft.x[FFT_H - 1].real) +
-            square(fft.x[FFT_H - 1].imag) );
+            square(fft.x[FFT_H - 1].imag));
 
          fft.result /= FFT_H;
 
          // Start again
-         fftNewCycle();
+         fft_new_cycle();
 
          // Tell the caller the result is ready
          retval = true;
       }
-   }
-   else // wInc == 0
-   {
-      // When wInc is 0, simply store a first pass of values
+   } else { // w_inc == 0
+      // When w_inc is 0, simply store a first pass of values
       fft.s[fft.i] = sample;
 
       // Move on
       ++fft.i;
 
-      // If all sample have been stored, turn on continuous mode
-      if ( fft.i == FFT_N )
-      {
-         fftNewCycle();
+      // If all samples have been stored, turn on continuous mode
+      if (fft.i == FFT_N) {
+         fft_new_cycle();
       }
    }
 
@@ -319,4 +300,3 @@ bool fftNext( int16_t sample )
 
 
 /* ----------------------------  End of file  ---------------------------- */
-
