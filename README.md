@@ -219,3 +219,42 @@ A value of zero (default) turns off the feature.
 - Always validate CRC and frame format for successful communication.
 
 ---
+
+# FMEA – Modbus Relay Board for CNC Safety
+
+This FMEA analyzes potential failure modes of a Modbus-controlled relay board designed for CNC safety, including load control and emergency stop (E-stop) functionality.
+Any failure should result in the CNC stopping by letting go of the estop switch.
+<br/>**Note**: The estop must be checked once at the start of operations. This step is done by the Masso CNC controller. This relay estop contact is Normally Opened. So when the CNC starts, the relay would be open.
+If the relay was to close **after** the Masso had booted, this could be considered an estop test.
+Therefore, the relay must be started well before the Masso. This is the case (100ms vs 10s).
+
+The top events to consider are:
+1. Lack of dust extraction clogs the work and leads to the cutter breaking.
+The operation is done in normally closed and protected condition to safeguard the operator.
+Mecanical damage only.
+2. Lack of cooling of the spindle leads to spindle overheat.
+NTP sensor on the spindle should detect the overheat if wired. Else, the spindle could be damaged.
+A fire is unlikely. 
+
+| Function             | Failure Mode                  | Effect of Failure                     | Cause(s)                               | Detection Method(s)         | S | O | D | RPN | Recommended Action(s)                                      |
+|----------------------|-------------------------------|----------------------------------------|---------------------------------------|------------------------------|---|---|---|-----|-------------------------------------------------------------|
+| Control Load Relays  | Relay not switching           | Load not powered leading to CNC or cutter damage | Relay failure, dry joint    | Feedback circuit             | 8 | 4 | 3 | 96  | Add redundant relay check, use industrial-grade relays     |
+| Control Load Relays  | Relay stuck ON                | Unsafe load activation                | Relay contact welding                  | Feedback circuit             | 9 | 3 | 4 | 108 | Use a forced conduit relay and read back the status of the relay  |
+| E-Stop Relay         | E-stop not triggered          | CNC continues in unsafe state         | Logic fault, relay failure             | Self-test, watchdog          | 10| 2 | 3 | 60  | Use safety-rated relay, periodic self-test                 |
+| Power Monitoring     | Over/under voltage undetected | Damage to CNC or relay                | Sensor failure, ADC error              | Voltage threshold check      | 9 | 3 | 4 | 108 | Add voltage sensing, calibration check                    |
+| Power Converter      | Converter fails               | Relay board unpowered, failsafe triggers | Component failure                   | Relay state monitoring       | 7 | 4 | 2 | 56  | Use robust converter, thermal protection. =<br/>Power the estop relay from the mains power |
+| Modbus Communication | Loss of communication         | E-stop triggered, CNC halts           | Cable fault, EMI, software crash       | Timeout watchdog             | 6 | 5 | 2 | 60  | Loss of comms indicates the bus is damaged or the master has crashed. esop. |
+| Test of the esop switch | estop relay opens and close cycle is considered a estop switch test  | False E-stop test                    | Non cold reboot of the firmware | Analysis of the reboot cause | 8 | 3 | 3 | 72  | Do not allow the modbus board to reboot |
+
+## Legend
+- **S (Severity)**: 1 (low) to 10 (catastrophic)
+- **O (Occurrence)**: 1 (rare) to 10 (frequent)
+- **D (Detection)**: 1 (certain detection) to 10 (undetectable)
+- **RPN (Risk Priority Number)**: S × O × D
+
+## Summary
+Focus should be placed on:
+- Improving detection of stuck or failed relays
+- Enhancing voltage monitoring redundancy
+- Ensuring robust communication and feedback diagnostics
+
