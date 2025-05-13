@@ -1,7 +1,9 @@
 #include "stats.hpp"
+
 #include <array>
 #include <asx/reactor.hpp>
 #include <asx/eeprom.hpp>
+
 #include <avr/interrupt.h>
 
 using namespace asx;
@@ -9,7 +11,7 @@ using namespace asx;
 namespace {
    // Use the banks 0, 1 and 2 for the 3 relays
    auto op_counters = std::array<eeprom::Counter, 3>{0,1,2};
-   
+
    // Use bank 3 for the operational count
    auto counter_minutes = eeprom::Counter(3);
 
