@@ -18,6 +18,7 @@ SRCS = \
    src/modbus.cpp \
    src/relay_ctrl.cpp \
    src/main.cpp \
+	src/ingress.cpp \
 
 ifdef SIM
 SRCS += \
