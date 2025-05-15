@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <array>
 
+#include <asx/reactor.hpp>
+
 
 namespace asx {
    namespace fft {
@@ -77,7 +79,7 @@ namespace asx {
          static inline index_t   w_inc      = 0;
          static inline index_t   w_index    = 0;
          static inline index_t   g_count    = 0;
-         static inline float     result     = 0.0f;
+         static inline asx::reactor::Handle on_fft_ready = asx::reactor::null;
 
          /** Start a new FFT cycle */
          static void new_cycle() {
@@ -91,7 +93,9 @@ namespace asx {
       public:
          /** Initialize the FFT */
          template<size_t CENTER_FREQUENCY>
-         static constexpr void init() {
+         static constexpr void init(asx::reactor::Handle _on_fft_ready) {
+            on_fft_ready = _on_fft_ready;
+
             uint16_t bin_number = CENTER_FREQUENCY / FFT_BIN_SIZE;
             bin = 0;
 
@@ -110,14 +114,15 @@ namespace asx {
             i = 0;
          }
 
-         /** Get the last computed result */
-         static float get_result() {
-            return result;
-         }
-
-         /** Process the next sample */
-         static bool next(sample_t sample) {
-            bool retval = false;
+         /**
+          * Process the next sample.
+          * Will delegate the processing to a reactor handler which splits the computation
+          * by yeilding the reactor.
+          * A registered handler will be called when the FFT is ready.
+          */
+         static void next(sample_t sample) {
+            // Store the sample in the buffer
+            s[i] = sample;
 
             if (w_inc > 0) {
                if (i != (FFT_N - 1)) {
@@ -145,7 +150,6 @@ namespace asx {
                      x[jj] += x[i - FFT_H];
                   }
 
-                  s[i] = sample;
                   ++i;
                   ++g_count;
                   w_index += w_inc;
@@ -157,24 +161,19 @@ namespace asx {
                      w_inc <<= 1;
                   }
                } else {
-                  s[i] = sample;
-
                   // Use std::abs() to compute the magnitude of the complex number
-                  result = std::abs(x[FFT_H - 1]) / FFT_H;
+                  auto result = std::abs(x[FFT_H - 1]) / FFT_H;
 
                   new_cycle();
-                  retval = true;
+                  on_fft_ready(result);
                }
             } else {
-               s[i] = sample;
                ++i;
 
                if (i == FFT_N) {
                   new_cycle();
                }
             }
-
-            return retval;
          }
       };
    } // namespace fft

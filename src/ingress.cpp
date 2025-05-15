@@ -28,11 +28,16 @@ namespace ingress {
    // Create an instance of the FFT class
    auto fft = fft_t {};
 
+   void handle_fft_result(uint16_t result) {
+      // Handle the FFT result
+      // This function will be called when the FFT computation is complete
+   }
+
    void init() {
       // Initialize the ingress system
 
       // Initialize the FFT instance for detecting 50Hz
-      fft.init<CENTER_FREQ>();
+      fft.init<CENTER_FREQ>(asx::reactor::bind(handle_fft_result));
 
       // Initialise the ADC for the ingress system
 

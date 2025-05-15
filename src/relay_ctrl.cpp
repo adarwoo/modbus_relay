@@ -12,6 +12,7 @@
  */
 #include <asx/reactor.hpp>
 #include <asx/ioport.hpp>
+#include <alert.h>
 
 #include "relay_ctrl.hpp"
 #include "stats.hpp"
@@ -29,47 +30,50 @@ namespace relay
    // The handle to the error notification
    auto on_error = asx::reactor::Handle{};
 
+   void backgroud_check();
+
    /** When constructed, the LED is ON to test it */
    void init( /*asx::reactor::Handle on_error_callback*/ )
    {
-      // Register the error callback
-      //on_error = on_error_callback;
+      LED_A.init(dir_t::out, value_t::high);
+      LED_B.init(dir_t::out, value_t::high);
+      LED_C.init(dir_t::out, value_t::high);
 
-      Pin(LED_A).init(value_t::high,  dir_t::out);
-      Pin(LED_B).init(value_t::high,  dir_t::out);
-      Pin(LED_C).init(value_t::high,  dir_t::out);
-
-      Pin(RELAY_A).init(value_t::low, dir_t::out);
-      Pin(RELAY_B).init(value_t::low, dir_t::out);
-      Pin(RELAY_C).init(value_t::low, dir_t::out);
+      RELAY_A.init(dir_t::out, value_t::low);
+      RELAY_B.init(dir_t::out, value_t::low);
+      RELAY_C.init(dir_t::out, value_t::low);
 
       // Check level will reflect the relay status
-      Pin(CHECK_A).init(dir_t::in, invert::inverted);
-      Pin(CHECK_B).init(dir_t::in, invert::inverted);
-      Pin(CHECK_C).init(dir_t::in, invert::inverted);
+      CHECK_A.init(dir_t::in, invert::inverted);
+      CHECK_B.init(dir_t::in, invert::inverted);
+      CHECK_C.init(dir_t::in, invert::inverted);
 
       // Start the background check timer
       using namespace std::chrono;
-      //timer = asx::reactor::bind(relay::backgroud_check, asx::reactor::prio::low).repeat(100ms);
+      timer = asx::reactor::bind(
+         backgroud_check, asx::reactor::prio::low).repeat(100ms);
    }
 
    void set(uint8_t index, bool close)
    {
       // Read the status of the object to switch
-      port_pin_t pin;
-      port_pin_t led;
+      Pin pin = RELAY_C;
+      Pin led = LED_C;
 
       switch (index) {
-      case 0: pin = RELAY_A.integral(); led = LED_A.integral(); break;
-      case 1: pin = RELAY_B.integral(); led = LED_B.integral(); break;
-      case 2: pin = RELAY_C.integral(); led = LED_C.integral(); break;
-      default: return;
+      case 0: pin = RELAY_A; led = LED_A; break;
+      case 1: pin = RELAY_B; led = LED_B; break;
+      case 2:
+         break;
+      default:
+         alert_and_stop();
+         break;
       }
 
-      bool change = *Pin(pin);
-      Pin(pin).set(close);
-      Pin(led).set(close);
-      change ^= *Pin(pin);
+      bool change = *Pin(pin); // Read the current status of the relay
+      Pin(pin).set(close);     // Set the relay to the requested state
+      Pin(led).set(close);     // Set the LED to the requested state
+      change ^= *Pin(pin);     // Check if the relay status has changed
 
       // Increment the switching count
       if ( change ) {
