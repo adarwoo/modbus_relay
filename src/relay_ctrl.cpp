@@ -16,6 +16,7 @@
 
 #include "relay_ctrl.hpp"
 #include "stats.hpp"
+#include "leds.hpp"
 
 #include "conf_board.h"
 
@@ -35,10 +36,6 @@ namespace relay
    /** When constructed, the LED is ON to test it */
    void init( /*asx::reactor::Handle on_error_callback*/ )
    {
-      LED_A.init(dir_t::out, value_t::high);
-      LED_B.init(dir_t::out, value_t::high);
-      LED_C.init(dir_t::out, value_t::high);
-
       RELAY_A.init(dir_t::out, value_t::low);
       RELAY_B.init(dir_t::out, value_t::low);
       RELAY_C.init(dir_t::out, value_t::low);
@@ -58,11 +55,10 @@ namespace relay
    {
       // Read the status of the object to switch
       Pin pin = RELAY_C;
-      Pin led = LED_C;
 
       switch (index) {
-      case 0: pin = RELAY_A; led = LED_A; break;
-      case 1: pin = RELAY_B; led = LED_B; break;
+      case 0: pin = RELAY_A; break;
+      case 1: pin = RELAY_B; break;
       case 2:
          break;
       default:
@@ -72,27 +68,15 @@ namespace relay
 
       bool change = *Pin(pin); // Read the current status of the relay
       Pin(pin).set(close);     // Set the relay to the requested state
-      Pin(led).set(close);     // Set the LED to the requested state
       change ^= *Pin(pin);     // Check if the relay status has changed
 
       // Increment the switching count
       if ( change ) {
          stat::increment_op(index);
       }
-   }
 
-   void clean_leds()
-   {
-      Pin(LED_A).set(*Pin(RELAY_A));
-      Pin(LED_B).set(*Pin(RELAY_B));
-      Pin(LED_C).set(*Pin(RELAY_C));
-   }
-
-   void flash_leds()
-   {
-      Pin(LED_A).set(not *Pin(LED_A));
-      Pin(LED_B).set(not *Pin(LED_B));
-      Pin(LED_C).set(not *Pin(LED_C));
+      // Set the LED
+      led::set(index, close ? led::LedState::on : led::LedState::off );
    }
 
    bool status(uint8_t index)

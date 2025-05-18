@@ -15,14 +15,7 @@ Modbus({
         "on_read_config"      : [(u8, "addr"), (u8, "qty")],
         "on_read_stats"       : [(u8, "addr"), (u8, "qty")],
         "reset_device"        : [],
-        "set_device_id"       : [(u8, "device_id")],
-        "set_baud"            : [(u16, "baud")],
-        "set_parity"          : [(u16, "parity")],
-        "set_stopbits"        : [(u16, "stopbits")],
-        "set_watchdog"        : [(u16, "watchdog")],
-        "config_device"       : [(u8, "addr"), (u16, "baud"), (u8, "parity"), (u8, "stopbits"), (u16, "wd")],
-        "on_read_reset"       : [],
-
+        "on_write_config"     : [(u8, "addr"), (u16, "value")],
     },
 
     "device@44": [
@@ -40,43 +33,40 @@ Modbus({
                                 u8(0, 7, alias="values"),
                                 "on_set_multiple"),
 
-        # 0 (40001): (R)  Product ID
-        # 1 (40002): (R)  HW version
-        # 2 (40003): (R)  SW version
+        #   0 (40001): (R)  Product ID
+        #   1 (40002): (R)  HW version
+        #   2 (40003): (R)  SW version
 
-        # 100 (40009): (RW) Device address
-        # 101 (40010): (RW) Baud rate selection (1/10 of the baud rate)
-        # 102 (40011): (RW) Parity
-        # 103 (40012): (RW) Stopbits
-        # 104 (40013): (RW) Watchdog for the bus communication : 0 = off, 1 = bus activity check, 2 = device activity
-        # 105 (40013): (RW) Watchdog for the bus communication : number of seconds without activity
-        # 106 (40014): (RW) Ingress monitor mode 0=Off, 1=DC, 2=AC_50Hz, 3=AC_60Hz
-        # 107 (40015): (RW) Ingress Min DC voltage in 10th volts
-        # 108 (40016): (RW) Ingress Max DC voltage in 10th volts
-        # 109 (40017): (RW) Ingress Min AC voltage in 10th volts
-        # 110 (40018): (RW) Ingress Max AC voltage in 10th volts
-        # 105 (40014): (RW) EStop configuration 0 = no estop, 1 = comms only, 2 = relay, 4 = undervolt, 8 = overvolt, 255 = all
+        # 100 (40101): (RW) Device address
+        # 101 (40102): (RW) Baud rate selection (1/10 of the baud rate)
+        # 102 (40103): (RW) Parity
+        # 103 (40104): (RW) Stopbits
+        # 104 (40105): (RW) Watchdog for the bus communication : number of seconds without activity
+        # 105 (40106): (RW) Ingress monitor mode 0=DC, 2=AC_50Hz, 3=AC_60Hz
+        # 106 (40107): (RW) Ingress Min DC voltage in volts
+        # 107 (40108): (RW) Ingress Max DC voltage in volts
+        # 108 (40109): (RW) Ingress Min AC voltage in volts
+        # 109 (40110): (RW) Ingress Max AC voltage in volts
+        # 110 (40111): (RW) EStop on communication watchdog
+        # 111 (40112): (RW) EStop on relay
+        # 112 (40113): (RW) EStop on undervoltage
+        # 113 (40114): (RW) EStop on overvoltage
 
-        # 100(40101): (R)  Running minutes
-        # 101(40101): (R)  Relay 0 number of cycles
-        # 102(40102): (R)  Relay 1 number of cycles
-        # 103(40103): (R)  Relay 2 number of cycles
+        # 200 (40101): (R)  Running minutes
+        # 201 (40101): (R)  Relay 0 number of cycles
+        # 202 (40102): (R)  Relay 1 number of cycles
+        # 203 (40103): (R)  Relay 2 number of cycles
 
-        # 200: (W) EStop Write 0x5104 to trigger an estop pulse of 1 second
-        # 300: (W) Factory reset. Erase the memory back to factory settings. Write 0x5043
+        # 300: (W) EStop Write 0x5104 to trigger an estop pulse of 1 second
+        # 400: (W) Factory reset. Erase the memory back to factory settings. Write 0x5043
 
-        (READ_HOLDING_REGISTERS, u16(0, 2), u16(1, 3), "on_read_info"),
-        (READ_HOLDING_REGISTERS, u16(8, 12), u16(1, 5), "on_read_config"),
-        (READ_HOLDING_REGISTERS, u16(16, 22), u16([2,4,6,8]), "on_read_stats"),
-        (READ_HOLDING_REGISTERS, u16(99), u16(2), "on_read_reset"),
+        (READ_HOLDING_REGISTERS,   u16(0,     2), u16(1, 3), "on_read_info"),
+        (READ_HOLDING_REGISTERS,   u16(100, 110), u16(1, 5), "on_read_config"),
+        (READ_HOLDING_REGISTERS,   u16(200, 203), u16([2,4,6,8]), "on_read_stats"),
 
-        (WRITE_SINGLE_REGISTER, u16(8), u16(1,255), "set_device_id"),
-        (WRITE_SINGLE_REGISTER, u16(9), u16([12, 24, 48, 96, 192, 384, 576, 1152]), "set_baud"),
-        (WRITE_SINGLE_REGISTER, u16(10), u16(0,2), "set_parity"),
-        (WRITE_SINGLE_REGISTER, u16(11), u16([1, 2]), "set_stopbits"),
-        (WRITE_SINGLE_REGISTER, u16(12), u16(), "set_watchdog"),
+        (WRITE_SINGLE_REGISTER,    u16(100, 111), u16(), "on_write_config"),
 
-        (WRITE_MULTIPLE_REGISTERS, u16(99), u16(2), u8(4), u32(0xDEAD5AFE), "reset_device"),
+        #(WRITE_MULTIPLE_REGISTERS, u16(400), u16(2), u8(4), u32(0xDEAD5AFE), "reset_device"),
 
     ],
 

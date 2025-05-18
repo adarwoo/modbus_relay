@@ -23,8 +23,6 @@
 #include <type_traits>
 #include <array>
 
-#include <asx/reactor.hpp>
-
 
 namespace asx {
    namespace fft {
@@ -79,7 +77,7 @@ namespace asx {
          static inline index_t   w_inc      = 0;
          static inline index_t   w_index    = 0;
          static inline index_t   g_count    = 0;
-         static inline asx::reactor::Handle on_fft_ready = asx::reactor::null;
+         static inline index_t   purge_count = 2 * FFT_N;
 
          /** Start a new FFT cycle */
          static void new_cycle() {
@@ -90,13 +88,16 @@ namespace asx {
             g_size = FFT_H;
          }
 
+         /** Reset the FFT */
+         static void reset() {
+            w_inc = 0;
+            i = 0;
+         }
+
       public:
          /** Initialize the FFT */
-         template<size_t CENTER_FREQUENCY>
-         static constexpr void init(asx::reactor::Handle _on_fft_ready) {
-            on_fft_ready = _on_fft_ready;
-
-            uint16_t bin_number = CENTER_FREQUENCY / FFT_BIN_SIZE;
+         static constexpr void init(uint16_t center_frequency) {
+            uint16_t bin_number = center_frequency / FFT_BIN_SIZE;
             bin = 0;
 
             for (index_t j = 0; j < FFT_M; ++j) {
@@ -108,19 +109,15 @@ namespace asx {
             reset();
          }
 
-         /** Reset the FFT */
-         static void reset() {
-            w_inc = 0;
-            i = 0;
+         static inline int16_t get_result() {
+            return static_cast<int16_t>(std::abs(x[FFT_H - 1]) / FFT_H);
          }
 
          /**
           * Process the next sample.
-          * Will delegate the processing to a reactor handler which splits the computation
-          * by yeilding the reactor.
-          * A registered handler will be called when the FFT is ready.
+          * @return true when a result is ready.
           */
-         static void next(sample_t sample) {
+         static bool next(sample_t sample) {
             // Store the sample in the buffer
             s[i] = sample;
 
@@ -161,11 +158,13 @@ namespace asx {
                      w_inc <<= 1;
                   }
                } else {
-                  // Use std::abs() to compute the magnitude of the complex number
-                  auto result = std::abs(x[FFT_H - 1]) / FFT_H;
-
                   new_cycle();
-                  on_fft_ready(result);
+
+                  if ( purge_count == 0 ) {
+                     return true;
+                  } else {
+                     --purge_count;
+                  }
                }
             } else {
                ++i;
@@ -174,6 +173,8 @@ namespace asx {
                   new_cycle();
                }
             }
+
+            return false;
          }
       };
    } // namespace fft
