@@ -163,6 +163,71 @@ In normal mode:
 
 ---
 
+# Modbus Register Map
+
+## Device Identification
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 0 | 40001 | R | Product ID |  |  |
+| 1 | 40002 | R | HW version |  |  |
+| 2 | 40003 | R | SW version |  |  |
+
+## Communication Settings
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 100 | 40101 | RW | Device address | 44 |  |
+| 101 | 40102 | RW | Baud rate selection | 96 | 3=300 Baud<br/>6=600 Baud<br/>12=1200 Baud<br/>24=2400 Baud<br/>48=4800 Baud<br/>96=9600 Baud<br/>192=19200 Baud<br/>364=36400 Baud<br/>576=57600 Baud<br/>1152=115200 Baud |
+| 102 | 40103 | RW | Parity | 0 | 0=None</br>1=Odd</br>2=Even</br> |
+| 103 | 40104 | RW | Stopbits | 1 | 1=1 Stop bit</br>2=2 stop bits |
+
+## Power Infeed Configuration
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 200 | 40201 | RW | Ingress type | 1 | 0=DC</br>1=AC 50Hz</br>2=AC 60Hz |
+| 201 | 40202 | RW | Ingress Min voltage | 10 | 1/10 volts [100-3000] |
+| 202 | 40203 | RW | Ingress Max voltage | 300 | 1/10 volts [100-3000] |
+
+## Safety Logic Configuration
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 300 | 40301 | RW | EStop on undervoltage | 1 | 0=no</br>1=yes |
+| 301 | 40302 | RW | EStop on overvoltage | 1 | 0=no</br>1=yes |
+| 302 | 40303 | RW | EStop on number of seconds without valid modbus activity | 0 | 0=off</br>[1-65535] Number of seconds |
+
+## Status & Monitoring
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 400 | 40401 | R | Current status |  | 0=OK, 1=ESTOP_RESETABLE, 2=ESTOP_TERMINAL |
+| 401 | 40402–40403 | R | Running minutes |  | 32-bit unsigned int (High word at 40402, Low word at 40403) |
+| 403 | 40404 | R | Infeed DC voltage |  | 1/10 volts |
+| 404 | 40405 | R | Infeed AC voltage |  | 1/10 volts |
+| 405 | 40406 | R | Fault type |  | 0=None</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
+| 406 | 40407 | R | External diagnostic code |  | Diagnostic code given with EStop command or 0xffff |
+| 407 | 40408 | R | Infeed out-of-range voltage |  | Invalid infeed voltage in 1/10th of volts or 0 |
+| 408 | 40409 | R | Relay 1 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
+| 409 | 40410 | R | Relay 2 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
+| 410 | 40411 | R | Relay 3 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
+
+## Relay Stats
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 500 | 40501 | R | Relay 1 number of cycles |  |  |
+| 501 | 40502 | R | Relay 2 number of cycles |  |  |
+| 502 | 40503 | R | Relay 3 number of cycles |  |  |
+
+## Control
+
+| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
+|------------|----------------|--------|-------------|---------------|--------|
+| 900 | 40901 | W | EStop |  | LSB contains a diagnostic code [1-127]<br/>MSB=1 : Pulse EStop for 1 second<br/>MSB=2 : Resettable EStop<br/>MSB=3 : Terminal EStop |
+| 901 | 40902 | W | EStop reset |  | 0x0404 |
+
 ## Configuring the device
 The factory default communication settings for the relay are:
 - Device address is 44
