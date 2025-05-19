@@ -1,45 +1,35 @@
 # Modbus Relay #
+![modbus_rtu](https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664)
 
 This project is a fully working MODBUS RTU Relay, which also includes a control of the EStop.
 The project comes with schematic and PCB, as well as the firmware of course!
 
 Features:
 1. Standard DIN Rail mountable PCB size
-2. 3 relays (10A 250VAC)
+2. 3 relays (9.4A 250VAC)
 3. Operational safety minded:
-   . Safety relay with force conduits and read back
-   . Infeed voltage measurement with acceptable range
-   . Communication watchdog
+   * Safety relay with force conduits and read back
+   * Infeed voltage measurement with acceptable range
+   * Communication watchdog
 4. EStop management (internal and external)
 5. Operational statistics
-   . Number of cycles
-   . Running time
-   . Fault codes
+   * Number of cycles
+   * Running time
+   * Fault codes
    
 The core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
 
 This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
 
-![estop relay](https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138)
+<img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" width="500">
+View of the PCB in the DIN Rail case
 
+## Application software
+The application software in written in C++23. It uses meta programming and concepts.
+A <i>docker</i> file is provided to create a build environment.
+The code fits the 32Kb flash space with plenty spare.
 
-<b>Solder side of the board</b>
-
-Out of the box, the relay supports the following modbus commands:
-- READ_COILS 1-3
-- WRITE_SINGLE_COIL Support for 0x5500 to toggle
-- WRITE_MULTIPLE_COILS 1-3
-- READ_HOLDING_REGISTERS
-  1. Version
-  2. FW version
-  3. HW version
-
-If compiling using the supplied Dockerfile, the elf is 7KB in size, so a ATTiny824 will work.
-
-The device default address is 44 (Decimal).
-By default, it runs at 115200 8E1.
-
-KiCAD schematic and PCB are available.
+KiCAD schematic and PCB are supplied too.
 
 Tested with QModMaster.
 
@@ -75,32 +65,30 @@ The relay comes pre-configured with the following value:
 | **Slave ID**      | `0x44`                    | The device address is 44 (decimal) by default  |
 | **Baud rate**     | `9600`                    | The device talks at 9600 by default            |
 | **Serial setup**  | `8N1`                     | 8bits, no parity and 1 stop bit                |
-| **Watchdog**      | `0` (off)                 | The watchdog feature is off by default         |
-
 
 ## Resetting the relay to factory default setttings
 
 If the relay is un-responsive, it may have been mis-configured.
-The relay can be reset to it's factory default using the following procedure.
+The relay can be reset to it's factory default using the following procedure:
+Push the switch for >5s. The LEDs will turn on as the relay resets. It will now be using the factory
+default settings and can now be configured.
 
-1. Power off the relay
-2. Configure your Modbus master configuration tool (such as QModMaster) using a baud rate of **9600**, **8 data bits**, **No parity**, and **1 stop bit** (9600 8N1).
-3. Ready the following message:
+# Operation
 
-| Field             | Value                     | Explanation                                    |
-|-------------------|---------------------------|------------------------------------------------|
-| **Slave ID**      | `0x00`                    | Broadcast address.                             |
-| **Function Code** | `0x10`                    | Write multiple holding registers.              |
-| **Start Address** | `0x0063`                  | Address of the reset register (40100)          |
-| **Quantity**      | `0x0002`                  | Writing 2 registers (32-bit number).           |
-| **Byte Count**    | `0x04`                    | 4 bytes of data to follow.                     |
-| **Data**          | `0xDEAD 0x5AFE`           | MSW = `0xDEAD`, LSW = `0x5AFE`.                |
-| **CRC**           | `0xBAE7`                  | CRC                                            |
-
-4. Power on the relay. All LEDs turn RED for 5 seconds.
-5. During that time, send the 'Write multiple register' commmand
-6. If the relay receives the command, the LEDs will blink fast for 5 seconds, then turn all on indicating the device was successfully reset
-7. Now the device is factory reset and can be reached at its address `44` (0x2C).
+The relay works like any modbus coil by writting to the coil registers.
+Addtionally, this relay has operational controls such as checking the infeed voltage, the communication bus and the health of the relays.
+It will open the EStop relay is any fail (depending on its configuration).
+When the EStop is set, the relay does the following:
+1. It opens the EStop relay
+2. It lights the fault LED if the failure cannot be recovered
+   * This is the case if a relay becomes faulty
+3. It blinks the fault LED if the EStop can be reset
+   * A push on the switch resets the EStop, unless the triggering condition has not be resolved
+4. It records the fault
+5. It flashes the corresponding LED to pin point the problem
+  * If a relay is at fault, the corresponding relay flashes
+  * If the infeed supply is at fault, it will flash. Note, the LED will flash (Long on short off) it a voltage is detected.
+  * The modbus Rx LED will flash to indicate the EStop was triggered remotely
 
 ## Simple relay operation
 
@@ -109,29 +97,6 @@ In normal mode:
 - The bus operates as configured
 - Relays operate based on the configured default positions and command inversion settings.
 - Regular coil commands do not respond in configuration mode to prevent mode mixing.
-
-### Supported Modbus Functions
-- **Read Coils (Function Code 1):**
-  - Addresses `0x0000` to `0x0002` for Relay 0, Relay 1, and Relay 2.
-- **Write Single Coil (Function Code 5):**
-  - Write `0xFF00` to turn on, `0x0000` to turn off, and `0x5500` to toggle a relay.
-- **Write Multiple Coils (Function Code 15):**
-  - Write a bit array to set relay states (1 = closed, 0 = open).
-- **Read Holding Registers (Function Code 3):**
-  - Register `0x0000` (40001): Product ID (`0x3701`).
-  - Register `0x0001` (40002): Device Hardware Version (`0xMMmm`, where MM = major, mm = minor).
-  - Register `0x0002` (40003): Software Version (`0xMMmm`, where MM = major, mm = minor).
-  - Register `0x0008` (40009): Device address
-  - Register `0x0009` (40010): Baud rate selection (1/100th of the actual baud rate)
-  - Register `0x000A` (40011): Parity. 0=None, 1=Odd, 2=Even
-  - Register `0x000B` (40012): Number of stop bits. 1=1 stop bit, 2=2 stop bits
-  - Register `0x000C` (40013): Watchdog window size in seconds
-  - Register `0x0010` (40017 + 40019): Number of minutes in operation as a 32-bits
-  - Register `0x0014` (40019 + 40020): Number of relay 0 movements as a 32-bits
-  - Register `0x001A` (40021 + 40022): Number of relay 1 movements as a 32-bits
-  - Register `0x001C` (40023 + 40024): Number of relay 2 movements as a 32-bits
-
----
 
 # Modbus Register Map
 
@@ -170,26 +135,26 @@ In normal mode:
 
 ## Status & Monitoring
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 400 | 40401 | R | Current status |  | 0=OK, 1=ESTOP_RESETABLE, 2=ESTOP_TERMINAL |
-| 401 | 40402–40403 | R | Running minutes |  | 32-bit unsigned int (High word at 40402, Low word at 40403) |
-| 403 | 40404 | R | Infeed DC voltage |  | 1/10 volts |
-| 404 | 40405 | R | Infeed AC voltage |  | 1/10 volts |
-| 405 | 40406 | R | Fault type |  | 0=None</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
-| 406 | 40407 | R | External diagnostic code |  | Diagnostic code given with EStop command or 0xffff |
-| 407 | 40408 | R | Infeed out-of-range voltage |  | Invalid infeed voltage in 1/10th of volts or 0 |
-| 408 | 40409 | R | Relay 1 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
-| 409 | 40410 | R | Relay 2 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
-| 410 | 40411 | R | Relay 3 diagnostic code |  | 0=Relay is OK<br/>1=Faulty relay |
+| Zero-Based | Modbus Address | Access | Description | Values |
+|------------|----------------|--------|-------------|--------|
+| 400 | 40401 | R | Current status | 0=OK, 1=ESTOP_RESETABLE, 2=ESTOP_TERMINAL |
+| 401 | 40402–40403 | R | Running minutes | 32-bit unsigned int (High word at 40402, Low word at 40403) |
+| 403 | 40404 | R | Infeed DC voltage | 1/10 volts |
+| 404 | 40405 | R | Infeed AC voltage | 1/10 volts |
+| 405 | 40406 | R | Fault type | 0=None</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
+| 406 | 40407 | R | External diagnostic code | Diagnostic code given with EStop command or 0xffff |
+| 407 | 40408 | R | Infeed out-of-range voltage | Invalid infeed voltage in 1/10th of volts or 0 |
+| 408 | 40409 | R | Relay 1 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
+| 409 | 40410 | R | Relay 2 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
+| 410 | 40411 | R | Relay 3 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
 
 ## Relay Stats
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 500 | 40501 | R | Relay 1 number of cycles |  |  |
-| 501 | 40502 | R | Relay 2 number of cycles |  |  |
-| 502 | 40503 | R | Relay 3 number of cycles |  |  |
+| Zero-Based | Modbus Address | Access | Description |
+|------------|----------------|--------|-------------|
+| 500 | 40501-40502 | R | Relay 1 number of cycles |
+| 502 | 40503-40504 | R | Relay 2 number of cycles |
+| 504 | 40503-40504 | R | Relay 3 number of cycles |
 
 ## Control
 
@@ -206,27 +171,9 @@ The factory default communication settings for the relay are:
 - **No parity**
 - **1 stop bit** (9600 8N1).
 
-### Configuration registers available
-These can be accessed with a write single register command or the serial settings can be set with 1 write multiple command.
-
-| Register Address | Function                          | Values/Description                    | Factory Default |
-|------------------|-----------------------------------|---------------------------------------|-----------------|
-| 40009 (0x0008)   | Device ID                         | 1 to 247                              | 44              |
-| 40010 (0x0009)   | 1/100th of the baud Rate          | 12, 24, 48, 96, 192, 384, 576, 1152   | 96              |
-| 40011 (0x0010)   | Parity                            | 0 = None, 1 = Odd, 2 = Even           | 0 (None)        |
-| 40012 (0x0011)   | Stop Bits                         | 1 or 2                                | 1               |
-| 40013 (0x0012)   | Watchdog Timeout (seconds)        | 0 = Disabled, 1->65535                | 0               |
-
-**Note**:  When writting the configuration with a multiple write, all 5 settings must be written in the same transaction.
-
-### Reset the device
-The register at 0x63 (40100) can be written with 0xDEAD5AFE to reset the device remotely.
-This is usefull to apply any changes made to the settings.
-The command will reply, and the leds will flash fast for 2 seconds, then solid (the device is booting).
-
 ### Using the watchdog
 The relay has a command watchdog which will release the relays following a period of inactivity.
-Everytime a valid modbus command is received (including holding register read etc.), the watchdog is reset.
+Everytime this devices receives a valid modbus command (including holding register read etc.), the watchdog is reset.
 This feature allow for the relays to be atomatically releases if the master was to fail.
 The period is given in seconds.
 A value of zero (default) turns off the feature.
