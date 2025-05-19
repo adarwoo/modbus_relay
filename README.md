@@ -1,57 +1,27 @@
 # Modbus Relay #
 
-This project is a fully working MODBUS RTU Relay.
+This project is a fully working MODBUS RTU Relay, which also includes a control of the EStop.
 The project comes with schematic and PCB, as well as the firmware of course!
 
-The core of the relay is an AVR Tiny1624, an automotive grade MPU designed for harsh environment.
-Note: The code optimized with -Os is <16KB. The -Og used typically for debug is <32k. Therefore, for debugging, a 3224 device is required.
-Remembed to edit the makefile to specify your device.
+Features:
+1. Standard DIN Rail mountable PCB size
+2. 3 relays (10A 250VAC)
+3. Operational safety minded:
+   . Safety relay with force conduits and read back
+   . Infeed voltage measurement with acceptable range
+   . Communication watchdog
+4. EStop management (internal and external)
+5. Operational statistics
+   . Number of cycles
+   . Running time
+   . Fault codes
+   
+The core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
 
 This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
-The generator reads from a Python configuration file.
 
-Example of such configuration file:
+![front](hw/estop relay.png)
 
-```python
-"device@44": [
-        (READ_COILS,            u16(0, 2, alias="addr"),
-                                u16(1, 3, alias="qty"),
-                                "on_read_coils"),
-
-        (WRITE_SINGLE_COIL,     u16(0, 2, alias="addr"),
-                                u16([0xFF00, 0, 0x5500], alias="op"),
-                                "on_set_single"),
-
-        (WRITE_MULTIPLE_COILS,  u16(0, alias="from"),
-                                u16(3, alias="qty"),
-                                u8(1, alias="count"),
-                                u8(0, 7, alias="values"),
-                                "on_set_multiple"),
-
-        (READ_HOLDING_REGISTERS, u16(0, 2), u16(1, 3), "on_read_info"),
-    ]
-```
-The handling code is just as simple:
-
-```c++
-   void on_read_info(uint8_t index, uint8_t qty) {
-      Datagram::pack<uint8_t>(qty*2);
-
-      while ( qty-- ) {
-         switch(index++) {
-         case 0: Datagram::pack( DEVICE_ID ); break;
-         case 1: Datagram::pack( HW_VERSION ); break;
-         case 2: Datagram::pack( FW_VERSION ); break;
-         default:
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         }
-      }
-   }
-
-```
-
-![front](https://github.com/user-attachments/assets/d9050efe-2072-4eb5-82a6-fa03b56061c4)
-![back](https://github.com/user-attachments/assets/93432889-79b6-4a08-bd2a-b309ec840141)
 
 <b>Solder side of the board</b>
 
