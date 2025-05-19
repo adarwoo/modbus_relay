@@ -20,7 +20,7 @@ The core of the relay is an AVR Tiny3227, an automotive grade MPU designed for h
 
 This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
 
-![front](hw/estop relay.png)
+![estop relay](https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138)
 
 
 <b>Solder side of the board</b>
