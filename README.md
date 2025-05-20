@@ -4,7 +4,7 @@
 This project is a fully working MODBUS RTU Relay, which also includes a control of the EStop.
 The project comes with schematic and PCB, as well as the firmware of course!
 
-Features:
+**Features:**
 1. Standard DIN Rail mountable PCB size
 2. 3 relays (9.4A 250VAC)
 3. Operational safety minded:
@@ -25,17 +25,16 @@ This project can be reused for other Modbus devices. A modbus interface generato
 View of the PCB in the DIN Rail case
 
 ## Application software
-The application software in written in C++23. It uses meta programming and concepts.
-A <i>docker</i> file is provided to create a build environment.
+The application software is written in C++23 as it uses meta programming, constant expressions and concepts for efficient code.<br/>
+A <i>docker</i> file is provided to create a build environment.</br>
 The code fits the 32Kb flash space with plenty spare.
 
-KiCAD schematic and PCB are supplied too.
-
-Tested with QModMaster.
-
-I plan to add address and serial configuration modbus command (and eeprom persistence).
+## Hardware
+The schematic and PCB have been edited in KiCad 9 and are supplied too.
 
 ## How to build ##
+A docker container file is provided to recreated a full build environment.<br/>
+The application can also be built in Microchip studio.<br/>
 You will need a Linux shell, or WSL shell in Windows.
 The tool 'gitman' is required as well as Docker. (docker-ce or else).
 
@@ -53,29 +52,33 @@ $ make NDEBUG=1 # Optional, add ARCH=attiny1624 to suit you device
 The binary modbus_relay.elf can be found in the directory
 # Modbus Relay Device User Manual
 
-## Overview
-The Modbus Relay Device is a configurable relay controller with Modbus RTU communication.
-This document describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
+# Operations overview
+The Modbus Relay Device is a configurable relay controller with Modbus RTU communication.<br/>
+This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
 ## Factory default settings
 The relay comes pre-configured with the following value:
 
 | Configuration     | Default value             | Explanation                                    |
 |-------------------|---------------------------|------------------------------------------------|
-| **Slave ID**      | `0x44`                    | The device address is 44 (decimal) by default  |
+| **Slave ID**      | `44`                      | The device address is 44 (decimal) by default  |
 | **Baud rate**     | `9600`                    | The device talks at 9600 by default            |
 | **Serial setup**  | `8N1`                     | 8bits, no parity and 1 stop bit                |
 
 ## Resetting the relay to factory default setttings
 
 If the relay is un-responsive, it may have been mis-configured.
-The relay can be reset to it's factory default using the following procedure:
-Push the switch for >5s. The LEDs will turn on as the relay resets. It will now be using the factory
-default settings and can now be configured.
+The relay can be reset to its factory default using the following procedure:<br/>
+1. Push the switch for > 5s
+   * All LEDs will light for 2s to indicate the relay has reset
+   * The configuration values have been reset to the factory default
+2. Connect QModbusMaster and try to connect to the device at 44 using serial port at 9600 8N1.
+3. Configure the device as required
+4. Apply the new configuration and reset the device
 
 # Operation
 
-The relay works like any modbus coil by writting to the coil registers.
+The relay works like any modbus coil by writting the coil registers.
 Addtionally, this relay has operational controls such as checking the infeed voltage, the communication bus and the health of the relays.
 It will open the EStop relay is any fail (depending on its configuration).
 When the EStop is set, the relay does the following:
@@ -102,17 +105,17 @@ In normal mode:
 
 ## Device Identification
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 0 | 40001 | R | Product ID |  |  |
-| 1 | 40002 | R | HW version |  |  |
-| 2 | 40003 | R | SW version |  |  |
+| Zero-Based | Modbus Address | Access | Description |
+|------------|----------------|--------|-------------|
+| 0 | 40001 | R | Product ID |
+| 1 | 40002 | R | HW version |
+| 2 | 40003 | R | SW version |
 
 ## Communication Settings
 
 | Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
 |------------|----------------|--------|-------------|---------------|--------|
-| 100 | 40101 | RW | Device address | 44 |  |
+| 100 | 40101 | RW | Device address | 44 | [1-127] |
 | 101 | 40102 | RW | Baud rate selection | 96 | 3=300 Baud<br/>6=600 Baud<br/>12=1200 Baud<br/>24=2400 Baud<br/>48=4800 Baud<br/>96=9600 Baud<br/>192=19200 Baud<br/>364=36400 Baud<br/>576=57600 Baud<br/>1152=115200 Baud |
 | 102 | 40103 | RW | Parity | 0 | 0=None</br>1=Odd</br>2=Even</br> |
 | 103 | 40104 | RW | Stopbits | 1 | 1=1 Stop bit</br>2=2 stop bits |
@@ -137,11 +140,11 @@ In normal mode:
 
 | Zero-Based | Modbus Address | Access | Description | Values |
 |------------|----------------|--------|-------------|--------|
-| 400 | 40401 | R | Current status | 0=OK, 1=ESTOP_RESETABLE, 2=ESTOP_TERMINAL |
+| 400 | 40401 | R | Current status | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>Device in terminal EStop |
 | 401 | 40402–40403 | R | Running minutes | 32-bit unsigned int (High word at 40402, Low word at 40403) |
 | 403 | 40404 | R | Infeed DC voltage | 1/10 volts |
 | 404 | 40405 | R | Infeed AC voltage | 1/10 volts |
-| 405 | 40406 | R | Fault type | 0=None</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
+| 405 | 40406 | R | EStop root cause | 0=Normal operation</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
 | 406 | 40407 | R | External diagnostic code | Diagnostic code given with EStop command or 0xffff |
 | 407 | 40408 | R | Infeed out-of-range voltage | Invalid infeed voltage in 1/10th of volts or 0 |
 | 408 | 40409 | R | Relay 1 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
