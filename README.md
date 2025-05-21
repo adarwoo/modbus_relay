@@ -1,24 +1,53 @@
 # Modbus Relay #
 ![modbus_rtu](https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664)
 
-This project is a fully working MODBUS RTU Relay, which also includes a control of the EStop.
-The project comes with schematic and PCB, as well as the firmware of course!
+This project is a fully working MODBUS RTU triple Relay, aimed at a CNC or equivalent.
+Beside the relay switching functions it also includes the control of the EStop on CNC.
+
+The project comes complete with schematic, PCB, 3D part, artwork and source code.
 
 **Features:**
 1. Standard DIN Rail mountable PCB size
-2. 3 relays (9.4A 250VAC)
-3. Operational safety minded:
-   * Safety relay with force conduits and read back
+2. 3 relays - 9.4A 250VAC per output
+3. Operational integrity minded
+   * Uses a safety relay with force conduits and read back
    * Infeed voltage measurement with acceptable range
    * Communication watchdog
-4. EStop management (internal and external)
-5. Operational statistics
+4. EStop management
+   * Used for failsafe of the relay operation
+      * Relay failure
+      * Infeed voltage out-of-range
+      * Communication loss
+   * Externally controlled
+     * Pulsed EStop
+     * Resetable
+     * Terminal
+6. Operational statistics
    * Number of cycles
    * Running time
    * Fault codes
-   
-The core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
 
+** Presentation of the hardware **
+At the core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
+The relays are SISF brand used in safety critical applications.
+They feature a forced conduit (so all contacts are driven by the same bar) and a dedicated read-back contact.
+This allow to valdate the correct relay operation.
+The modbus interface used a RS485 driver LTC1785 or equivalent.
+The PCB can be placed in a DIN Rail PCB mount. 4 mounting screws can also be used.
+A 3D cover is available to remove access to the contacts.
+
+The schematic and PCB have been edited in KiCAD9.
+
+** Presentation of the software **
+The software is build on top of a small framework revolving around a simple reactor pattern.
+The reactor allow for an arbitrary function to be notified from any context, and will execute when the CPU become available.
+A simple priority system allow for reactor functions to be called in priority (to process data in a register).
+The over computing time of any reactor function is measured, so the worse case latency is known.
+The system does handle all asynchronous events in realtime with no delay.
+The jitter on the RS485 is null, and all replies are instantanous (4ms delay to allow for proper end of frame detection).
+
+The modbus registers are described in this document.
+A python scripts generates the final source for the modbus funtions.
 This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
 
 <img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" width="500">
