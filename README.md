@@ -169,16 +169,16 @@ In normal mode:
 
 | Zero-Based | Modbus Address | Access | Description | Values |
 |------------|----------------|--------|-------------|--------|
-| 400 | 40401 | R | Current status | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>Device in terminal EStop |
+| 400 | 40401 | R | Current status | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
 | 401 | 40402–40403 | R | Running minutes | 32-bit unsigned int (High word at 40402, Low word at 40403) |
-| 403 | 40404 | R | Infeed DC voltage | 1/10 volts |
-| 404 | 40405 | R | Infeed AC voltage | 1/10 volts |
-| 405 | 40406 | R | EStop root cause | 0=Normal operation</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=external |
-| 406 | 40407 | R | External diagnostic code | Diagnostic code given with EStop command or 0xffff |
-| 407 | 40408 | R | Infeed out-of-range voltage | Invalid infeed voltage in 1/10th of volts or 0 |
-| 408 | 40409 | R | Relay 1 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
-| 409 | 40410 | R | Relay 2 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
-| 410 | 40411 | R | Relay 3 diagnostic code | 0=Relay is OK<br/>1=Faulty relay |
+| 403 | 40404 | R | Current infeed voltage (type as configured) | 1/10 volts |
+| 404 | 40405 | R | EStop root cause | 0=Normal operation</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=command |
+| 405 | 40406 | R | Given command diagnostic code | Diagnostic code given with EStop command |
+| 406 | 40407 | R | Infeed minimum voltage | Infeed voltage in 1/10th of volts or 0 |
+| 407 | 40408 | R | Infeed maximum voltage | Infeed voltage in 1/10th of volts or 0 |
+| 408 | 40409 | R | Relay 1 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
+| 409 | 40410 | R | Relay 2 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
+| 410 | 40411 | R | Relay 3 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
 
 ## Relay Stats
 
@@ -194,6 +194,7 @@ In normal mode:
 |------------|----------------|--------|-------------|---------------|--------|
 | 900 | 40901 | W | EStop |  | LSB contains a diagnostic code [1-127]<br/>MSB=1 : Pulse EStop for 1 second<br/>MSB=2 : Resettable EStop<br/>MSB=3 : Terminal EStop |
 | 901 | 40902 | W | EStop reset |  | 0x0404 |
+| 902 | 40903 | W | Infeed min/max reset |  | 0x0405 |
 
 ## Configuring the device
 The factory default communication settings for the relay are:
