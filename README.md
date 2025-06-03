@@ -85,25 +85,25 @@ The binary modbus_relay.elf can be found in the directory
 The Modbus Relay Device is a configurable relay controller with Modbus RTU communication.<br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
-## Factory default settings
-The relay comes pre-configured with the following value:
+## Recovery mode
 
-| Configuration     | Default value             | Explanation                                    |
-|-------------------|---------------------------|------------------------------------------------|
-| **Slave ID**      | `44`                      | The device address is 44 (decimal) by default  |
-| **Baud rate**     | `9600`                    | The device talks at 9600 by default            |
+When a relay cannot be reached or is un-responsive, the following procedure can be used.<br/>
+
+1. Push the relay push button for > 5s
+   * The Alert LED Flashes fast
+   * The communication values have been temporary reset to:
+
+| Configuration     | value             | Explanation                                    |
+|-------------------|-------------------|------------------------------------------------|
+| **Slave ID**      | `44`              | The device address is 44 (decimal) by default  |
+| **Baud rate**     | `9600`            | The device talks at 9600 by default            |
 | **Serial setup**  | `8N1`                     | 8bits, no parity and 1 stop bit                |
 
-## Resetting the relay to factory default setttings
-
-If the relay is un-responsive, it may have been mis-configured.
-The relay can be reset to its factory default using the following procedure:<br/>
-1. Push the switch for > 5s
-   * All LEDs will light for 2s to indicate the relay has reset
-   * The configuration values have been reset to the factory default
-2. Connect QModbusMaster and try to connect to the device at 44 using serial port at 9600 8N1.
+2. Start the 'Relay Guarian' application, and select 'Recovery' from the menu.
 3. Configure the device as required
 4. Apply the new configuration and reset the device
+
+**Note**: When activating the recovery mode, all relay operations are maintained.
 
 # Operation
 
@@ -132,69 +132,147 @@ In normal mode:
 
 # Modbus Register Map
 
-## Device Identification
+## Coil registers
 
-| Zero-Based | Modbus Address | Access | Description |
-|------------|----------------|--------|-------------|
-| 0 | 40001 | R | Product ID |
-| 1 | 40002 | R | HW version |
-| 2 | 40003 | R | SW version |
+The relay coils can be accessed from 0 (Relay 1) upto relay 31.
+Coils can be written and read at will.
+**Note**: The relay may respond differently based on the relay configuration such as
+polarity and deboucing.
 
-## Communication Settings
+## Input registers
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 100 | 40101 | RW | Device address | 44 | [1-127] |
-| 101 | 40102 | RW | Baud rate selection | 96 | 3=300 Baud<br/>6=600 Baud<br/>12=1200 Baud<br/>24=2400 Baud<br/>48=4800 Baud<br/>96=9600 Baud<br/>192=19200 Baud<br/>364=36400 Baud<br/>576=57600 Baud<br/>1152=115200 Baud |
-| 102 | 40103 | RW | Parity | 0 | 0=None</br>1=Odd</br>2=Even</br> |
-| 103 | 40104 | RW | Stopbits | 1 | 1=1 Stop bit</br>2=2 stop bits |
+The registers have been grouped so they can easily be accessed.
 
-## Power Infeed Configuration
+### Device Identification
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 200 | 40201 | RW | Ingress type | 1 | 0=DC</br>1=AC 50Hz</br>2=AC 60Hz |
-| 201 | 40202 | RW | Ingress Min voltage | 10 | 1/10 volts [100-3000] |
-| 202 | 40203 | RW | Ingress Max voltage | 300 | 1/10 volts [100-3000] |
+| Zero-Based | Modbus Address | Access | Description | Value(s) |
+|------------|---------------|--------|--------------|----------|
+| 0          | 30001         | R      | Product ID   | 0x3701*  |
+| 1          | 30002         | R      | HW version   | MSB=minor, LSB=major |
+| 2          | 30003         | R      | SW version   | MSB=minor, LSB=major |
+| 3–7        | 30004–30008   | —      | *Reserved*   |          |
 
-## Safety Logic Configuration
+The EStop relay is 0x3708. The simple modbus relay is 0x3701.
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 300 | 40301 | RW | EStop on undervoltage | 1 | 0=no</br>1=yes |
-| 301 | 40302 | RW | EStop on overvoltage | 1 | 0=no</br>1=yes |
-| 302 | 40303 | RW | EStop on number of seconds without valid modbus activity | 0 | 0=off</br>[1-65535] Number of seconds |
+### Status & Monitoring
 
-## Status & Monitoring
+| Zero-Based | Modbus Address | Access | Description                 | Values |
+|------------|---------------|--------|-----------------------------|--------|
+| 8          | 30008         | R      | Current status              | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
+| 9-10       | 30010–40011   | R      | Running minutes (32-bit)    | High word at 40010, Low word at 40011 |
+| 11         | 30012         | R      | Current infeed voltage      | 1/10 volts |
+| 12         | 30013         | R      | EStop root cause            | 0=Normal operation<br/>1=faulty relay<br/>2=modbus watchdog<br/>3=voltage monitor<br/>4=command |
+| 13         | 30014         | R      | Given command diagnostic code | Diagnostic code given with EStop command |
+| 14         | 30015         | R      | Infeed minimum voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 15         | 30016         | R      | Infeed maximum voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 16-23      | 30017–30042   | —      | *Reserved*                  |        |
 
-| Zero-Based | Modbus Address | Access | Description | Values |
-|------------|----------------|--------|-------------|--------|
-| 400 | 40401 | R | Current status | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
-| 401 | 40402–40403 | R | Running minutes | 32-bit unsigned int (High word at 40402, Low word at 40403) |
-| 403 | 40404 | R | Current infeed voltage (type as configured) | 1/10 volts |
-| 404 | 40405 | R | EStop root cause | 0=Normal operation</br>1=faulty relay</br>2=modbus watchdog</br>3=voltage monitor</br>4=command |
-| 405 | 40406 | R | Given command diagnostic code | Diagnostic code given with EStop command |
-| 406 | 40407 | R | Infeed minimum voltage | Infeed voltage in 1/10th of volts or 0 |
-| 407 | 40408 | R | Infeed maximum voltage | Infeed voltage in 1/10th of volts or 0 |
-| 408 | 40409 | R | Relay 1 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
-| 409 | 40410 | R | Relay 2 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
-| 410 | 40411 | R | Relay 3 diagnostic | 0=Relay is OK<br/>1=Faulty relay |
+### Relay Diagnostics & Stats
 
-## Relay Stats
+*Note:* The registers are organised by banks of upto 8 relays.
+If variants of the board are created with more than 8 relays, simply add another
+table of 24 registers.
+This address scheme allow addressing up to 32 relays.
 
-| Zero-Based | Modbus Address | Access | Description |
-|------------|----------------|--------|-------------|
-| 500 | 40501-40502 | R | Relay 1 number of cycles |
-| 502 | 40503-40504 | R | Relay 2 number of cycles |
-| 504 | 40503-40504 | R | Relay 3 number of cycles |
+| Zero-Based | Modbus Address | Access | Description                | Values |
+|------------|----------------|--------|----------------------------|--------|
+| 24         | 30025          | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty |
+| 25         | 30026          | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
+| 26         | 30027          | R      | Relay 3 diagnostic         | 0=OK<br/>1=Faulty |
+| 27         | 30028          | R      | Relay 4 diagnostic         | 0=OK<br/>1=Faulty |
+| 28         | 30029          | R      | Relay 5 diagnostic         | 0=OK<br/>1=Faulty |
+| 29         | 30030          | R      | Relay 6 diagnostic         | 0=OK<br/>1=Faulty |
+| 30         | 30031          | R      | Relay 7 diagnostic         | 0=OK<br/>1=Faulty |
+| 31         | 30032          | R      | Relay 8 diagnostic         | 0=OK<br/>1=Faulty |
+| 32-33      | 30033–30034    | R      | Relay 1 number of cycles (32-bit) |      |
+| 34-35      | 30035–30036    | R      | Relay 2 number of cycles (32-bit) |      |
+| 36-37      | 30037–30038    | R      | Relay 3 number of cycles (32-bit) |      |
+| 38-39      | 30039–30040    | R      | Relay 4 number of cycles (32-bit) |      |
+| 40-41      | 30041–30042    | R      | Relay 5 number of cycles (32-bit) |      |
+| 42-43      | 30043–30044    | R      | Relay 6 number of cycles (32-bit) |      |
+| 44-45      | 30045–30046    | R      | Relay 7 number of cycles (32-bit) |      |
+| 46-47      | 30047–30048    | R      | Relay 8 number of cycles (32-bit) |      |
 
-## Control
+## Holding registers
 
-| Zero-Based | Modbus Address | Access | Description | Factory Value | Values |
-|------------|----------------|--------|-------------|---------------|--------|
-| 900 | 40901 | W | EStop |  | LSB contains a diagnostic code [1-127]<br/>MSB=1 : Pulse EStop for 1 second<br/>MSB=2 : Resettable EStop<br/>MSB=3 : Terminal EStop |
-| 901 | 40902 | W | EStop reset |  | 0x0404 |
-| 902 | 40903 | W | Infeed min/max reset |  | 0x0405 |
+The holding registers can be read all together. Reserved value reads as 0.
+
+### Communication Settings
+
+| Zero-Based | Modbus Address | Access | Description       | Factory Value | Values |
+|------------|---------------|--------|--------------------|---------------|--------|
+| 0         | 40011         | RW     | Device address      | 44            | [1-127] |
+| 1         | 40012         | RW     | Baud rate selection | 96            | 3=300 Baud<br/>6=600 Baud<br/>12=1200 Baud<br/>24=2400 Baud<br/>48=4800 Baud<br/>96=9600 Baud<br/>192=19200 Baud<br/>364=36400 Baud<br/>576=57600 Baud<br/>1152=115200 Baud |
+| 2         | 40013         | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
+| 3         | 40014         | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
+| 4–7       | 40015–40020   | —      | *Reserved*          |               |        |
+
+### Power Infeed Configuration
+
+| Zero-Based | Modbus Address | Access | Description         | Factory Value | Values |
+|------------|---------------|--------|---------------------|---------------|--------|
+| 8          | 40021         | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
+| 9          | 40022         | RW     | Ingress Min voltage | 10            | 1/10 volts [100-3000] |
+| 10         | 40023         | RW     | Ingress Max voltage | 300           | 1/10 volts [100-3000] |
+| 11-15      | 40024–40030   | —      | *Reserved*          |               |        |
+
+### Safety Logic Configuration
+
+| Zero-Based | Modbus Address | Access | Description                                 | Factory Value | Values |
+|------------|---------------|--------|---------------------------------------------|---------------|--------|
+| 16         | 40031         | RW     | EStop on undervoltage                       | 1             | 0=no<br/>1=yes |
+| 17         | 40032         | RW     | EStop on overvoltage                        | 1             | 0=no<br/>1=yes |
+| 18         | 40033         | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 19-23      | 40034–40040   | —      | *Reserved*                                  |               |        |
+
+---
+
+### Relay Configuration (Bank 0: Relays 1–8)
+
+| Zero-Based | Modbus Address | Access | Description         | Factory Value | Values |
+|------------|---------------|--------|---------------------|---------------|--------|
+| 24        | 40101         | RW     | Relay 1 config      | 0           |     |
+| 25        | 40102         | RW     | Relay 2 config      | 0           | ...    |
+| 26        | 40103         | RW     | Relay 3 config      | 0           | ...    |
+| 27        | 40104         | RW     | Relay 4 config      | 0           | ...    |
+| 28        | 40105         | RW     | Relay 5 config      | ...           | ...    |
+| 29        | 40106         | RW     | Relay 6 config      | ...           | ...    |
+| 30        | 40107         | RW     | Relay 7 config      | ...           | ...    |
+| 31        | 40108         | RW     | Relay 8 config      | ...           | ...    |
+
+**Next Bank (Relays 32–): 40121–40128**
+(Repeat the above pattern for additional banks.)
+
+#### Relay configuration values
+
+The following configuration is available. By default, all features are off. These changes are all permanent.
+
+| Bit position | Function | Explanation |
+|--------------|----------|-------------|
+| 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
+| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. [^invnote] |
+| 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
+| 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
+
+[^invnote]: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
+
+#### Combined settings table
+
+The following table illustrates the effect of the invert and default settings:
+
+|Default Position	| Inversion	| Physical State at Power-up|
+|-----------------|-----------|---------------------------|
+|0	               | 0	      |  Relay OFF                |
+|1	               | 0	      |  Relay ON                 |
+|0                | 1         |	Relay ON                 |
+|1                | 1          |	Relay OFF                |
+
+---
+
+**Notes:**
+- All relay diagnostics and counters are grouped in blocks of 8 for efficient Modbus access.
+- To add more relays, simply add another bank of 8 at the next available block.
+- Control registers are write-only and can be mapped to holding registers or coils as appropriate for your Modbus implementation.
 
 ## Configuring the device
 The factory default communication settings for the relay are:
@@ -249,7 +327,7 @@ The operation is done in normally closed and protected condition to safeguard th
 Mecanical damage only.
 2. Lack of cooling of the spindle leads to spindle overheat.
 NTP sensor on the spindle should detect the overheat if wired. Else, the spindle could be damaged.
-A fire is unlikely. 
+A fire is unlikely.
 
 | Function             | Failure Mode                  | Effect of Failure                     | Cause(s)                               | Detection Method(s)         | S | O | D | RPN | Recommended Action(s)                                      |
 |----------------------|-------------------------------|----------------------------------------|---------------------------------------|------------------------------|---|---|---|-----|-------------------------------------------------------------|
