@@ -48,8 +48,8 @@ The project comes complete with documentation, schematic, PCB, 3D part, artwork 
 ## Presentation of the hardware ##
 
 <div style="text-align: center; position: relative;">
-  <img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" width="300" style="display: inline-block;">
-  <span style="position: absolute; right: 0; font-style: italic;">View of the PCB in the DIN Rail case</span>
+  <img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" height="500" style="display: inline-block;">
+  <img src="https://github.com/user-attachments/assets/fd56e418-ea18-465f-a665-b4eb595fe600" height="500" style="display: inline-block;">
 </div>
 
 At the core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
@@ -69,15 +69,28 @@ A 3D cover is available to cover the whole PCBs. Together with the DIN rail moun
 
 ### CAD files ###
 
-#### PCBA ####
-
 The following files are available:
  * The [schematic](hw/modbus_relay.kicad.sch) edited with *KiCAD 9.1*
  * The [PCB](hw/modbus_relay.kicad.pcb) edited in *KiCAD 9.1*
  * The [BOM](hw/BOM.md) edited in *KiCAD 9.1*
+ * The [Front plate artwork](hw/front_plate_graphics.svg) edited in LibreOffice Draw
+ * [LED holder STL file](cad/leds_spacers.STL)
+ * [Spacer columns STL file](cad/3mm%2016mm.STL)
+ * [Flex swtich membrane](cad/Flex%20switch%20membrane.STL)
+ * [Flex retaining holder](cad/Flex%20Holder.STL)
 
- #### 3D files ####
+#### Printing the files
 
+ * The case was printed in mate green PLA with PLA support material for the AVR port.
+ * The flexible switch was printed in TPU.
+ * The holder in black PLA.
+
+#### Printing the front plate
+
+ * The front was printed on an adhesive vinyl sticker at max resolution then cut to size.
+
+> [!Note]
+> You may need to adjust the dimension to account for non-linearity of the printer.
 
 ## Presentation of the software ##
 The software is build on top of a small framework revolving around a simple reactor pattern.
