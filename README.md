@@ -5,6 +5,24 @@ It is aimed for industrial systems such as a CNC or equivalent.
 
 The project comes complete with documentation, schematic, PCB, 3D part, artwork and source code.
 
+## Table of Contents
+1. [Features Summary](#features-summary)
+2. [Presentation of the Hardware](#presentation-of-the-hardware)
+3. [Presentation of the Software](#presentation-of-the-software)
+4. [How to Build](#how-to-build)
+5. [Operations Overview](#operations-overview)
+6. [Recovery Mode](#recovery-mode)
+7. [Modbus Register Map](#modbus-register-map)
+   - [Coil Registers](#coil-registers)
+   - [Input Registers](#input-registers)
+   - [Holding Registers](#holding-registers)
+8. [Configuring the Device](#configuring-the-device)
+9. [Using the Watchdog](#using-the-watchdog)
+10. [Troubleshooting](#troubleshooting)
+11. [FMEA – Modbus Relay Board for CNC Safety](#fmea--modbus-relay-board-for-cnc-safety)
+
+---
+
 ## Features summary ##
 
 1. Standard DIN Rail mountable PCB
@@ -152,6 +170,19 @@ In normal mode:
 The relay coils can be accessed from 0 (Relay 1) upto relay 31.
 Coils can be written and read at will.
 
+The device supports the following function code:
+ * **01**: [Read coils](https://www.modbustools.com/modbus.html#function01)
+<br/>Read from 1 to 32 contiguous status of coils.
+<br/>Coils in the response message are packed as one per bit of a byte, 1=On and 0=Off.
+<br/>If the requested quantity of coils are not a multiple of 8, zeros are padded in the final byte.
+ * **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05)
+<br/>Write a single output to either On (1) or Off
+ * **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function15)
+<br/>Force each coil in a sequence of coils to either On or Off
+
+> [!WARNING]
+> When reading a relay with inverted command, the value is inverted too
+
 > [!WARNING]
 > The relays may respond differently based on the relay configuration such as polarity and deboucing.
 
@@ -159,7 +190,11 @@ Coils can be written and read at will.
 
 The registers have been grouped so they can easily be accessed.
 Reserved values reads as 0.
-Only function code **04** is supported.
+
+Only the function **04**: [Read input registers](https://www.modbustools.com/modbus.html#function04) is supported to read registers.
+
+> [!WARNING]
+> Make sure to issue function 04: Read input registers when reading input registers and not function ~~**03: Read Holding Regsiters**~~, as the memory of both types overlaps.
 
 ### Device Identification
 
@@ -234,12 +269,16 @@ The holding registers can be read all together. Reserved value reads as 0.
 
 The following function codes are supported:
 
-- **03 - Read Holding Registers**<br/>
-Reads the values of one or more holding registers.
-Commonly used to retrieve configuration or control values stored in the device.
-- **06 - Write Single Register**<br/>
-Writes a single value to a specific holding register.
-Used for updating configuration or control parameters.
+* **03** - [Read Holding Registers](https://www.modbustools.com/modbus.html#function03)<br/>
+<br/>Reads the values of one or more holding registers.
+<br/>Commonly used to retrieve configuration or control values stored in the device.
+* **06** - [Write Single Register](https://www.modbustools.com/modbus.html#function06)<br/>
+<br/>Writes a single value to a specific holding register.
+<br/>Used for updating configuration or control parameters.
+
+> [!WARNING]
+> Do no issue the function 04: Read input registers when reading holding registers as the memory addresses of both types overlaps.
+
 
 Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write Multiple Registers) are not supported.
 
@@ -305,12 +344,12 @@ The following configuration is available. By default, all features are off. Thes
 
 The following table illustrates the effect of the invert and default settings:
 
-|Default Position	| Inversion	| Physical State at Power-up|
-|-----------------|-----------|---------------------------|
-|0	               | 0	      |  Relay OFF                |
-|1	               | 0	      |  Relay ON                 |
-|0                | 1         |	Relay ON                 |
-|1                | 1         |	Relay OFF                |
+| Inversion	|Default Position	| Physical State at Power-up|
+|:---------:|:---------------:|---------------------------|
+| 0         |0	               |  Relay OFF = **Opened**   |
+| 0         |**1**            |  Relay ON  = **Closed**   |
+| **1**     |0                |	Relay ON  = **Closed**   |
+| **1**     |**1**            |	Relay OFF = **Opened**   |
 
 ---
 
