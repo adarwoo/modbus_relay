@@ -74,7 +74,8 @@ The following files are available:
  * The [PCB](hw/modbus_relay.kicad.pcb) edited in *KiCAD 9.1*
  * The [BOM](hw/BOM.md) edited in *KiCAD 9.1*
  * The [Front plate artwork](hw/front_plate_graphics.svg) edited in LibreOffice Draw
- * [LED holder STL file](cad/leds_spacers.STL)
+ * [The front plate STL file](cad/Front%20Plate.3mf)
+ * [LED holder STL file](cad/leds_spacer.STL)
  * [Spacer columns STL file](cad/3mm%2016mm.STL)
  * [Flex swtich membrane](cad/Flex%20switch%20membrane.STL)
  * [Flex retaining holder](cad/Flex%20Holder.STL)
