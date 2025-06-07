@@ -5,7 +5,8 @@ It is aimed for industrial systems such as a CNC or equivalent.
 
 The project comes complete with documentation, schematic, PCB, 3D part, artwork and source code.
 
-** Features summary **
+## Features summary ##
+
 1. Standard DIN Rail mountable PCB
 2. 3 relays - 9.4A 250VAC per output
 3. Operational integrity minded
@@ -65,7 +66,6 @@ A python scripts is used to generates the final source for the modbus functions.
 
 > [^TIPS]: This project could be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
 
-
 ## Application software
 The application software is written in C++23 as it uses meta programming, constant expressions and concepts for efficient code.<br/>
 A <i>docker</i> file is provided to create a build environment.</br>
@@ -110,13 +110,13 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 |-------------------|-------------------|------------------------------------------------|
 | **Slave ID**      | `44`              | The device address is 44 (decimal) by default  |
 | **Baud rate**     | `9600`            | The device talks at 9600 by default            |
-| **Serial setup**  | `8N1`                     | 8bits, no parity and 1 stop bit                |
+| **Serial setup**  | `8N1`             | 8bits, no parity and 1 stop bit                |
 
 2. Start the 'Relay Guarian' application, and select 'Recovery' from the menu.
 3. Configure the device as required
 4. Apply the new configuration and reset the device
 
-**Note**: When activating the recovery mode, all relay operations are maintained.
+> [!NOTE]: When activating the recovery mode, all relay operations are maintained.
 
 # Operation
 
@@ -149,14 +149,14 @@ In normal mode:
 
 The relay coils can be accessed from 0 (Relay 1) upto relay 31.
 Coils can be written and read at will.
-**Note**: The relay may respond differently based on the relay configuration such as
-polarity and deboucing.
+
+> [!WARNING]: The relays may respond differently based on the relay configuration such as polarity and deboucing.
 
 ## Input registers
 
 The registers have been grouped so they can easily be accessed.
 Reserved values reads as 0.
-Only function code 04 is supported.
+Only function code **04** is supported.
 
 ### Device Identification
 
@@ -164,16 +164,15 @@ This registers provides details about the device in use.
 
 | Modbus Address | Hex value | Access | Description         | Value(s)                     |
 |----------------|-----------|--------|:-------------------:|------------------------------|
-| 30001          | 0x0000    | R      | Product ID          | MSB=0x37<br/>LSB=Number of relays [^note] |
+| 30001          | 0x0000    | R      | Product ID          | MSB=Device Identification code <sup>1</sup><br/>LSB=Number of relays <sup>2</sup> |
 | 30002          | 0x0001    | R      | HW version          | MSB=minor, LSB=major         |
 | 30003          | 0x0002    | R      | SW version          | MSB=minor, LSB=major         |
 | 30004          | 0x0003    | R      | Number of relays    | UINT16<br/>1-32              |
 | 30005          | 0x0004    | R      | Number of relay banks | UINT16<br/>1-4             |
 | 30006–30008    | 0x0005–0x0007 | R  | *Reserved*          |                              |
 
-[^note]: A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
-
-The EStop relay is 0x3708. The simple modbus relay is 0x3701.
+* <sup>1</sup> EStop relay code=0x37. Simple modbus code=0x36.
+* <sup>2</sup> A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
 
 ### Status & Monitoring
 
@@ -218,7 +217,7 @@ This address scheme allow addressing up to 32 relays.
 > [!NOTE]
 > Attempts to read a non-available relay will result in a data error.
 
-> [!TIPS]
+> [!TIP]
 > For generic software, the number of available relays and banks can be read in input registers 3 and 4.
 
 ## Holding registers
@@ -226,7 +225,7 @@ This address scheme allow addressing up to 32 relays.
 The holding registers can be read all together. Reserved value reads as 0.
 
 > [!WARNING]
-> Resered values cannot be written and will generate an error.
+> Reserved values cannot be written and will generate an error.
 
 ### Supported function codes
 
@@ -278,11 +277,11 @@ The following configuration is available. By default, all features are off. Thes
 | Bit position | Function | Explanation |
 |--------------|----------|-------------|
 | 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
-| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. [^invnote] |
+| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. <sup>note</sup> |
 | 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
 | 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
 
-[^invnote]: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
+<sup>note</sup>: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
