@@ -67,8 +67,17 @@ The relay output features MOV suppressors for inductive loads.
 The PCB can be placed in a DIN Rail PCB mount. 4 mounting screws can also be used.
 A 3D cover is available to cover the whole PCBs. Together with the DIN rail mount assembly, the module should comply with IP2X.
 
-### Schematic ###
-The schematic and PCB have been edited in KiCAD9.
+### CAD files ###
+
+#### PCBA ####
+
+The following files are available:
+ * The [schematic](hw/modbus_relay.kicad.sch) edited with *KiCAD 9.1*
+ * The [PCB](hw/modbus_relay.kicad.pcb) edited in *KiCAD 9.1*
+ * The [BOM](hw/BOM.md) edited in *KiCAD 9.1*
+
+ #### 3D files ####
+
 
 ## Presentation of the software ##
 The software is build on top of a small framework revolving around a simple reactor pattern.
