@@ -292,18 +292,19 @@ The holding registers can be read all together. Reserved value reads as 0.
 
 The following function codes are supported:
 
-* **03** - [Read Holding Registers](https://www.modbustools.com/modbus.html#function03)<br/>
+* **03** - [Read Holding Registers](https://www.modbustools.com/modbus.html#function03)
 <br/>Reads the values of one or more holding registers.
 <br/>Commonly used to retrieve configuration or control values stored in the device.
-* **06** - [Write Single Register](https://www.modbustools.com/modbus.html#function06)<br/>
+* **06** - [Write Single Register](https://www.modbustools.com/modbus.html#function06)
 <br/>Writes a single value to a specific holding register.
 <br/>Used for updating configuration or control parameters.
+* **16** - [Write Multiplee Registers](https://www.modbustools.com/modbus.html#function16)
+<br/>Writes a whole configuration group at once. See the sub-chapter for details
 
 > [!WARNING]
 > Do no issue the function 04: Read input registers when reading holding registers as the memory addresses of both types overlaps.
 
-
-Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write Multiple Registers) are not supported.
+Other functions codes such as 23 ( Read/Write Multiple Registers) are not supported.
 
 ### Communication Settings
 
@@ -315,6 +316,10 @@ Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write 
 | 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
 | 40005–40006    | 0x0004–0x0005 | R  | *Reserved*          |               |        |
 
+This group can be written with the command **16**, only by writting register 40001 to 40004 in 1 command.
+
+Other combinations will return an error.
+
 ### Power Infeed Configuration
 
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
@@ -324,6 +329,10 @@ Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write 
 | 40011          | 0x000A    | RW     | Ingress Max voltage | 300           | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
+This group can be written with the command **16**, only by writting register 40009 to 40011 in 1 command.
+
+Other combinations will return an error.
+
 ### Safety Logic Configuration
 
 | Modbus Address | Hex Value | Access | Description                                | Factory Value | Values |
@@ -332,6 +341,10 @@ Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write 
 | 40018          | 0x0011    | RW     | EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
 | 40019          | 0x0012    | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
 | 40020–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
+
+This group can be written with the command **16**, only by writting register 40017 to 40019 in 1 command.
+
+Other combinations will return an error.
 
 ### Relay Configuration (Bank 0: Relays 1–8)
 
@@ -351,17 +364,16 @@ The following configuration is available. By default, all features are off. Thes
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
 | 40025          | 0x0018    | RW     | Relay 1 config      | RCFG   |
-| 40026          | 0x0019    | RW     | Relay 2 config      | RCFG   |
-| 40027          | 0x001A    | RW     | Relay 3 config      | RCFG   |
-| 40028          | 0x001B    | RW     | Relay 4 config      | RCFG   |
-| 40029          | 0x001C    | RW     | Relay 5 config      | RCFG   |
-| 40030          | 0x001D    | RW     | Relay 6 config      | RCFG   |
-| 40031          | 0x001E    | RW     | Relay 7 config      | RCFG   |
-| 40032          | 0x001F    | RW     | Relay 8 config      | RCFG   |
+| 40025 + n      | 0x0018 + n| RW     | Relay 1 + n config  | RCFG   |
+| 40056          | 0x0038    | RW     | Relay 32 config     | RCFG   |
 
-**Next Bank (Relays 32–): 40121–40128**
-(Repeat the above pattern for additional banks.)
+> [!WARNING]
+> Read or writing a non-supported relay will generate an error.
 
+This group can be written with the command **16**, only by writting register 40025 to the register of the last relay.
+So, for a 3 relays devices, you must write registers 40025, 40026 and 40027 (3 registers) in the same transaction.
+
+Any other combinations will return an error.
 
 #### Combined settings table
 
