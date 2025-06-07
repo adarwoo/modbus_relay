@@ -266,10 +266,10 @@ Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write 
 
 | Modbus Address | Hex Value | Access | Description                                | Factory Value | Values |
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
-| 40031          | 0x001E    | RW     | EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
-| 40032          | 0x001F    | RW     | EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
-| 40033          | 0x0020    | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
-| 40034–40040    | 0x0021–0x0027 | R  | *Reserved*                                |               |        |
+| 40017          | 0x0010    | RW     | EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
+| 40018          | 0x0011    | RW     | EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
+| 40019          | 0x0012    | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 40020–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
 
 ### Relay Configuration (Bank 0: Relays 1–8)
 
@@ -288,14 +288,14 @@ The following configuration is available. By default, all features are off. Thes
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
-| 40101          | 0x0064    | RW     | Relay 1 config      | RCFG   |
-| 40102          | 0x0065    | RW     | Relay 2 config      | RCFG   |
-| 40103          | 0x0066    | RW     | Relay 3 config      | RCFG   |
-| 40104          | 0x0067    | RW     | Relay 4 config      | RCFG   |
-| 40105          | 0x0068    | RW     | Relay 5 config      | RCFG   |
-| 40106          | 0x0069    | RW     | Relay 6 config      | RCFG   |
-| 40107          | 0x006A    | RW     | Relay 7 config      | RCFG   |
-| 40108          | 0x006B    | RW     | Relay 8 config      | RCFG   |
+| 40025          | 0x0018    | RW     | Relay 1 config      | RCFG   |
+| 40026          | 0x0019    | RW     | Relay 2 config      | RCFG   |
+| 40027          | 0x001A    | RW     | Relay 3 config      | RCFG   |
+| 40028          | 0x001B    | RW     | Relay 4 config      | RCFG   |
+| 40029          | 0x001C    | RW     | Relay 5 config      | RCFG   |
+| 40030          | 0x001D    | RW     | Relay 6 config      | RCFG   |
+| 40031          | 0x001E    | RW     | Relay 7 config      | RCFG   |
+| 40032          | 0x001F    | RW     | Relay 8 config      | RCFG   |
 
 **Next Bank (Relays 32–): 40121–40128**
 (Repeat the above pattern for additional banks.)
