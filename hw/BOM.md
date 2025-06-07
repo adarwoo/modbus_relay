@@ -30,7 +30,6 @@
 | F1-F2                                           | 2   | Murata NFM61R           | SMD                           |
 | J10                                             | 1   | Header 2x3              | Pitch 0.1"                    |
 | RV1-RV4                                         | 4   | MOV 471K                | Pitch 7mm                     |
----
 | H1-H4                                           | 4   | Spacers 3mm / Ø 16mm    | To print                      |
 | K2-K4                                           | 3   | Relay Muster SiSF212 24V| Through                       |
 | K1                                              | 1   | Relay 5V DPDT Shrack    | PE014005                      |
