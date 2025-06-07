@@ -64,7 +64,8 @@ The jitter on the RS485 is almost null, and all replies are instantanous (4ms de
 
 A python scripts is used to generates the final source for the modbus functions.
 
-> [^TIPS]: This project could be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
+> [!TIP]
+> This project could be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
 
 ## Application software
 The application software is written in C++23 as it uses meta programming, constant expressions and concepts for efficient code.<br/>
@@ -116,7 +117,8 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 3. Configure the device as required
 4. Apply the new configuration and reset the device
 
-> [!NOTE]: When activating the recovery mode, all relay operations are maintained.
+> [!NOTE]
+> When activating the recovery mode, all relay operations are maintained.
 
 # Operation
 
@@ -150,7 +152,8 @@ In normal mode:
 The relay coils can be accessed from 0 (Relay 1) upto relay 31.
 Coils can be written and read at will.
 
-> [!WARNING]: The relays may respond differently based on the relay configuration such as polarity and deboucing.
+> [!WARNING]
+> The relays may respond differently based on the relay configuration such as polarity and deboucing.
 
 ## Input registers
 
@@ -190,10 +193,10 @@ This registers provides details about the device in use.
 
 ### Relay Diagnostics & Stats
 
-*Note:* The registers are organised by banks of upto 8 relays.
-If variants of the board are created with more than 8 relays, simply add another
-table of 24 registers.
-This address scheme allow addressing up to 32 relays.
+> [!NOTE]
+> The registers are organised by banks of upto 8 relays.
+> If variants of the board are created with more than 8 relays, simply add another table of 24 registers.
+> This address scheme allow addressing up to 32 relays.
 
 | Modbus Address | Hex value | Access | Description                | Values |
 |----------------|-----------|--------|:--------------------------:|--------|
@@ -231,10 +234,10 @@ The holding registers can be read all together. Reserved value reads as 0.
 
 The following function codes are supported:
 
-- 03 - Read Holding Registers
+- **03 - Read Holding Registers**<br/>
 Reads the values of one or more holding registers.
 Commonly used to retrieve configuration or control values stored in the device.
-- 06 - Write Single Register
+- **06 - Write Single Register**<br/>
 Writes a single value to a specific holding register.
 Used for updating configuration or control parameters.
 
@@ -311,10 +314,10 @@ The following table illustrates the effect of the invert and default settings:
 
 ---
 
-**Notes:**
-- All relay diagnostics and counters are grouped in blocks of 8 for efficient Modbus access.
-- To add more relays, simply add another bank of 8 at the next available block.
-- Control registers are write-only and can be mapped to holding registers or coils as appropriate for your Modbus implementation.
+> [!NOTE]
+> 1. All relay diagnostics and counters are grouped in blocks of 8 for efficient Modbus access.
+> 2. To add more relays, simply add another bank of 8 at the next available block.
+> 3. Control registers are write-only and can be mapped to holding registers or coils as appropriate for your Modbus implementation.
 
 ## Configuring the device
 The factory default communication settings for the relay are:
@@ -335,8 +338,10 @@ A value of zero (default) turns off the feature.
 
 ## Troubleshooting
 ### Cannot Communicate with Device
-- Ensure the device is in **configuration mode** or responding to the correct **Device ID**.
-- Check baud rate, parity, and stop bit settings.
+- If the modbus LEDs are flickering, make sure the Relay Guarian and relay share the same settings.
+- Active the recovery mode on the device and in Guardian Relay
+- If no communication is established, check the serial adapter communication port
+- Check the wriring. Modbus pins cannot be swapped.
 
 ### Lost Device ID
 1. Send a valid broadcast frame to enter configuration mode.
@@ -345,13 +350,6 @@ A value of zero (default) turns off the feature.
 ### Relay Does Not Respond
 - Verify relay default positions and inversion settings in the holding registers.
 - Check the watchdog timeout setting to ensure it isn’t triggering prematurely.
-
----
-
-## Notes
-- Configuration mode is only accessible during the 2-second boot window.
-- For security and reliability, avoid using **Device ID 0** for normal operations.
-- Always validate CRC and frame format for successful communication.
 
 ---
 
