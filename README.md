@@ -1,13 +1,12 @@
-# Modbus Relay #
-![modbus_rtu](https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664)
+# Modbus Relay with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"> #
 
-This project is a fully working MODBUS RTU triple Relay, aimed at a CNC or equivalent.
-Beside the relay switching functions it also includes the control of the EStop on CNC.
+This project features is a MODBUS RTU relays controller, which includes failsafe mode and an EStop.
+It is aimed for industrial systems such as a CNC or equivalent.
 
-The project comes complete with schematic, PCB, 3D part, artwork and source code.
+The project comes complete with documentation, schematic, PCB, 3D part, artwork and source code.
 
-**Features:**
-1. Standard DIN Rail mountable PCB size
+** Features summary **
+1. Standard DIN Rail mountable PCB
 2. 3 relays - 9.4A 250VAC per output
 3. Operational integrity minded
    * Uses a safety relay with force conduits and read back
@@ -27,31 +26,45 @@ The project comes complete with schematic, PCB, 3D part, artwork and source code
    * Running time
    * Fault codes
 
-** Presentation of the hardware **
+## Presentation of the hardware ##
+
+<div style="text-align: center; position: relative;">
+  <img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" width="300" style="display: inline-block;">
+  <span style="position: absolute; right: 0; font-style: italic;">View of the PCB in the DIN Rail case</span>
+</div>
+
 At the core of the relay is an AVR Tiny3227, an automotive grade MPU designed for harsh environment.
+The MPU is clocked using the internal calibrated RC clock at 20MHz.
+
 The relays are SISF brand used in safety critical applications.
 They feature a forced conduit (so all contacts are driven by the same bar) and a dedicated read-back contact.
-This allow to valdate the correct relay operation.
-The modbus interface used a RS485 driver LTC1785 or equivalent.
-The PCB can be placed in a DIN Rail PCB mount. 4 mounting screws can also be used.
-A 3D cover is available to remove access to the contacts.
+This allow validating the correct relay operations.
+The relay are driven by small MOSFET. The read back features a contact scrubbing circuit as recommended by the manufacturer.
 
+The modbus interface uses a RS485 driver LTC1785A (which features short protection) and transient suppressors.
+
+The relay output features MOV suppressors for inductive loads.
+
+The PCB can be placed in a DIN Rail PCB mount. 4 mounting screws can also be used.
+A 3D cover is available to cover the whole PCBs. Together with the DIN rail mount assembly, the module should comply with IP2X.
+
+### Schematic ###
 The schematic and PCB have been edited in KiCAD9.
 
-** Presentation of the software **
+## Presentation of the software ##
 The software is build on top of a small framework revolving around a simple reactor pattern.
 The reactor allow for an arbitrary function to be notified from any context, and will execute when the CPU become available.
 A simple priority system allow for reactor functions to be called in priority (to process data in a register).
-The over computing time of any reactor function is measured, so the worse case latency is known.
-The system does handle all asynchronous events in realtime with no delay.
-The jitter on the RS485 is null, and all replies are instantanous (4ms delay to allow for proper end of frame detection).
 
-The modbus registers are described in this document.
-A python scripts generates the final source for the modbus funtions.
-This project can be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
+A dedicated reactor pin allows measuring the worse compute time for any reactor function, which in turn, determine the worse
+case latency. This allow garanteeing a real time operation throughout.
+As such, the system does handle all asynchronous events in realtime with no delay, including all Modbus transaction, even at 115200 Bauds.
+The jitter on the RS485 is almost null, and all replies are instantanous (4ms delay to allow for proper end of frame detection).
 
-<img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" width="500">
-View of the PCB in the DIN Rail case
+A python scripts is used to generates the final source for the modbus functions.
+
+> [^TIPS]: This project could be reused for other Modbus devices. A modbus interface generator is provided that makes adding modbus commands simple.
+
 
 ## Application software
 The application software is written in C++23 as it uses meta programming, constant expressions and concepts for efficient code.<br/>
@@ -142,30 +155,39 @@ polarity and deboucing.
 ## Input registers
 
 The registers have been grouped so they can easily be accessed.
+Reserved values reads as 0.
+Only function code 04 is supported.
 
 ### Device Identification
 
-| Zero-Based | Modbus Address | Access | Description | Value(s) |
-|------------|---------------|--------|--------------|----------|
-| 0          | 30001         | R      | Product ID   | 0x3701*  |
-| 1          | 30002         | R      | HW version   | MSB=minor, LSB=major |
-| 2          | 30003         | R      | SW version   | MSB=minor, LSB=major |
-| 3–7        | 30004–30008   | —      | *Reserved*   |          |
+This registers provides details about the device in use.
+
+| Modbus Address | Hex value | Access | Description         | Value(s)                     |
+|----------------|-----------|--------|:-------------------:|------------------------------|
+| 30001          | 0x0000    | R      | Product ID          | MSB=0x37<br/>LSB=Number of relays [^note] |
+| 30002          | 0x0001    | R      | HW version          | MSB=minor, LSB=major         |
+| 30003          | 0x0002    | R      | SW version          | MSB=minor, LSB=major         |
+| 30004          | 0x0003    | R      | Number of relays    | UINT16<br/>1-32              |
+| 30005          | 0x0004    | R      | Number of relay banks | UINT16<br/>1-4             |
+| 30006–30008    | 0x0005–0x0007 | R  | *Reserved*          |                              |
+
+[^note]: A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
 
 The EStop relay is 0x3708. The simple modbus relay is 0x3701.
 
 ### Status & Monitoring
 
-| Zero-Based | Modbus Address | Access | Description                 | Values |
-|------------|---------------|--------|-----------------------------|--------|
-| 8          | 30008         | R      | Current status              | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
-| 9-10       | 30010–40011   | R      | Running minutes (32-bit)    | High word at 40010, Low word at 40011 |
-| 11         | 30012         | R      | Current infeed voltage      | 1/10 volts |
-| 12         | 30013         | R      | EStop root cause            | 0=Normal operation<br/>1=faulty relay<br/>2=modbus watchdog<br/>3=voltage monitor<br/>4=command |
-| 13         | 30014         | R      | Given command diagnostic code | Diagnostic code given with EStop command |
-| 14         | 30015         | R      | Infeed minimum voltage      | Infeed voltage in 1/10th of volts or 0 |
-| 15         | 30016         | R      | Infeed maximum voltage      | Infeed voltage in 1/10th of volts or 0 |
-| 16-23      | 30017–30042   | —      | *Reserved*                  |        |
+| Modbus Address | Hex value | Access | Description                 | Values                        |
+|----------------|-----------|--------|-----------------------------|-------------------------------|
+| 30009          | 0x0008    | R      | Current status              | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
+| 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30012          | 0x000B    | R      | Current infeed voltage AC   | 1/10 volts<br/>0-3000         |
+| 30013          | 0x000C    | R      | Current infeed voltage DC   | 1/10 volts<br/>0-3000         |
+| 30014          | 0x000D    | R      | EStop root cause            | 0=Normal operation<br/>1=faulty relay<br/>2=Modbus watchdog<br/>3=Voltage monitor<br/>4=Command |
+| 30015          | 0x000E    | R      | Given command diagnostic code | Diagnostic code given with EStop command |
+| 30016          | 0x000F    | R      | Infeed minimum voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 30017          | 0x0010    | R      | Infeed maximum voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
 ### Relay Diagnostics & Stats
 
@@ -174,76 +196,82 @@ If variants of the board are created with more than 8 relays, simply add another
 table of 24 registers.
 This address scheme allow addressing up to 32 relays.
 
-| Zero-Based | Modbus Address | Access | Description                | Values |
-|------------|----------------|--------|----------------------------|--------|
-| 24         | 30025          | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty |
-| 25         | 30026          | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
-| 26         | 30027          | R      | Relay 3 diagnostic         | 0=OK<br/>1=Faulty |
-| 27         | 30028          | R      | Relay 4 diagnostic         | 0=OK<br/>1=Faulty |
-| 28         | 30029          | R      | Relay 5 diagnostic         | 0=OK<br/>1=Faulty |
-| 29         | 30030          | R      | Relay 6 diagnostic         | 0=OK<br/>1=Faulty |
-| 30         | 30031          | R      | Relay 7 diagnostic         | 0=OK<br/>1=Faulty |
-| 31         | 30032          | R      | Relay 8 diagnostic         | 0=OK<br/>1=Faulty |
-| 32-33      | 30033–30034    | R      | Relay 1 number of cycles (32-bit) |      |
-| 34-35      | 30035–30036    | R      | Relay 2 number of cycles (32-bit) |      |
-| 36-37      | 30037–30038    | R      | Relay 3 number of cycles (32-bit) |      |
-| 38-39      | 30039–30040    | R      | Relay 4 number of cycles (32-bit) |      |
-| 40-41      | 30041–30042    | R      | Relay 5 number of cycles (32-bit) |      |
-| 42-43      | 30043–30044    | R      | Relay 6 number of cycles (32-bit) |      |
-| 44-45      | 30045–30046    | R      | Relay 7 number of cycles (32-bit) |      |
-| 46-47      | 30047–30048    | R      | Relay 8 number of cycles (32-bit) |      |
+| Modbus Address | Hex value | Access | Description                | Values |
+|----------------|-----------|--------|:--------------------------:|--------|
+| 30025          | 0x0018    | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty |
+| 30026          | 0x0019    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
+| 30027          | 0x001A    | R      | Relay 3 diagnostic         | 0=OK<br/>1=Faulty |
+| 30028          | 0x001B    | R      | Relay 4 diagnostic         | 0=OK<br/>1=Faulty |
+| 30029          | 0x001C    | R      | Relay 5 diagnostic         | 0=OK<br/>1=Faulty |
+| 30030          | 0x001D    | R      | Relay 6 diagnostic         | 0=OK<br/>1=Faulty |
+| 30031          | 0x001E    | R      | Relay 7 diagnostic         | 0=OK<br/>1=Faulty |
+| 30032          | 0x001F    | R      | Relay 8 diagnostic         | 0=OK<br/>1=Faulty |
+| 30033 (+1)     | 0x0020 (+1)| R     | Relay 1 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30035 (+1)     | 0x0022 (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30037 (+1)     | 0x0024 (+1)| R     | Relay 3 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30039 (+1)     | 0x0026 (+1)| R     | Relay 4 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30041 (+1)     | 0x0028 (+1)| R     | Relay 5 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30043 (+1)     | 0x002A (+1)| R     | Relay 6 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30045 (+1)     | 0x002C (+1)| R     | Relay 7 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30047 (+1)     | 0x002E (+1)| R     | Relay 8 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+
+> [!NOTE]
+> Attempts to read a non-available relay will result in a data error.
+
+> [!TIPS]
+> For generic software, the number of available relays and banks can be read in input registers 3 and 4.
 
 ## Holding registers
 
 The holding registers can be read all together. Reserved value reads as 0.
 
+> [!WARNING]
+> Resered values cannot be written and will generate an error.
+
+### Supported function codes
+
+The following function codes are supported:
+
+- 03 - Read Holding Registers
+Reads the values of one or more holding registers.
+Commonly used to retrieve configuration or control values stored in the device.
+- 06 - Write Single Register
+Writes a single value to a specific holding register.
+Used for updating configuration or control parameters.
+
+Other functions codes such as 16 (Write Multiple Registers) and 23 ( Read/Write Multiple Registers) are not supported.
+
 ### Communication Settings
 
-| Zero-Based | Modbus Address | Access | Description       | Factory Value | Values |
-|------------|---------------|--------|--------------------|---------------|--------|
-| 0         | 40011         | RW     | Device address      | 44            | [1-127] |
-| 1         | 40012         | RW     | Baud rate selection | 96            | 3=300 Baud<br/>6=600 Baud<br/>12=1200 Baud<br/>24=2400 Baud<br/>48=4800 Baud<br/>96=9600 Baud<br/>192=19200 Baud<br/>364=36400 Baud<br/>576=57600 Baud<br/>1152=115200 Baud |
-| 2         | 40013         | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
-| 3         | 40014         | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
-| 4–7       | 40015–40020   | —      | *Reserved*          |               |        |
+| Modbus Address | Hex Value | Access | Description        | Factory Value | Values |
+|----------------|-----------|--------|--------------------|---------------|--------|
+| 40001          | 0x0000    | RW     | Device address      | 44            | [1-127] |
+| 40002          | 0x0001    | RW     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
+| 40003          | 0x0002    | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
+| 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
+| 40005–40006    | 0x0004–0x0005 | R  | *Reserved*          |               |        |
 
 ### Power Infeed Configuration
 
-| Zero-Based | Modbus Address | Access | Description         | Factory Value | Values |
-|------------|---------------|--------|---------------------|---------------|--------|
-| 8          | 40021         | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 9          | 40022         | RW     | Ingress Min voltage | 10            | 1/10 volts [100-3000] |
-| 10         | 40023         | RW     | Ingress Max voltage | 300           | 1/10 volts [100-3000] |
-| 11-15      | 40024–40030   | —      | *Reserved*          |               |        |
+| Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
+|----------------|-----------|--------|---------------------|---------------|--------|
+| 40009          | 0x0008    | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
+| 40010          | 0x0009    | RW     | Ingress Min voltage | 10            | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Ingress Max voltage | 300           | 1/10 volts [100-3000] |
+| 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
 ### Safety Logic Configuration
 
-| Zero-Based | Modbus Address | Access | Description                                 | Factory Value | Values |
-|------------|---------------|--------|---------------------------------------------|---------------|--------|
-| 16         | 40031         | RW     | EStop on undervoltage                       | 1             | 0=no<br/>1=yes |
-| 17         | 40032         | RW     | EStop on overvoltage                        | 1             | 0=no<br/>1=yes |
-| 18         | 40033         | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
-| 19-23      | 40034–40040   | —      | *Reserved*                                  |               |        |
-
----
+| Modbus Address | Hex Value | Access | Description                                | Factory Value | Values |
+|----------------|-----------|--------|-------------------------------------------|---------------|--------|
+| 40031          | 0x001E    | RW     | EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
+| 40032          | 0x001F    | RW     | EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
+| 40033          | 0x0020    | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 40034–40040    | 0x0021–0x0027 | R  | *Reserved*                                |               |        |
 
 ### Relay Configuration (Bank 0: Relays 1–8)
 
-| Zero-Based | Modbus Address | Access | Description         | Factory Value | Values |
-|------------|---------------|--------|---------------------|---------------|--------|
-| 24        | 40101         | RW     | Relay 1 config      | 0           |     |
-| 25        | 40102         | RW     | Relay 2 config      | 0           | ...    |
-| 26        | 40103         | RW     | Relay 3 config      | 0           | ...    |
-| 27        | 40104         | RW     | Relay 4 config      | 0           | ...    |
-| 28        | 40105         | RW     | Relay 5 config      | ...           | ...    |
-| 29        | 40106         | RW     | Relay 6 config      | ...           | ...    |
-| 30        | 40107         | RW     | Relay 7 config      | ...           | ...    |
-| 31        | 40108         | RW     | Relay 8 config      | ...           | ...    |
-
-**Next Bank (Relays 32–): 40121–40128**
-(Repeat the above pattern for additional banks.)
-
-#### Relay configuration values
+#### RCFG / Relay configuration values
 
 The following configuration is available. By default, all features are off. These changes are all permanent.
 
@@ -256,6 +284,21 @@ The following configuration is available. By default, all features are off. Thes
 
 [^invnote]: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
 
+| Modbus Address | Hex Value | Access | Description         | Values |
+|----------------|-----------|--------|---------------------|--------|
+| 40101          | 0x0064    | RW     | Relay 1 config      | RCFG   |
+| 40102          | 0x0065    | RW     | Relay 2 config      | RCFG   |
+| 40103          | 0x0066    | RW     | Relay 3 config      | RCFG   |
+| 40104          | 0x0067    | RW     | Relay 4 config      | RCFG   |
+| 40105          | 0x0068    | RW     | Relay 5 config      | RCFG   |
+| 40106          | 0x0069    | RW     | Relay 6 config      | RCFG   |
+| 40107          | 0x006A    | RW     | Relay 7 config      | RCFG   |
+| 40108          | 0x006B    | RW     | Relay 8 config      | RCFG   |
+
+**Next Bank (Relays 32–): 40121–40128**
+(Repeat the above pattern for additional banks.)
+
+
 #### Combined settings table
 
 The following table illustrates the effect of the invert and default settings:
@@ -265,7 +308,7 @@ The following table illustrates the effect of the invert and default settings:
 |0	               | 0	      |  Relay OFF                |
 |1	               | 0	      |  Relay ON                 |
 |0                | 1         |	Relay ON                 |
-|1                | 1          |	Relay OFF                |
+|1                | 1         |	Relay OFF                |
 
 ---
 
