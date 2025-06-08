@@ -13,10 +13,9 @@
 #include "infeed.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
-#include "config.hpp"
-#include "datagram.hpp"
+#include "net.hpp"
 
-namespace modbus {
+namespace net {
    using namespace asx::modbus;
 
    // Create an alias for the static method
@@ -207,6 +206,17 @@ namespace modbus {
       infeed::reset_min_max();
    }
 
+   bool locate_device = false;
+
+   void on_locate(uint8_t onoff) {
+      locate_device = static_cast<bool>(onoff);
+   }
+
+   // Corresponding accessor API
+   bool get_locate_device_status() {
+      return locate_device;
+   }
+
    void on_factory_reset() {
       config::reset_config();
    }
@@ -227,6 +237,11 @@ namespace modbus {
    }
 
    void init() {
+      // Set the modbus install ID
+      dg::set_device_id(config::get_config().address);
+
+      // Initialise the modbus slave template API. Overrides the UART settings
+      modbus_slave::init();
    }
 
-} // End of namespace modbus
+} // End of namespace net

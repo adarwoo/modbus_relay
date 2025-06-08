@@ -1,14 +1,22 @@
 #pragma once
 
+#include <asx/uart.hpp>
 #include <asx/modbus_rtu.hpp>
 
+#include "config.hpp"
 #include "datagram.hpp"
-#include "conf_uart.hpp"
 
-namespace modbus {
+namespace net {
    // All APIs declared in datagram.hpp
-   using Uart = asx::uart::Uart<1, uart::UartRunTimeConfig>;
+   using Uart = asx::uart::Uart<1, config::UartRunTimeConfig>;
 
    // Our relay modbus rtu slave templated class
    using modbus_slave = asx::modbus::Slave<Datagram, Uart>;
-} // End of namespace modbus
+
+   // Get modbus control information
+   bool get_locate_device_status();
+
+   // Initialise the network
+   void init();
+
+} // End of namespace net

@@ -3,7 +3,7 @@ from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
     "buffer_size": 127,
-    "namespace": "modbus",
+    "namespace": "net",
     "on_received": "on_payload_received",
     "slave": True,
 
@@ -37,6 +37,7 @@ Modbus({
 
         "on_estop_set" : [(u8, "estop_type"), (u8, "diag")],
         "on_measurement_reset" : [],
+        "on_locate" : [(u8, "onoff")],
         "on_factory_reset" : [],
         "on_reset" : []
     },
@@ -98,8 +99,9 @@ Modbus({
         # Device control
         (WRITE_SINGLE_REGISTER,  u16(0x64), u8([0,0x11,0x22,0xff]), u8(), "on_estop_set"),
         (WRITE_SINGLE_REGISTER,  u16(0x65), u16(0xAA55),                  "on_measurement_reset"),
-        (WRITE_SINGLE_REGISTER,  u16(0x66), u16(0xAA55),                  "on_factory_reset"),
-        (WRITE_SINGLE_REGISTER,  u16(0x67), u16(0xAA55),                  "on_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x66), u16(0,1),                     "on_locate"),
+        (WRITE_SINGLE_REGISTER,  u16(0x67), u16(0xAA55),                  "on_factory_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x68), u16(0xAA55),                  "on_reset"),
     ],
 })
 

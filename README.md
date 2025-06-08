@@ -520,9 +520,10 @@ This group of register allow controlling the EStop and the relay.
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
 | 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
-| 40102          | 0x0065    | W      | Reset measurements. Allow re-measuring min and max | 0xAA55  |
-| 40103          | 0x0066    | W      | Reset configuration to factory default and reboot  | 0xAA55 |
-| 40104          | 0x0067    | W      | Reset the device    | 0xAA55  |
+| 40102          | 0x0065    | W      | Zero measurements. Allow re-measuring min and max | 0xAA55  |
+| 40103          | 0x0066    | W      | Locate device. Fast flash all the LEDs to locate the device | 0 = Turn off<br/>1 = Turn on |
+| 40104          | 0x0067    | W      | Reset configuration to factory default and reboot  | 0xAA55 |
+| 40105          | 0x0068    | W      | Reset the device    | 0xAA55  |
 
 **Note <sup>1</sup>** : See the format below
 

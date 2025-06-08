@@ -12,6 +12,7 @@
 #include "infeed.hpp"
 #include "config.hpp"
 #include "datagram.hpp"
+#include "net.hpp"
 #include "estop.hpp"
 
 using namespace std::chrono;
@@ -24,11 +25,6 @@ namespace relay {
    }
 }
 
-// All APIs declared in datagram.hpp
-using Uart = asx::uart::Uart<1, config::UartRunTimeConfig>;
-
-// Our relay modbus rtu slave templated class
-using modbus_slave = asx::modbus::Slave<modbus::Datagram, Uart>;
 
 int main()
 {
@@ -52,13 +48,8 @@ int main()
    // Ready the switch
    sw::init(asx::reactor::null);
 
-   // Initialise the modbus slave template API. Overrides the UART settings
-   modbus_slave::init();
-
-   // Reset the LEDs to the actual state after 2 seconds
-   reactor::bind([]() {
-      led::resume();
-   }).delay(2s);
+   // Ready the modbus handlers and set the datagram ID
+   net::init();
 
    // Run the reactor/scheduler
    reactor::run();
