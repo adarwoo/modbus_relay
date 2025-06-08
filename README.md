@@ -321,6 +321,7 @@ This group of registers allow configuring the communication settings of the rela
 > [!NOTE]
 > Function ~~**06: Write single register**~~ is not availble for this group.
 > You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
+
 > [!WARNING]
 > Once the command is acknowledged, the relay will immediatly start using the new settings.
 
