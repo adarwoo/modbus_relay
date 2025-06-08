@@ -5,6 +5,8 @@
 #include <stats.hpp>
 
 #include "modbus.hpp"
+#include "estop.hpp"
+#include "infeed.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
 
@@ -66,177 +68,128 @@ namespace relay {
       Datagram::set_size(6);
    }
 
-   void on_read_info(uint8_t index, uint8_t qty) {
+   /** Read any of the input register */
+   void on_read_inputs(uint8_t addr, uint8_t count) {
       Datagram::pack<uint8_t>(qty*2);
 
       while ( qty-- ) {
          switch(index++) {
-         case 0: Datagram::pack( DEVICE_ID ); break;
-         case 1: Datagram::pack( HW_VERSION ); break;
-         case 2: Datagram::pack( FW_VERSION ); break;
+         case 0x00: Datagram::pack( DEVICE_ID ); break;
+         case 0x01: Datagram::pack( HW_VERSION ); break;
+         case 0x02: Datagram::pack( FW_VERSION ); break;
+         case 0x03: Datagram::pack( NUMBER_OF_RELAYS ); break;
+         case 0x04: Datagram::pack( NUMBER_OF_BANKS ); break;
+
+         case 0x08: Datagram::pack( estop::get_status_value() ); break;
+
+         case 0x09: Datagram::pack( stat::get_running_minutes() >> 16 ); break;
+         case 0x0A: Datagram::pack( stat::get_running_minutes() & 0xFFFF ); break;
+         case 0x0B: Datagram::pack( infeed::get_ac_voltage() ); break;
+         case 0x0C: Datagram::pack( infeed::get_dc_voltage() ); break;
+         case 0x0D: Datagram::pack( estop::get_root_cause_value() ); break;
+         case 0x0E: Datagram::pack( estop::get_diagnostic_code() ); break;
+
+         case 0x0F: Datagram::pack( infeed::get_min_voltage() ); break;
+         case 0x10: Datagram::pack( infeed::get_max_voltage() ); break;
+
+         case 0x18: Datagram::pack( relay::is_ok(0) ); break;
+         case 0x19: Datagram::pack( relay::is_ok(1) ); break;
+         case 0x1A: Datagram::pack( relay::is_ok(2) ); break;
+
+         case 0x20: Datagram::pack( relay::get_cycle(0) >> 16 ); break;
+         case 0x21: Datagram::pack( relay::get_cycle(0) & 0xFFFF ); break;
+         case 0x22: Datagram::pack( relay::get_cycle(1) >> 16 ); break;
+         case 0x23: Datagram::pack( relay::get_cycle(1) & 0xFFFF ); break;
+         case 0x24: Datagram::pack( relay::get_cycle(2) >> 16 ); break;
+         case 0x25: Datagram::pack( relay::get_cycle(3) & 0xFFFF ); break;
 
          default:
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
+            Datagram::pack(uint16_t{0});
          }
       }
    }
 
-   void on_read_stats(uint8_t index, uint8_t qty) {
-      Datagram::pack<uint8_t>(qty*2);
+   void on_read_holdings(uint8_t index, uint8_t qty) {
+      using namespace datagram;
 
-      while ( qty ) {
-         switch(index++) {
-         case 200: Datagram::pack( stat::get_running_minutes() ); break;
-         case 201: Datagram::pack( stat::get_op_count(0) ); break;
-         case 202: Datagram::pack( stat::get_op_count(1) ); break;
-         case 203: Datagram::pack( stat::get_op_count(2) ); break;
-         }
-         qty -= 2;
-      }
-   }
-
-   void on_read_config(uint8_t index, uint8_t qty) {
-      Datagram::pack<uint8_t>(qty*2);
+      pack<uint8_t>(qty*2);
+      auto &cfg = config::get_config();
 
       while ( qty-- ) {
          switch(index++) {
-         case 100: Datagram::pack( (uint16_t)get_config().address ); break;
-         case 101: Datagram::pack( get_config().baud ); break;
-         case 102: Datagram::pack( (uint16_t)get_config().parity ); break;
-         case 103: Datagram::pack( (uint16_t)get_config().stopbits ); break;
+         case 0x00: pack<uint16_t>( cfg.address ); break;
+         case 0x01: pack<uint16_t)( cfg.baud ); break;
+         case 0x02: pack<uint16_t)( cfg.parity ); break;
+         case 0x03: pack<uint16_t)( cfg.stopbits ); break;
 
-         case 104: Datagram::pack( (uint16_t)get_config().watchdog ); break;
+         case 0x08: pack<uint16_t>( cfg.infeed_type ); break;
+         case 0x09: pack<uint16_t>( cfg.infeed_type == infeed::Type::dc ? cfg.infeed_dc_min : cfg.infeed_ac_min ); break;
+         case 0x0A: pack<uint16_t>( cfg.infeed_type == infeed::Type::dc ? cfg.infeed_dc_max : cfg.infeed_ac_max ); break;
 
-         case 105: Datagram::pack( (uint16_t)get_config().frequency ); break;
-         case 106: Datagram::pack( (uint16_t)get_config().infeed_dc_min ); break;
-         case 107: Datagram::pack( (uint16_t)get_config().infeed_dc_max ); break;
-         case 108: Datagram::pack( (uint16_t)get_config().infeed_ac_min ); break;
-         case 109: Datagram::pack( (uint16_t)get_config().infeed_ac_max ); break;
+         case 0x10: pack<uint16_t>( cfg.estop_on_undervolt); break;
+         case 0x11: pack<uint16_t>( cfg.estop_on_overvolt); break;
+         case 0x12: pack<uint16_t>( cfg.estop_on_wd); break;
 
-         case 110: Datagram::pack( (uint16_t)get_config().estop_on_wd ); break;
-         case 111: Datagram::pack( (uint16_t)get_config().estop_on_relay ); break;
-         case 112: Datagram::pack( (uint16_t)get_config().estop_on_undervolt ); break;
-         case 113: Datagram::pack( (uint16_t)get_config().estop_on_overvolt ); break;
+         case 0x18: pack<uint16_t>( cfg.relay_config.value[0] ); break;
+         case 0x19: pack<uint16_t>( cfg.relay_config.value[1] ); break;
+         case 0x1A: pack<uint16_t>( cfg.relay_config.value[2] ); break;
          }
       }
    }
 
-   /**
-    * Write a single register address to change the config
-    */
-   void on_write_config(uint8_t index, uint16_t value) {
-      switch(index++) {
-      case 100: // Set the device ID
-         if (value < 1 || value > 127) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_device_id(value);
-         }
-         break;
+   // -------------------------------------------------------------------------
+   // Write holding
+   // -------------------------------------------------------------------------
 
-      case 101: // Set the baud rate (as 1/100th of the actual)
-         if ( is_valid_baudrate(value) ) {
-            set_baud(value);
-         } else {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         }
-         break;
+   void on_write_device_address(uint8_t addr) {
+      config::set_device_id(addr);
+   }
 
-      case 102: // Set the parity
-         if ( value > 2 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_parity(value);
-         }
-         break;
+   void on_write_baud_rate(uint8_t baud) {
+      config::set_baud(baud);
+   }
 
-      case 103: // Set the stop bits
-         if ( value > 2 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_stopbits(value);
-         }
-         break;
+   void on_write_parity(uint8_t parity) {
+      config::set_parity(parity);
+   }
 
-      case 104: // Set the watchdog timeout
-         if ( value < 1 || value > 60 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_watchdog(value);
-         }
-         break;
+   void on_write_stopbits(uint8_t stopbits) {
+      config::set_stopbits(stopbits);
+   }
 
-      case 105: // Set the frequency
-         if ( value != 0 || value != 50 || value != 60 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_frequency(value);
-         }
-         break;
+   void on_write_comms_settings(uint8_t addr, uint8_t baud, uint8_t parity, uint8_t stopbits) {
+      config::set_device_id(addr);
+      config::set_baud(baud);
+      config::set_parity(parity);
+      config::set_stopbits(stopbits);
+   }
 
-      case 106: // Set the infeed DC min
-         if ( value > 100 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_infeed_dc_min(value);
-         }
-         break;
+   void on_write_estop_on_under(uint8_t onoff) {
+      config::set_estop_on_undervolt(static_cast<bool>(onoff));
+   }
 
-      case 107: // Set the infeed DC max
-         if ( value > 120 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_infeed_dc_max(value);
-         }
-         break;
+   void on_write_estop_on_over(uint8_t onoff) {
+      config::set_estop_on_overvolt(static_cast<bool>(onoff));
+   }
 
-      case 108: // Set the infeed AC min
-         if ( value > 250 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_infeed_ac_min(value);
-         }
-         break;
+   void on_write_estop_on_timeout(uint16_t seconds) {
+      config::set_estop_on_wd(seconds);
+   }
 
-      case 109: // Set the infeed AC max
-         if ( value > 250 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_infeed_ac_max(value);
-         }
-         break;
+   void on_write_estop_settings(uint8_t over, uint8_t under, uint8_t timeout) {
+      config::set_estop_on_undervolt(static_cast<bool>(over));
+      config::set_estop_on_overvolt(static_cast<bool>(under));
+      config::set_estop_on_wd(timeout);
+   }
 
-      case 110: // Set the estop on watchdog
-         if ( value > 1 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_estop_on_wd(value);
-         }
-         break;
-      case 111: // Set the estop on relay
-         if ( value > 1 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_estop_on_relay(value);
-         }
-         break;
-      case 112: // Set the estop on undervolt
-         if ( value > 1 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_estop_on_undervolt(value);
-         }
-         break;
-      case 113: // Set the estop on overvolt
-         if ( value > 1 ) {
-            Datagram::reply_error(modbus::error_t::illegal_data_value);
-         } else {
-            set_estop_on_overvolt(value);
-         }
-         break;
-      default:
-         Datagram::reply_error(modbus::error_t::illegal_data_value);
-      }
+   void on_write_single_relay_cfg(uint8_t address, uint8_t conf, uint8_t filter) {
+      config::set_relay_config(address, conf, filter);
+   }
+
+   void on_write_relay_cfgs(uint8_t conf1, uint8_t filter1, uint8_t conf2, uint8_t filter2, uint8_t conf3, uint8_t filter3) {
+      config::set_relay_config(0, conf1, filter1);
+      config::set_relay_config(1, conf2, filter2);
+      config::set_relay_config(2, conf3, filter3);
    }
 
    void on_read_reset() {

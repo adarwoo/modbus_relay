@@ -2,23 +2,46 @@
 from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
-    "buffer_size": 32,
+    "buffer_size": 127,
     "namespace": "relay",
     "on_received": "on_ready_reply",
     "slave": True,
 
     "callbacks": {
-        "on_read_coils"       : [(u8, "addr"), (u8, "qty")],
-        "on_set_single"       : [(u8, "addr"), (u16, "operation")],
-        "on_set_multiple"     : [(u8, "operation")],
-        "on_read_info"        : [(u8, "addr"), (u8, "qty")],
-        "on_read_config"      : [(u8, "addr"), (u8, "qty")],
-        "on_read_stats"       : [(u8, "addr"), (u8, "qty")],
-        "reset_device"        : [],
-        "on_write_config"     : [(u8, "addr"), (u16, "value")],
+        "on_read_coils"             : [(u8, "addr"), (u8, "qty")],
+        "on_set_single"             : [(u8, "addr"), (u16, "operation")],
+        "on_set_multiple"           : [(u8, "operation")],
+
+        "on_read_inputs"            : [(u8, "addr"), (u8, "count")],
+
+        "on_read_holdings"          : [(u8, "addr"), (u8, "count")],
+
+        "on_write_device_address"   : [(u8, "addr")],
+        "on_write_baud_rate"        : [(u8, "baud")],
+        "on_write_parity"           : [(u8, "parity")],
+        "on_write_stopbits"         : [(u8, "stopbits")],
+        "on_write_comms_settings"   : [
+            (u8, "addr"), (u8, "baud"), (u8, "parity"), (u8, "stopbits")
+        ],
+
+        "on_write_estop_on_under"   : [(u8, "onoff")],
+        "on_write_estop_on_over"    : [(u8, "onoff")],
+        "on_write_estop_on_timeout" : [(u16, "timeout")],
+        "on_write_estop_settings"   : [
+            (u8, "over"), (u8, "under"), (u8, "timeout")
+        ],
+
+        "on_write_relay_cfgs"       : [
+            (u8, "conf1"), (u8, "filter1"),
+            (u8, "conf2"), (u8, "filter2"),
+            (u8, "conf3"), (u8, "filter3")
+        ],
+
+        "on_write_single_relay_cfg" : [(u8, "address"), (u8, "conf"), (u8, "filter")]
     },
 
     "device@44": [
+        # Coils operations
         (READ_COILS,            u16(0, 2, alias="addr"),
                                 u16(1, 3, alias="qty"),
                                 "on_read_coils"),
@@ -33,43 +56,48 @@ Modbus({
                                 u8(0, 7, alias="values"),
                                 "on_set_multiple"),
 
-        #   0 (40001): (R)  Product ID
-        #   1 (40002): (R)  HW version
-        #   2 (40003): (R)  SW version
+        # Input registers
+        (READ_INPUT_REGISTERS,  u16(0, 0x2F), u16(1, 0x30), "on_read_inputs"),
 
-        # 100 (40101): (RW) Device address
-        # 101 (40102): (RW) Baud rate selection (1/10 of the baud rate)
-        # 102 (40103): (RW) Parity
-        # 103 (40104): (RW) Stopbits
-        # 104 (40105): (RW) Watchdog for the bus communication : number of seconds without activity
-        # 105 (40106): (RW) Ingress monitor mode 0=DC, 2=AC_50Hz, 3=AC_60Hz
-        # 106 (40107): (RW) Ingress Min DC voltage in volts
-        # 107 (40108): (RW) Ingress Max DC voltage in volts
-        # 108 (40109): (RW) Ingress Min AC voltage in volts
-        # 109 (40110): (RW) Ingress Max AC voltage in volts
-        # 110 (40111): (RW) EStop on communication watchdog
-        # 111 (40112): (RW) EStop on relay
-        # 112 (40113): (RW) EStop on undervoltage
-        # 113 (40114): (RW) EStop on overvoltage
+        ## Holding registers
+        (READ_HOLDING_REGISTERS, u16(0, 0x1A), u16(1,0x1B), "on_read_holdings"),
 
-        # 200 (40101): (R)  Running minutes
-        # 201 (40101): (R)  Relay 0 number of cycles
-        # 202 (40102): (R)  Relay 1 number of cycles
-        # 203 (40103): (R)  Relay 2 number of cycles
+        # Communication settings
+        (WRITE_SINGLE_REGISTER,  u16(0), u16(1,127), "on_write_device_address"),
+        (WRITE_SINGLE_REGISTER,  u16(1), u16(0,9),   "on_write_baud_rate"),
+        (WRITE_SINGLE_REGISTER,  u16(2), u16(0,2),   "on_write_parity"),
+        (WRITE_SINGLE_REGISTER,  u16(3), u16(1,2),   "on_write_stopbits"),
+        (WRITE_MULTIPLE_REGISTERS,
+            u16(0), u16(4), u8(8),
+                u16(1,127),
+                u16(0,9),
+                u16(0,2),
+                u16(1,2),
+            "on_write_comms_settings"
+        ),
 
-        # 300: (W) EStop Write 0x5104 to trigger an estop pulse of 1 second
-        # 400: (W) Factory reset. Erase the memory back to factory settings. Write 0x5043
+        # Power infeed configuration
+        (WRITE_SINGLE_REGISTER,  u16(0x10), u16(0,1), "on_write_estop_on_under"),
+        (WRITE_SINGLE_REGISTER,  u16(0x11), u16(0,1), "on_write_estop_on_over"),
+        (WRITE_SINGLE_REGISTER,  u16(0x12), u16(),    "on_write_estop_on_timeout"),
+        (WRITE_MULTIPLE_REGISTERS,
+            u16(0x10), u16(3), u8(6),
+                u16(0,1),
+                u16(0,1),
+                u16(),
+            "on_write_estop_settings"
+        ),
 
-        (READ_HOLDING_REGISTERS,   u16(0,     2), u16(1, 3), "on_read_info"),
-        (READ_HOLDING_REGISTERS,   u16(100, 110), u16(1, 5), "on_read_config"),
-        (READ_HOLDING_REGISTERS,   u16(200, 203), u16([2,4,6,8]), "on_read_stats"),
-
-        (WRITE_SINGLE_REGISTER,    u16(100, 111), u16(), "on_write_config"),
-
-        #(WRITE_MULTIPLE_REGISTERS, u16(400), u16(2), u8(4), u32(0xDEAD5AFE), "reset_device"),
-
+        # Relay configuration
+        (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u8(0,7), u8(), "on_write_single_relay_cfg"),
+        (WRITE_MULTIPLE_REGISTERS,
+            u16(0x18), u16(3), u8(6),
+                u8(0,7), u8(),
+                u8(0,7), u8(),
+                u8(0,7), u8(),
+            "on_write_relay_cfgs"
+        ),
     ],
-
 })
 
 
