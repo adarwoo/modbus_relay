@@ -30,10 +30,8 @@ The project comes complete with documentation, schematic, PCB, 3D part, artwork 
     - [Coil Registers](#coil-registers)
     - [Input Registers](#input-registers)
     - [Holding Registers](#holding-registers)
-12. [Configuring the Device](#configuring-the-device)
-13. [Using the Watchdog](#using-the-watchdog)
-14. [Troubleshooting](#troubleshooting)
-15. [FMEA – Modbus Relay Board for CNC Safety](#fmea--modbus-relay-board-for-cnc-safety)
+12. [Troubleshooting](#troubleshooting)
+13. [FMEA – Modbus Relay Board for CNC Safety](#fmea--modbus-relay-board-for-cnc-safety)
 
 ---
 
@@ -464,11 +462,11 @@ Other combinations will return an error.
 This group allow configuring the individual relays.
 The value written is RCFG described below.
 
-| Modbus Address | Hex Value | Access | Description         | Values |
-|----------------|-----------|--------|---------------------|--------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | RCFG   |
-| 40025 + n      | 0x0018 + n| RW     | Relay 1 + n config  | RCFG   |
-| 40056          | 0x0038    | RW     | Relay 32 config     | RCFG   |
+| Modbus Address | Hex Value | Access | Description         | Factory default | Values |
+|----------------|-----------|--------|---------------------|------------------|-------|
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| 40025 + n      | 0x0018 + n| RW     | Relay 1 + n config  | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| 40056          | 0x0038    | RW     | Relay 32 config     | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
 
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
@@ -487,6 +485,7 @@ The following configuration is available. By default, all features are off. Thes
 | 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
 | 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. <sup>note</sup> |
 | 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
+| 3            | Mode on fault | If '1', leave the relay as is. If '0', an attempt is made to position the relay to the configured default position |
 | 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
 
 <sup>note</sup>: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
@@ -533,23 +532,6 @@ The following table documents the values to use to control the EStop.
 |--------------|----------|-------------|
 | MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the ESTop could not be reset<br/>0x11 : Pulsed EStop. Create a 1 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a device reset will clear the ESTop (Register 40103) |
 | LSB          | Diagnostic code | A code can be applied to allow investigating the cause of EStop/Reset.<br/>Values: <0-255> |
-
-## Configuring the device
-The factory default communication settings for the relay are:
-- Device address is 44
-- Baud rate is **9600**
-- **8 data bits**
-- **No parity**
-- **1 stop bit** (9600 8N1).
-
-For watchdog configuration, see [Using the Watchdog](#using-the-watchdog).
-
-### Using the watchdog
-The relay has a command watchdog which will release the relays following a period of inactivity.
-Everytime this devices receives a valid modbus command (including holding register read etc.), the watchdog is reset.
-This feature allow for the relays to be atomatically releases if the master was to fail.
-The period is given in seconds.
-A value of zero (default) turns off the feature.
 
 ## Troubleshooting
 
