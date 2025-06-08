@@ -298,7 +298,7 @@ The following function codes are supported:
 * **06** - [Write Single Register](https://www.modbustools.com/modbus.html#function06)
 <br/>Writes a single value to a specific holding register.
 <br/>Used for updating configuration or control parameters.
-* **16** - [Write Multiplee Registers](https://www.modbustools.com/modbus.html#function16)
+* **16** - [Write Multiple Registers](https://www.modbustools.com/modbus.html#function16)
 <br/>Writes a whole configuration group at once. See the sub-chapter for details
 
 > [!WARNING]
@@ -308,7 +308,9 @@ Other functions codes such as 23 ( Read/Write Multiple Registers) are not suppor
 
 ### Communication Settings
 
-| Modbus Address | Hex Value | Access | Description        | Factory Value | Values |
+This group of registers allow configuring the communication settings of the relay.
+
+| Modbus Address | Hex Value | Access | Description        | Factory<br/>Recovery | Values |
 |----------------|-----------|--------|--------------------|---------------|--------|
 | 40001          | 0x0000    | RW     | Device address      | 44            | [1-127] |
 | 40002          | 0x0001    | RW     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
@@ -316,9 +318,11 @@ Other functions codes such as 23 ( Read/Write Multiple Registers) are not suppor
 | 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
 | 40005–40006    | 0x0004–0x0005 | R  | *Reserved*          |               |        |
 
-This group can be written with the command **16**, only by writting register 40001 to 40004 in 1 command.
-
-Other combinations will return an error.
+> [!NOTE]
+> Function **06: Write single register** is not availble for this group.
+> You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
+> [!WARNING]
+> Once the command is acknowledged, the relay will immediatly start using the new settings.
 
 ### Power Infeed Configuration
 
@@ -346,20 +350,10 @@ This group can be written with the command **16**, only by writting register 400
 
 Other combinations will return an error.
 
-### Relay Configuration (Bank 0: Relays 1–8)
+### Relay Configuration
 
-#### RCFG / Relay configuration values
-
-The following configuration is available. By default, all features are off. These changes are all permanent.
-
-| Bit position | Function | Explanation |
-|--------------|----------|-------------|
-| 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
-| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. <sup>note</sup> |
-| 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
-| 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
-
-<sup>note</sup>: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
+This group allow configuring the individual relays.
+The value written is RCFG described below.
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
@@ -375,16 +369,29 @@ So, for a 3 relays devices, you must write registers 40025, 40026 and 40027 (3 r
 
 Any other combinations will return an error.
 
+#### RCFG / Relay configuration values
+
+The following configuration is available. By default, all features are off. These changes are all permanent.
+
+| Bit position | Function | Explanation |
+|--------------|----------|-------------|
+| 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
+| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. <sup>note</sup> |
+| 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
+| 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
+
+<sup>note</sup>: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
+
 #### Combined settings table
 
 The following table illustrates the effect of the invert and default settings:
 
 | Inversion	|Default Position	| Physical State at Power-up|
 |:---------:|:---------------:|---------------------------|
-| 0         |0	               |  Relay OFF = **Opened**   |
-| 0         |**1**            |  Relay ON  = **Closed**   |
-| **1**     |0                |	Relay ON  = **Closed**   |
-| **1**     |**1**            |	Relay OFF = **Opened**   |
+| 0         |0	               |  OFF = **Opened**   |
+| 0         |**1**            |  ON  = **Closed**   |
+| **1**     |0                |	OFF = **Closed**   |
+| **1**     |**1**            |	ON  = **Opened**   |
 
 ---
 
@@ -392,6 +399,31 @@ The following table illustrates the effect of the invert and default settings:
 > 1. All relay diagnostics and counters are grouped in blocks of 8 for efficient Modbus access.
 > 2. To add more relays, simply add another bank of 8 at the next available block.
 > 3. Control registers are write-only and can be mapped to holding registers or coils as appropriate for your Modbus implementation.
+
+### Device control register
+
+This group of register allow controlling the EStop and the relay.
+
+> [!NOTE]
+> These registers are write only. The function **03: Read multiple registers** is not availble for this group.
+> The register must be written individually. Function **16 - Write Multiple Registers** is not available.
+
+| Modbus Address | Hex Value | Access | Description         | Values |
+|----------------|-----------|--------|---------------------|--------|
+| 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
+| 40102          | 0x0065    | W      | Reset to factory default and reboot  | 0xAA55 |
+| 40103          | 0x0066    | W      | Reset the device    | 0xAA55  |
+
+**Note <sup>1</sup>** : See the format below
+
+#### ESTOP_CTRL : ESTop control ####
+
+The following table documents the values to use to control the EStop.
+
+| Byte | Function | Values |
+|--------------|----------|-------------|
+| MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the ESTop could not be reset<br/>0x11 : Pulsed EStop. Create a 1 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a device reset will clear the ESTop (Register 40103) |
+| LSB          | Diagnostic code | A code can be applied to allow investigating the cause of EStop/Reset.<br/>Values: <0-255> |
 
 ## Configuring the device
 The factory default communication settings for the relay are:
