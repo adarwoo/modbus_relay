@@ -140,6 +140,42 @@ The binary modbus_relay.elf can be found in the directory
 The Modbus Relay Device is a configurable relay controller with Modbus RTU communication.<br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
+## Simple operation
+The relay works like any modbus coil by writting the coil registers.
+The coils can be written individually using command **05**: Write single coil, or by bunch using command **15**: Write multiple coils.
+
+The status of the relay can be read back with command **01**: Read coils.
+
+The relay polarity can be inverted, and the default relay position set in the configuration.
+
+## System Health Monitoring
+
+### Infeed monitoring
+
+The module can sense the voltage of the relay infeed and act upon a failure.
+The failure ranges from:
+1. Overvoltage : The infeed voltage is higher than a configured threshold
+2. Undervoltage : The infeed voltage is lower than a configured threshold
+
+When an infeed defect is detected, the device will open the EStop relay. This should stop operations.
+The relays can be individually configured to go Open or Close when a infeed fault is detected.
+
+### Relay health monitoring
+
+All the relay are equiped with a status read back. If a relay was to fail, the ESTop is trigggered in terminal mode.
+Only a reset of the relay can temporary reset the EStop.
+The faulty relay can be isolated with a disable command, but it should be replaced.
+
+The relays can be individually configured to go Open or Close when a relay fault is detected.
+
+### Modbus communication monitoring
+
+The device can monitor for correct activity on the Modbus network, triggering a resetable EStop if the master stops issuing commands to the device.
+
+> [!NOTE]
+> The bus is considered active if commands addressed to the device are received at least once in the configured watchdog duration.
+> For good operation, it is recommended to read the register 30009 (Status) periodically, like every second.
+
 ## Recovery mode
 
 When a relay cannot be reached or is un-responsive, the following procedure can be used.<br/>
@@ -161,11 +197,21 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 > [!NOTE]
 > When activating the recovery mode, all relay operations are maintained.
 
-# Operation
+## LEDs
 
-The relay works like any modbus coil by writting the coil registers.
-Addtionally, this relay has operational controls such as checking the infeed voltage, the communication bus and the health of the relays.
-It will open the EStop relay is any fail (depending on its configuration).
+The module features many LED to see the device operation and faults easilty.
+
+### EStop LED
+
+The fault LED state is as follow:
+
+| State | Description |
+|-------|-------------|
+| Off   | Normal operations |
+| On    | Device is terminated. A hard reboot is required. If the termination was caused by a failing relay, the correspond relay LED will flash at 2Hz |
+| Flash fast at 10Hz | Device is in recovery mode |
+| Flash at 2Hz | Fault detected. The fault can be cleared by pressing the ESTOP reset button.<br/>Another LED will synchronously blink to point to the fault.<br/><ul><li><b>INFEED LED</b>: Infeed fault, over or under</li><li><b>TX LED</b>: Modbus watchdog</li></ul>
+
 When the EStop is set, the relay does the following:
 1. It opens the EStop relay
 2. It lights the fault LED if the failure cannot be recovered
@@ -178,13 +224,40 @@ When the EStop is set, the relay does the following:
   * If the infeed supply is at fault, it will flash. Note, the LED will flash (Long on short off) it a voltage is detected.
   * The modbus Rx LED will flash to indicate the EStop was triggered remotely
 
-## Simple relay operation
+### INFEED Led ###
 
-In normal mode:
-- The device responds only to frames addressed to its **Device ID**.
-- The bus operates as configured
-- Relays operate based on the configured default positions and command inversion settings.
-- Regular coil commands do not respond in configuration mode to prevent mode mixing.
+The infeed LED provides visual information about the infeed voltage.
+
+| State | Description |
+|-------|-------------|
+| Off   | Infeed voltage is < 10V (AC+DC) |
+| On    | Infeed voltage detected, and within configured range |
+| Flash . . | Voltage detecting, but below the configured threshold |
+| Flash _ _ | Voltage detecting, but over the configured threshold |
+| Flash at 2Hz | Along with the EStop. A infeed fault was detected. |
+
+> [!CAUTION]
+> The INFEED LED is for indication only. ***You must assume voltage is present at all times***.
+
+### Modbus LEDs
+
+The modbus LEDs should activity on the Modbus RS485 network, including data not addresses to the relay.
+
+### Relay LEDS
+
+Each relay have a dedicated LED.
+
+The LED status is as follow:
+
+| State | Description |
+|-------|-------------|
+| Off   | The relay is in the OFF state |
+| On    | The relay is in the ON state |
+| Flash 2Hz | A fault was detected |
+| Flash . . | Relay is disabled |
+
+> [!IMPORTANT]
+> The ON state accounts for the configured polarity of the relay.
 
 # Modbus Register Map
 
