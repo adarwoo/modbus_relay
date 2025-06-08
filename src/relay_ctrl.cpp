@@ -12,6 +12,7 @@
  */
 #include <asx/reactor.hpp>
 #include <asx/ioport.hpp>
+#include <asx/bitstore.hpp>
 #include <alert.h>
 
 #include "relay_ctrl.hpp"
@@ -19,7 +20,7 @@
 #include "leds.hpp"
 
 #include "conf_board.h"
-
+#include "conf_version.hpp"
 
 namespace relay
 {
@@ -30,6 +31,12 @@ namespace relay
 
    // The handle to the error notification
    auto on_error = asx::reactor::Handle{};
+
+   /// @brief < Keep track of faulty relays
+   auto relays_fault = asx::BitStore<NUMBER_OF_RELAYS>{};
+
+   /// @brief Keep track of disabled relay
+   auto relays_disabled = asx::BitStore<NUMBER_OF_RELAYS>{};
 
    void backgroud_check();
 
@@ -51,8 +58,7 @@ namespace relay
          backgroud_check, asx::reactor::prio::low).repeat(100ms);
    }
 
-   void set(uint8_t index, bool close)
-   {
+   void set(uint8_t index, bool close) {
       // Read the status of the object to switch
       Pin pin = RELAY_C;
 
@@ -79,7 +85,7 @@ namespace relay
       led::set(index, close ? led::LedState::on : led::LedState::off );
    }
 
-   bool status(uint8_t index)
+   bool get(uint8_t index)
    {
       bool retval = false;
 
@@ -130,22 +136,34 @@ namespace relay
     * A failure is final and the function will cancel the repeating timer.
     */
    void backgroud_check() {
-      static std::array<uint8_t, 3> err_counts = {0, 0, 0};
+      static std::array<uint8_t, NUMBER_OF_RELAYS> err_counts = {0, 0, 0};
 
       // Read the status of the object to switch
-      for (uint8_t i = 0; i < 3; i++) {
-         if (status(i) != check(i)) {
-            if ( ++err_counts[i] > 3 ) {
-               // Notify the main application of a mismatch
-               on_error.notify(i);
+      for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
+         if ( relays_disabled.get(i) ) {
+            continue; // Don't report disabled relay
+         }
 
-               // Cancel the timer
-               asx::timer::cancel(timer);
-            }
-         } else {
-            err_counts[i] = 0;
+         if ( relays_fault.get(i) ) {
+            continue; // Don't report the fault again - it is final
+         }
+
+         if ( get(i) == check(i) ) {
+            err_counts[i] = 0; // Reset the error counter
+            continue; // All good
+         }
+
+         if ( ++err_counts[i] > 3 ) {
+            // Store the fault to make it available in the modbus register
+            relays_fault.set(i);
+
+            // Notify the main application of a mismatch
+            on_error.notify(i);
          }
       }
+   }
 
+   bool is_ok(uint8_t index) {
+      return relays_fault.get(index);
    }
 }

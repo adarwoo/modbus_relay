@@ -315,6 +315,19 @@ The device supports the following function code:
 > [!WARNING]
 > The relays may respond differently based on the relay configuration such as polarity and deboucing.
 
+### Detail of the function 05 : Write single coil
+
+The following values can be used:
+
+| Value | Meaning |
+|-------|--------------------------------------------------------------------------------------------------------------|
+| 0x0000| This specific 16-bit value is the Modbus standard representation for "OFF". |
+| 0xFF00| This specific 16-bit value is the Modbus standard representation for "ON" when writing to a coil. |
+| 0xAA00| This value will toggle the coil |
+
+> [!IMPORTANT]
+> The inversion setting is taken into account with writing coils.
+
 ## Input registers
 
 The registers have been grouped so they can easily be accessed.
@@ -519,8 +532,9 @@ This group of register allow controlling the EStop and the relay.
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
 | 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
-| 40102          | 0x0065    | W      | Reset to factory default and reboot  | 0xAA55 |
-| 40103          | 0x0066    | W      | Reset the device    | 0xAA55  |
+| 40102          | 0x0065    | W      | Reset measurements. Allow re-measuring min and max | 0xAA55  |
+| 40103          | 0x0066    | W      | Reset to factory default and reboot  | 0xAA55 |
+| 40104          | 0x0067    | W      | Reset the device    | 0xAA55  |
 
 **Note <sup>1</sup>** : See the format below
 

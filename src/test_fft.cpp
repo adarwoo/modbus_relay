@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "fft.hpp"
+#include <asx/single_bin_fft.hpp>
 
 constexpr size_t FFT_N = 64; // FFT window size
 constexpr size_t SAMPLE_FREQUENCY = 320; // Sampling frequency in Hz

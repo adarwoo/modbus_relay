@@ -1,31 +1,48 @@
 /**
  * Implement all modbus callback functions
  */
+#include <avr/io.h>
 #include <trace.h>
 #include <stats.hpp>
 
-#include "modbus.hpp"
+#include <chrono>
+
+#include <asx/reactor.hpp>
+
 #include "estop.hpp"
 #include "infeed.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
+#include "config.hpp"
+#include "datagram.hpp"
 
-using namespace asx;
+namespace modbus {
+   using namespace asx::modbus;
 
-namespace relay {
+   // Create an alias for the static method
+   using dg = Datagram;
+
+   // Timer instance for the watchdog
+   auto watchdog_timer = asx::timer::Instance{};
+
+   // Reactor for the watchdog
+   auto react_on_watchdog = asx::reactor::bind(
+      []() { estop::trigger(estop::Cause::modbus_watchdog); }
+   );
+
    //
    // Implement all the callbacks
    //
    void on_read_coils(uint8_t addr, uint8_t qty) {
       TRACE_INFO(RELAY, "%d - %d", addr, qty);
 
-      Datagram::pack( uint8_t{1} ); // Number of bytes returned
+      dg::pack( uint8_t{1} ); // Number of bytes returned
 
-      uint8_t value = status(2);
+      uint8_t value = relay::get(2);
       value <<=1;
-      value |= status(1);
+      value |= relay::get(1);
       value <<=1;
-      value |= status(0);
+      value |= relay::get(0);
 
       // If address is 0, keep all, if 1 remove the first etc..
       value >>= addr;
@@ -34,9 +51,9 @@ namespace relay {
       value &= (1 << qty) - 1;
 
       if ( qty > (3 - addr) ) {
-         Datagram::reply_error(modbus::error_t::illegal_data_value);
+         dg::reply_error(error_t::illegal_data_value);
       } else {
-         Datagram::pack(value);
+         dg::pack(value);
       }
    }
 
@@ -44,11 +61,11 @@ namespace relay {
       TRACE_INFO(RELAY, "%d - %d", index, operation);
 
       switch ( operation ) {
-         case 0x0000: set(index, false);
+         case 0x0000: relay::set(index, false);
             break;
-         case 0xFF00: set(index);
+         case 0xFF00: relay::set(index);
             break;
-         case 0x5500: set(index, !status(index));
+         case 0x5500: relay::set(index, !relay::get(index));
             break;
          default:
             break;
@@ -59,80 +76,80 @@ namespace relay {
       TRACE_INFO(RELAY, "%.2x", values);
 
       for ( uint8_t i=0; i<3; ++i ) {
-         set( i, values & 1 );
+         relay::set( i, values & 1 );
          values >>= 1;
       }
 
       // For the response, we need to shorten the frame
       // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
-      Datagram::set_size(6);
+      dg::set_size(6);
    }
 
    /** Read any of the input register */
-   void on_read_inputs(uint8_t addr, uint8_t count) {
-      Datagram::pack<uint8_t>(qty*2);
+   void on_read_inputs(uint8_t addr, uint8_t qty) {
+      // Reply with a byte count
+      dg::pack<uint8_t>(qty*2);
 
       while ( qty-- ) {
-         switch(index++) {
-         case 0x00: Datagram::pack( DEVICE_ID ); break;
-         case 0x01: Datagram::pack( HW_VERSION ); break;
-         case 0x02: Datagram::pack( FW_VERSION ); break;
-         case 0x03: Datagram::pack( NUMBER_OF_RELAYS ); break;
-         case 0x04: Datagram::pack( NUMBER_OF_BANKS ); break;
+         switch(addr++) {
+         case 0x00: dg::pack( DEVICE_ID ); break;
+         case 0x01: dg::pack( HW_VERSION ); break;
+         case 0x02: dg::pack( FW_VERSION ); break;
+         case 0x03: dg::pack( NUMBER_OF_RELAYS ); break;
+         case 0x04: dg::pack( NUMBER_OF_BANKS ); break;
 
-         case 0x08: Datagram::pack( estop::get_status_value() ); break;
+         case 0x08: dg::pack( static_cast<uint16_t>(estop::get_status()) ); break;
 
-         case 0x09: Datagram::pack( stat::get_running_minutes() >> 16 ); break;
-         case 0x0A: Datagram::pack( stat::get_running_minutes() & 0xFFFF ); break;
-         case 0x0B: Datagram::pack( infeed::get_ac_voltage() ); break;
-         case 0x0C: Datagram::pack( infeed::get_dc_voltage() ); break;
-         case 0x0D: Datagram::pack( estop::get_root_cause_value() ); break;
-         case 0x0E: Datagram::pack( estop::get_diagnostic_code() ); break;
+         case 0x09: dg::pack( stat::get_running_minutes() >> 16 ); break;
+         case 0x0A: dg::pack( stat::get_running_minutes() & 0xFFFF ); break;
+         case 0x0B: dg::pack( infeed::get_ac_voltage() ); break;
+         case 0x0C: dg::pack( infeed::get_dc_voltage() ); break;
+         case 0x0D: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
+         case 0x0E: dg::pack( estop::get_diagnostic_code() ); break;
 
-         case 0x0F: Datagram::pack( infeed::get_min_voltage() ); break;
-         case 0x10: Datagram::pack( infeed::get_max_voltage() ); break;
+         case 0x0F: dg::pack( infeed::get_min_voltage() ); break;
+         case 0x10: dg::pack( infeed::get_max_voltage() ); break;
 
-         case 0x18: Datagram::pack( relay::is_ok(0) ); break;
-         case 0x19: Datagram::pack( relay::is_ok(1) ); break;
-         case 0x1A: Datagram::pack( relay::is_ok(2) ); break;
+         case 0x18: dg::pack( relay::is_ok(0) ); break;
+         case 0x19: dg::pack( relay::is_ok(1) ); break;
+         case 0x1A: dg::pack( relay::is_ok(2) ); break;
 
-         case 0x20: Datagram::pack( relay::get_cycle(0) >> 16 ); break;
-         case 0x21: Datagram::pack( relay::get_cycle(0) & 0xFFFF ); break;
-         case 0x22: Datagram::pack( relay::get_cycle(1) >> 16 ); break;
-         case 0x23: Datagram::pack( relay::get_cycle(1) & 0xFFFF ); break;
-         case 0x24: Datagram::pack( relay::get_cycle(2) >> 16 ); break;
-         case 0x25: Datagram::pack( relay::get_cycle(3) & 0xFFFF ); break;
+         case 0x20: dg::pack( relay::get_cycles(0) >> 16 ); break;
+         case 0x21: dg::pack( relay::get_cycles(0) & 0xFFFF ); break;
+         case 0x22: dg::pack( relay::get_cycles(1) >> 16 ); break;
+         case 0x23: dg::pack( relay::get_cycles(1) & 0xFFFF ); break;
+         case 0x24: dg::pack( relay::get_cycles(2) >> 16 ); break;
+         case 0x25: dg::pack( relay::get_cycles(3) & 0xFFFF ); break;
 
          default:
-            Datagram::pack(uint16_t{0});
+            dg::pack(uint16_t{0});
          }
       }
    }
 
    void on_read_holdings(uint8_t index, uint8_t qty) {
-      using namespace datagram;
-
-      pack<uint8_t>(qty*2);
+      // Number of bytes returned
+      dg::pack<uint8_t>(qty*2);
       auto &cfg = config::get_config();
 
       while ( qty-- ) {
          switch(index++) {
-         case 0x00: pack<uint16_t>( cfg.address ); break;
-         case 0x01: pack<uint16_t)( cfg.baud ); break;
-         case 0x02: pack<uint16_t)( cfg.parity ); break;
-         case 0x03: pack<uint16_t)( cfg.stopbits ); break;
+         case 0x00: dg::pack<uint16_t>( cfg.address ); break;
+         case 0x01: dg::pack<uint16_t>( cfg.baud ); break;
+         case 0x02: dg::pack( static_cast<uint16_t>(cfg.parity) ); break;
+         case 0x03: dg::pack( static_cast<uint16_t>(cfg.stopbits) ); break;
 
-         case 0x08: pack<uint16_t>( cfg.infeed_type ); break;
-         case 0x09: pack<uint16_t>( cfg.infeed_type == infeed::Type::dc ? cfg.infeed_dc_min : cfg.infeed_ac_min ); break;
-         case 0x0A: pack<uint16_t>( cfg.infeed_type == infeed::Type::dc ? cfg.infeed_dc_max : cfg.infeed_ac_max ); break;
+         case 0x08: dg::pack( static_cast<uint16_t>(cfg.infeed_type) ); break;
+         case 0x09: dg::pack<uint16_t>( cfg.infeed_min ); break;
+         case 0x0A: dg::pack<uint16_t>( cfg.infeed_max ); break;
 
-         case 0x10: pack<uint16_t>( cfg.estop_on_undervolt); break;
-         case 0x11: pack<uint16_t>( cfg.estop_on_overvolt); break;
-         case 0x12: pack<uint16_t>( cfg.estop_on_wd); break;
+         case 0x10: dg::pack<uint16_t>( cfg.estop_on_undervolt); break;
+         case 0x11: dg::pack<uint16_t>( cfg.estop_on_overvolt); break;
+         case 0x12: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
 
-         case 0x18: pack<uint16_t>( cfg.relay_config.value[0] ); break;
-         case 0x19: pack<uint16_t>( cfg.relay_config.value[1] ); break;
-         case 0x1A: pack<uint16_t>( cfg.relay_config.value[2] ); break;
+         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].value ); break;
+         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].value ); break;
+         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].value ); break;
          }
       }
    }
@@ -140,22 +157,6 @@ namespace relay {
    // -------------------------------------------------------------------------
    // Write holding
    // -------------------------------------------------------------------------
-
-   void on_write_device_address(uint8_t addr) {
-      config::set_device_id(addr);
-   }
-
-   void on_write_baud_rate(uint8_t baud) {
-      config::set_baud(baud);
-   }
-
-   void on_write_parity(uint8_t parity) {
-      config::set_parity(parity);
-   }
-
-   void on_write_stopbits(uint8_t stopbits) {
-      config::set_stopbits(stopbits);
-   }
 
    void on_write_comms_settings(uint8_t addr, uint8_t baud, uint8_t parity, uint8_t stopbits) {
       config::set_device_id(addr);
@@ -173,13 +174,13 @@ namespace relay {
    }
 
    void on_write_estop_on_timeout(uint16_t seconds) {
-      config::set_estop_on_wd(seconds);
+      config::set_watchdog(seconds);
    }
 
    void on_write_estop_settings(uint8_t over, uint8_t under, uint8_t timeout) {
       config::set_estop_on_undervolt(static_cast<bool>(over));
       config::set_estop_on_overvolt(static_cast<bool>(under));
-      config::set_estop_on_wd(timeout);
+      config::set_watchdog(timeout);
    }
 
    void on_write_single_relay_cfg(uint8_t address, uint8_t conf, uint8_t filter) {
@@ -192,9 +193,40 @@ namespace relay {
       config::set_relay_config(2, conf3, filter3);
    }
 
-   void on_read_reset() {
-      Datagram::pack<uint8_t>(4);
-      Datagram::pack<uint32_t>(0xDEAD5AFE);
+   // Trigger an estop
+   void on_estop_set(uint8_t type, uint8_t diag) {
+      // If the device is already on terminal EStop - return an error
+      if ( estop::get_status() == estop::Status::terminated ) {
+         dg::reply_error(error_t::negative_acknowledge);
+      } else {
+         estop::trigger(static_cast<estop::ExternalTriggerType>(type), diag);
+      }
    }
 
-} // End of namespace relay
+   void on_measurement_reset() {
+      infeed::reset_min_max();
+   }
+
+   void on_factory_reset() {
+      config::reset_config();
+   }
+
+   void on_reset() {
+      // Manually trigger a reset
+      ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
+   }
+
+   // Implement this method to reset the watchdog
+   void on_payload_received(std::string_view x) {
+      watchdog_timer.cancel();
+      auto per = config::get_config().estop_modbus_watchdog;
+
+      if ( per ) {
+         watchdog_timer = react_on_watchdog.delay( std::chrono::seconds(per) );
+      }
+   }
+
+   void init() {
+   }
+
+} // End of namespace modbus

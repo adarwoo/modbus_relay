@@ -3,8 +3,8 @@ from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
     "buffer_size": 127,
-    "namespace": "relay",
-    "on_received": "on_ready_reply",
+    "namespace": "modbus",
+    "on_received": "on_payload_received",
     "slave": True,
 
     "callbacks": {
@@ -16,10 +16,6 @@ Modbus({
 
         "on_read_holdings"          : [(u8, "addr"), (u8, "count")],
 
-        "on_write_device_address"   : [(u8, "addr")],
-        "on_write_baud_rate"        : [(u8, "baud")],
-        "on_write_parity"           : [(u8, "parity")],
-        "on_write_stopbits"         : [(u8, "stopbits")],
         "on_write_comms_settings"   : [
             (u8, "addr"), (u8, "baud"), (u8, "parity"), (u8, "stopbits")
         ],
@@ -37,10 +33,15 @@ Modbus({
             (u8, "conf3"), (u8, "filter3")
         ],
 
-        "on_write_single_relay_cfg" : [(u8, "address"), (u8, "conf"), (u8, "filter")]
+        "on_write_single_relay_cfg" : [(u8, "address"), (u8, "conf"), (u8, "filter")],
+
+        "on_estop_set" : [(u8, "estop_type"), (u8, "diag")],
+        "on_measurement_reset" : [],
+        "on_factory_reset" : [],
+        "on_reset" : []
     },
 
-    "device@44": [
+    "device": [
         # Coils operations
         (READ_COILS,            u16(0, 2, alias="addr"),
                                 u16(1, 3, alias="qty"),
@@ -63,10 +64,6 @@ Modbus({
         (READ_HOLDING_REGISTERS, u16(0, 0x1A), u16(1,0x1B), "on_read_holdings"),
 
         # Communication settings
-        (WRITE_SINGLE_REGISTER,  u16(0), u16(1,127), "on_write_device_address"),
-        (WRITE_SINGLE_REGISTER,  u16(1), u16(0,9),   "on_write_baud_rate"),
-        (WRITE_SINGLE_REGISTER,  u16(2), u16(0,2),   "on_write_parity"),
-        (WRITE_SINGLE_REGISTER,  u16(3), u16(1,2),   "on_write_stopbits"),
         (WRITE_MULTIPLE_REGISTERS,
             u16(0), u16(4), u8(8),
                 u16(1,127),
@@ -89,14 +86,20 @@ Modbus({
         ),
 
         # Relay configuration
-        (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u8(0,7), u8(), "on_write_single_relay_cfg"),
+        (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u8(0,0xf), u8(), "on_write_single_relay_cfg"),
         (WRITE_MULTIPLE_REGISTERS,
             u16(0x18), u16(3), u8(6),
-                u8(0,7), u8(),
-                u8(0,7), u8(),
-                u8(0,7), u8(),
+                u8(0,0xf), u8(),
+                u8(0,0xf), u8(),
+                u8(0,0xf), u8(),
             "on_write_relay_cfgs"
         ),
+
+        # Device control
+        (WRITE_SINGLE_REGISTER,  u16(0x64), u8([0,0x11,0x22,0xff]), u8(), "on_estop_set"),
+        (WRITE_SINGLE_REGISTER,  u16(0x65), u16(0xAA55),                  "on_measurement_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x66), u16(0xAA55),                  "on_factory_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x67), u16(0xAA55),                  "on_reset"),
     ],
 })
 

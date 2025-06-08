@@ -4,24 +4,30 @@
 
 using namespace asx;
 
-namespace relay {
+namespace config {
+   using namespace infeed::literal;
 
-   static const auto default_config = EepromConfig{
+   static const auto default_config = EepromConfig {
       .address = 44,
-      .baud = 1152, // 100th of the actual rate
+      .baud = 5, // 9600
       .stopbits = uart::stop::_1,
       .parity = uart::parity::even,
-      .watchdog = 5,
-      .frequency = 50,
-      .infeed_dc_min = 10,
-      .infeed_dc_max = 28,
-      .infeed_ac_min = 200,
-      .infeed_ac_max = 250,
-      .estop_on_wd = true,
-      .estop_on_relay = true,
-      .estop_on_undervolt = true,
-      .estop_on_overvolt = true,
+      .infeed_type = infeed::Type::ac_50hz,
+      .infeed_min = 10_volts,
+      .infeed_max = 250_volts,
+      .estop_on_undervolt = false,
+      .estop_on_overvolt = false,
+      .estop_modbus_watchdog = 0,
+      .relays_config = {relay::Config{0}, relay::Config{0}, relay::Config{0}}
    };
+
+   constexpr auto hundredth_baudrates = std::array<uint32_t, 10>{
+      300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+   };
+
+   constexpr bool is_valid_baudrate(uint8_t check) {
+      return check < hundredth_baudrates.size();
+   }
 
    static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 6>(default_config);
 
@@ -70,17 +76,7 @@ namespace relay {
    }
 
    void set_watchdog(uint16_t period) {
-      eeprom_config.watchdog = period;
-      eeprom_config.update();
-   }
-
-   void set_estop_on_wd(bool yes) {
-      eeprom_config.estop_on_wd = yes;
-      eeprom_config.update();
-   }
-
-   void set_estop_on_relay(bool yes) {
-      eeprom_config.estop_on_relay = yes;
+      eeprom_config.estop_modbus_watchdog = period;
       eeprom_config.update();
    }
 
@@ -94,32 +90,18 @@ namespace relay {
       eeprom_config.update();
    }
 
-   void set_frequency(uint8_t freq) {
-      if (freq != 50 && freq != 60) {
-         freq = 0;
-      }
-
-      eeprom_config.frequency = freq;
+   void set_infeed_min(uint8_t threshold) {
+      eeprom_config.infeed_min = threshold;
       eeprom_config.update();
    }
 
-   void set_infeed_dc_min(uint8_t threshold) {
-      eeprom_config.infeed_dc_min = threshold;
+   void set_infeed_max(uint8_t threshold) {
+      eeprom_config.infeed_max = threshold;
       eeprom_config.update();
    }
 
-   void set_infeed_dc_max(uint8_t threshold) {
-      eeprom_config.infeed_dc_max = threshold;
-      eeprom_config.update();
-   }
-
-   void set_infeed_ac_min(uint16_t threshold) {
-      eeprom_config.infeed_ac_min = threshold;
-      eeprom_config.update();
-   }
-
-   void set_infeed_ac_max(uint16_t threshold) {
-      eeprom_config.infeed_ac_max = threshold;
-      eeprom_config.update();
+   void set_relay_config(uint8_t address, uint8_t conf, uint8_t filter) {
+      eeprom_config.relays_config[address].debounce_time = filter;
+      eeprom_config.relays_config[address].config = conf;
    }
 } // End of relay namespace
