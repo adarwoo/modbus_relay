@@ -279,7 +279,7 @@ This registers provides details about the device in use.
 > Attempts to read a non-available relay will result in a data error.
 
 > [!TIP]
-> For generic software, the number of available relays and banks can be read in input registers 3 and 4.
+> For generic software, the number of available relays and banks can be read in input registers 30004 and 30005.
 
 ## Holding registers
 
@@ -319,7 +319,7 @@ This group of registers allow configuring the communication settings of the rela
 | 40005–40006    | 0x0004–0x0005 | R  | *Reserved*          |               |        |
 
 > [!NOTE]
-> Function **06: Write single register** is not availble for this group.
+> Function ~~**06: Write single register**~~ is not availble for this group.
 > You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
 > [!WARNING]
 > Once the command is acknowledged, the relay will immediatly start using the new settings.
@@ -405,8 +405,8 @@ The following table illustrates the effect of the invert and default settings:
 This group of register allow controlling the EStop and the relay.
 
 > [!NOTE]
-> These registers are write only. The function **03: Read multiple registers** is not availble for this group.
-> The register must be written individually. Function **16 - Write Multiple Registers** is not available.
+> These registers are write only. The function ~~**03: Read multiple registers**~~ is not availble for this group.
+> The register must be written individually. Function ~~**16 - Write Multiple Registers**~~ is not available.
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
