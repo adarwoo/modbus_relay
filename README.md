@@ -5,25 +5,39 @@ It is aimed for industrial systems such as a CNC or equivalent.
 
 The project comes complete with documentation, schematic, PCB, 3D part, artwork and source code.
 
+---
+
 ## Table of Contents
 1. [Features Summary](#features-summary)
 2. [Presentation of the Hardware](#presentation-of-the-hardware)
-3. [Presentation of the Software](#presentation-of-the-software)
-4. [How to Build](#how-to-build)
-5. [Operations Overview](#operations-overview)
-6. [Recovery Mode](#recovery-mode)
-7. [Modbus Register Map](#modbus-register-map)
-   - [Coil Registers](#coil-registers)
-   - [Input Registers](#input-registers)
-   - [Holding Registers](#holding-registers)
-8. [Configuring the Device](#configuring-the-device)
-9. [Using the Watchdog](#using-the-watchdog)
-10. [Troubleshooting](#troubleshooting)
-11. [FMEA – Modbus Relay Board for CNC Safety](#fmea--modbus-relay-board-for-cnc-safety)
+3. [CAD Files](#cad-files)
+   - [Printing the Files](#printing-the-files)
+   - [Printing the Front Plate](#printing-the-front-plate)
+4. [Presentation of the Software](#presentation-of-the-software)
+5. [Application Software](#application-software)
+6. [Hardware](#hardware)
+7. [How to Build](#how-to-build)
+8. [Operations Overview](#operations-overview)
+   - [Simple Operation](#simple-operation)
+   - [System Health Monitoring](#system-health-monitoring)
+9. [Recovery Mode](#recovery-mode)
+10. [LEDs](#leds)
+    - [EStop LED](#estop-led)
+    - [INFEED LED](#infeed-led)
+    - [Modbus LEDs](#modbus-leds)
+    - [Relay LEDs](#relay-leds)
+11. [Modbus Register Map](#modbus-register-map)
+    - [Coil Registers](#coil-registers)
+    - [Input Registers](#input-registers)
+    - [Holding Registers](#holding-registers)
+12. [Configuring the Device](#configuring-the-device)
+13. [Using the Watchdog](#using-the-watchdog)
+14. [Troubleshooting](#troubleshooting)
+15. [FMEA – Modbus Relay Board for CNC Safety](#fmea--modbus-relay-board-for-cnc-safety)
 
 ---
 
-## Features summary ##
+## Features summary
 
 1. Standard DIN Rail mountable PCB
 2. 3 relays - 9.4A 250VAC per output
@@ -45,7 +59,7 @@ The project comes complete with documentation, schematic, PCB, 3D part, artwork 
    * Running time
    * Fault codes
 
-## Presentation of the hardware ##
+## Presentation of the hardware
 
 <div style="text-align: center; position: relative;">
   <img src="https://github.com/user-attachments/assets/c7a2c55f-4833-4e39-9875-c24443134138" height="500" style="display: inline-block;">
@@ -67,7 +81,7 @@ The relay output features MOV suppressors for inductive loads.
 The PCB can be placed in a DIN Rail PCB mount. 4 mounting screws can also be used.
 A 3D cover is available to cover the whole PCBs. Together with the DIN rail mount assembly, the module should comply with IP2X.
 
-### CAD files ###
+### CAD files
 
 The following files are available:
  * The [schematic](hw/modbus_relay.kicad.sch) edited with *KiCAD 9.1*
@@ -79,6 +93,8 @@ The following files are available:
  * [Spacer columns STL file](cad/3mm%2016mm.STL)
  * [Flex swtich membrane](cad/Flex%20switch%20membrane.STL)
  * [Flex retaining holder](cad/Flex%20Holder.STL)
+
+For printing instructions, refer to [Printing the Files](#printing-the-files).
 
 #### Printing the files
 
@@ -93,7 +109,7 @@ The following files are available:
 > [!Note]
 > You may need to adjust the dimension to account for non-linearity of the printer.
 
-## Presentation of the software ##
+## Presentation of the software
 The software is build on top of a small framework revolving around a simple reactor pattern.
 The reactor allow for an arbitrary function to be notified from any context, and will execute when the CPU become available.
 A simple priority system allow for reactor functions to be called in priority (to process data in a register).
@@ -113,16 +129,18 @@ The application software is written in C++23 as it uses meta programming, consta
 A <i>docker</i> file is provided to create a build environment.</br>
 The code fits the 32Kb flash space with plenty spare.
 
+For build instructions, see [How to Build](#how-to-build).
+
 ## Hardware
 The schematic and PCB have been edited in KiCad 9 and are supplied too.
 
-## How to build ##
+## How to build
 A docker container file is provided to recreated a full build environment.<br/>
 The application can also be built in Microchip studio.<br/>
 You will need a Linux shell, or WSL shell in Windows.
 The tool 'gitman' is required as well as Docker. (docker-ce or else).
 
-### Steps ###
+### Steps
 ```bash
 # Clone this repo
 $ git clone https://https://github.com/adarwoo/modbus_relay.git
@@ -201,6 +219,14 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 
 The module features many LED to see the device operation and faults easilty.
 
+For detailed LED states, see:
+- [EStop LED](#estop-led)
+- [INFEED LED](#infeed-led)
+- [Modbus LEDs](#modbus-leds)
+- [Relay LEDs](#relay-leds)
+
+---
+
 ### EStop LED
 
 The fault LED state is as follow:
@@ -224,7 +250,7 @@ When the EStop is set, the relay does the following:
   * If the infeed supply is at fault, it will flash. Note, the LED will flash (Long on short off) it a voltage is detected.
   * The modbus Rx LED will flash to indicate the EStop was triggered remotely
 
-### INFEED Led ###
+### INFEED Led
 
 The infeed LED provides visual information about the infeed voltage.
 
@@ -260,6 +286,15 @@ The LED status is as follow:
 > The ON state accounts for the configured polarity of the relay.
 
 # Modbus Register Map
+
+The Modbus registers are grouped into:
+- [Coil Registers](#coil-registers)
+- [Input Registers](#input-registers)
+- [Holding Registers](#holding-registers)
+
+For communication settings, see [Communication Settings](#communication-settings).
+
+---
 
 ## Coil registers
 
@@ -490,7 +525,7 @@ This group of register allow controlling the EStop and the relay.
 
 **Note <sup>1</sup>** : See the format below
 
-#### ESTOP_CTRL : ESTop control ####
+#### ESTOP_CTRL : ESTop control
 
 The following table documents the values to use to control the EStop.
 
@@ -507,6 +542,8 @@ The factory default communication settings for the relay are:
 - **No parity**
 - **1 stop bit** (9600 8N1).
 
+For watchdog configuration, see [Using the Watchdog](#using-the-watchdog).
+
 ### Using the watchdog
 The relay has a command watchdog which will release the relays following a period of inactivity.
 Everytime this devices receives a valid modbus command (including holding register read etc.), the watchdog is reset.
@@ -514,9 +551,8 @@ This feature allow for the relays to be atomatically releases if the master was 
 The period is given in seconds.
 A value of zero (default) turns off the feature.
 
----
-
 ## Troubleshooting
+
 ### Cannot Communicate with Device
 - If the modbus LEDs are flickering, make sure the Relay Guarian and relay share the same settings.
 - Active the recovery mode on the device and in Guardian Relay
