@@ -450,8 +450,9 @@ Other combinations will return an error.
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
 | 40017          | 0x0010    | RW     | Activater EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
 | 40018          | 0x0011    | RW     | Activate EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
-| 40019          | 0x0012    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
-| 40020–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
+| 40019          | 0x0011    | RW     | Activate EStop on incorrect type of supply<br>If AC is configured, but DC is detected for example  | 1             | 0=no<br/>1=yes |
+| 40020          | 0x0012    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 40021–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
 
 This group can be written with the command **16**, only by writting register 40017 to 40019 in 1 command.
 
@@ -520,7 +521,7 @@ This group of register allow controlling the EStop and the relay.
 |----------------|-----------|--------|---------------------|--------|
 | 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
 | 40102          | 0x0065    | W      | Reset measurements. Allow re-measuring min and max | 0xAA55  |
-| 40103          | 0x0066    | W      | Reset to factory default and reboot  | 0xAA55 |
+| 40103          | 0x0066    | W      | Reset configuration to factory default and reboot  | 0xAA55 |
 | 40104          | 0x0067    | W      | Reset the device    | 0xAA55  |
 
 **Note <sup>1</sup>** : See the format below
