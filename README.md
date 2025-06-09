@@ -348,8 +348,7 @@ This registers provides details about the device in use.
 | 30002          | 0x0001    | R      | HW version          | MSB=minor, LSB=major         |
 | 30003          | 0x0002    | R      | SW version          | MSB=minor, LSB=major         |
 | 30004          | 0x0003    | R      | Number of relays    | UINT16<br/>1-32              |
-| 30005          | 0x0004    | R      | Number of relay banks | UINT16<br/>1-4             |
-| 30006–30008    | 0x0005–0x0007 | R  | *Reserved*          |                              |
+| 30005–30008    | 0x0004–0x0007 | R  | *Reserved*          |                              |
 
 * <sup>1</sup> EStop relay code=0x37. Simple modbus code=0x36.
 * <sup>2</sup> A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
@@ -360,45 +359,33 @@ This registers provides details about the device in use.
 |----------------|-----------|--------|-----------------------------|-------------------------------|
 | 30009          | 0x0008    | R      | Current status              | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
 | 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30012          | 0x000B    | R      | Current infeed voltage AC   | 1/10 volts<br/>0-3000         |
-| 30013          | 0x000C    | R      | Current infeed voltage DC   | 1/10 volts<br/>0-3000         |
+| 30012          | 0x000B    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
+| 30013          | 0x000C    | R      | Current infeed voltage type | 0=DC, 1=AC                    |
 | 30014          | 0x000D    | R      | EStop root cause            | 0=Normal operation<br/>1=faulty relay<br/>2=Modbus watchdog<br/>3=Voltage monitor<br/>4=Command |
 | 30015          | 0x000E    | R      | Given command diagnostic code | Diagnostic code given with EStop command |
-| 30016          | 0x000F    | R      | Infeed minimum voltage      | Infeed voltage in 1/10th of volts or 0 |
-| 30017          | 0x0010    | R      | Infeed maximum voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 30016          | 0x000F    | R      | Infeed lowest voltage       | Infeed voltage in 1/10th of volts or 0 |
+| 30017          | 0x0010    | R      | Infeed highest voltage      | Infeed voltage in 1/10th of volts or 0 |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
 ### Relay Diagnostics & Stats
 
 > [!NOTE]
-> The registers are organised by banks of upto 8 relays.
-> If variants of the board are created with more than 8 relays, simply add another table of 24 registers.
-> This address scheme allow addressing up to 32 relays.
+> The table is structure to expand if more relays are added
 
 | Modbus Address | Hex value | Access | Description                | Values |
 |----------------|-----------|--------|:--------------------------:|--------|
 | 30025          | 0x0018    | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty |
-| 30026          | 0x0019    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
-| 30027          | 0x001A    | R      | Relay 3 diagnostic         | 0=OK<br/>1=Faulty |
-| 30028          | 0x001B    | R      | Relay 4 diagnostic         | 0=OK<br/>1=Faulty |
-| 30029          | 0x001C    | R      | Relay 5 diagnostic         | 0=OK<br/>1=Faulty |
-| 30030          | 0x001D    | R      | Relay 6 diagnostic         | 0=OK<br/>1=Faulty |
-| 30031          | 0x001E    | R      | Relay 7 diagnostic         | 0=OK<br/>1=Faulty |
-| 30032          | 0x001F    | R      | Relay 8 diagnostic         | 0=OK<br/>1=Faulty |
-| 30033 (+1)     | 0x0020 (+1)| R     | Relay 1 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30035 (+1)     | 0x0022 (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30037 (+1)     | 0x0024 (+1)| R     | Relay 3 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30039 (+1)     | 0x0026 (+1)| R     | Relay 4 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30041 (+1)     | 0x0028 (+1)| R     | Relay 5 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30043 (+1)     | 0x002A (+1)| R     | Relay 6 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30045 (+1)     | 0x002C (+1)| R     | Relay 7 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30047 (+1)     | 0x002E (+1)| R     | Relay 8 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30026 (+1)     | 0x0019 (+1)| R     | Relay 1 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30028          | 0x001B    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
+| 30029 (+1)     | 0x001C (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| 30031          | 0x001E    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
+| 30032 (+1)     | 0x001F (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
 
-> [!NOTE]
-> Attempts to read a non-available relay will result in a data error.
+> [!WARNING]
+> Reading passed the last supported relay will generate an error.
 
 > [!TIP]
-> For generic software, the number of available relays and banks can be read in input registers 30004 and 30005.
+> For generic software, the number of available relays can be read in input registers 30004.
 
 ## Holding registers
 
@@ -449,8 +436,8 @@ This group of registers allow configuring the communication settings of the rela
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
 |----------------|-----------|--------|---------------------|---------------|--------|
 | 40009          | 0x0008    | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 40010          | 0x0009    | RW     | Ingress Min voltage | 10            | 1/10 volts [100-3000] |
-| 40011          | 0x000A    | RW     | Ingress Max voltage | 300           | 1/10 volts [100-3000] |
+| 40010          | 0x0009    | RW     | Ingress minimum voltage threshold | 10       | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Ingress maximum voltage threshold | 300      | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
 This group can be written with the command **16**, only by writting register 40009 to 40011 in 1 command.
@@ -461,9 +448,9 @@ Other combinations will return an error.
 
 | Modbus Address | Hex Value | Access | Description                                | Factory Value | Values |
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
-| 40017          | 0x0010    | RW     | EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
-| 40018          | 0x0011    | RW     | EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
-| 40019          | 0x0012    | RW     | EStop on number of seconds without activity | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 40017          | 0x0010    | RW     | Activater EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
+| 40018          | 0x0011    | RW     | Activate EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
+| 40019          | 0x0012    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
 | 40020–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
 
 This group can be written with the command **16**, only by writting register 40017 to 40019 in 1 command.
