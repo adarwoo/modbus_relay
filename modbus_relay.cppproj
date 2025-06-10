@@ -376,7 +376,10 @@
     <Compile Include="src\config.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\fft.hpp">
+    <Compile Include="src\estop.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\estop.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\infeed.cpp">
@@ -385,16 +388,19 @@
     <Compile Include="src\infeed.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\leds.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\leds.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\modbus.cpp">
+    <Compile Include="src\net.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\modbus.hpp">
+    <Compile Include="src\net.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\relay_ctrl.cpp">
