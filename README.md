@@ -360,11 +360,11 @@ This registers provides details about the device in use.
 | 30009          | 0x0008    | R      | Current status              | 0=Device operational<br/>1=Device in EStop. Reset possible<br/>2=Device in terminal EStop |
 | 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
 | 30012          | 0x000B    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
-| 30013          | 0x000C    | R      | Current infeed voltage type | 0=DC, 1=AC                    |
-| 30014          | 0x000D    | R      | EStop root cause            | 0=Normal operation<br/>1=faulty relay<br/>2=Modbus watchdog<br/>3=Voltage monitor<br/>4=Command |
-| 30015          | 0x000E    | R      | Given command diagnostic code | Diagnostic code given with EStop command |
-| 30016          | 0x000F    | R      | Infeed lowest voltage       | Infeed voltage in 1/10th of volts or 0 |
-| 30017          | 0x0010    | R      | Infeed highest voltage      | Infeed voltage in 1/10th of volts or 0 |
+| 30013          | 0x000C    | R      | Actual infeed voltage type  | Reports the type of infeed voltage detected<br/>0=DC, 1=AC                    |
+| 30014          | 0x000D    | R      | EStop root cause            | 0=normal. No ongoing estop<br/>1=relay. A relay fault was detected<br/>2=modbus. The communication watchdog reported a lack of communication<br/>3=voltage. An incorrect voltage or voltage type was detected<br/>4=external. A modbus command was issued.<br/><br/>Unless an EStop condition is still in progress, this register is cleared to 0 by reading the diagnostic code. |
+| 30015          | 0x000E    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>relay</b><br/>Holds the faulty relay index + 1</li><li><b>modbus</b><br/>The timeout in seconds</li><li><b>voltage</b><br/>0xFFFF is the voltage type is incorrect, else the triggering voltage in 1/10V</li><li><b>external</b><br/>Contains the [ESTop control](#rcfg--relay-configuration-values) value</li></ul><br/><b>Note:</b> This register and the root cause are cleared when reading it unless an active EStop is in progress |
+| 30016          | 0x000F    | R      | Infeed lowest voltage       | Infeed voltage in 1/10th of volts |
+| 30017          | 0x0010    | R      | Infeed highest voltage      | Infeed voltage in 1/10th of volts |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
 ### Relay Diagnostics & Stats
