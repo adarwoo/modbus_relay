@@ -17,13 +17,14 @@ namespace config {
       asx::uart::parity parity;
 
       // Infeed config
-      infeed::Type infeed_type; // 0=DC, 1=50 or 2=60Hz
-      uint16_t infeed_min; // Infeed Min voltage in 1/10 volts
-      uint16_t infeed_max; // Infeed Max voltage in 1/10 volts
+      infeed::CfgType infeed_type; // 0=DC, 1=50 or 2=60Hz
+      uint16_t infeed_min_volt_threshold; // Infeed Min voltage in 1/10 volts
+      uint16_t infeed_max_volt_threshold; // Infeed Max voltage in 1/10 volts
 
       // EStop config
       bool estop_on_undervolt; // EStop on infeed undervoltage
       bool estop_on_overvolt;  // EStop on infeed overvoltage
+      bool estop_on_bad_voltage_type; // EStop on bad voltage type (AC/DC mismatch)
       uint16_t estop_modbus_watchdog; // EStop on watchdog timeout. Period in seconds
 
       // Relay config
@@ -42,8 +43,9 @@ namespace config {
    void set_watchdog(uint16_t period);
    void set_estop_on_undervolt(bool yes);
    void set_estop_on_overvolt(bool yes);
-   void set_infeed_min(uint8_t threshold);
-   void set_infeed_max(uint8_t threshold);
+   void set_estop_on_bad_voltage_type(bool yes);
+   void set_infeed_min_voltage_threshold(uint16_t threshold);
+   void set_infeed_max_voltage_threshold(uint16_t threshold);
 
    void set_relay_config(uint8_t address, uint8_t conf, uint8_t filter);
 

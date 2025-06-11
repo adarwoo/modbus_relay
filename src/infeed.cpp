@@ -61,11 +61,12 @@ namespace infeed {
          processing_required = true;
          last_ac_voltage = fft_t::get_result();
 
-         if ( config::get_config().infeed_type != infeed::Type::dc ) {
+         // TODO: Use optional and test all AC/DC
+         if ( config::get_config().infeed_type != infeed::CfgType::dc ) {
             // If the frequency is not set, we assume it's a DC signal
             inrange = (
-               last_ac_voltage > config::get_config().infeed_min &&
-               last_ac_voltage < config::get_config().infeed_max
+               last_ac_voltage > config::get_config().infeed_min_volt_threshold &&
+               last_ac_voltage < config::get_config().infeed_max_volt_threshold
             );
          }
       }
@@ -78,11 +79,11 @@ namespace infeed {
          last_dc_voltage = static_cast<int16_t>(dc_sum / 256);
          dc_sum = dc_count = 0;
 
-         if ( config::get_config().infeed_type != infeed::Type::dc ) {
+         if ( config::get_config().infeed_type != infeed::CfgType::dc ) {
             // If the frequency is not set, we assume it's a DC signal
             inrange = (
-               last_dc_voltage > config::get_config().infeed_min &&
-               last_dc_voltage < config::get_config().infeed_max
+               last_dc_voltage > config::get_config().infeed_min_volt_threshold &&
+               last_dc_voltage < config::get_config().infeed_max_volt_threshold
             );
          }
       }
@@ -113,9 +114,9 @@ namespace infeed {
       uint8_t freq = 55; // Half way will detect either mains type
       auto infeed_type = config::get_config().infeed_type;
 
-      if ( infeed_type == infeed::Type::ac_50hz ) {
+      if ( infeed_type == infeed::CfgType::ac_50hz ) {
          freq = 50;
-      } else if ( infeed_type == infeed::Type::ac_60hz ) {
+      } else if ( infeed_type == infeed::CfgType::ac_60hz ) {
          freq = 60;
       }
 
@@ -166,19 +167,22 @@ namespace infeed {
       ADC0.INTCTRL |= ADC_RESRDY_bm;
    }
 
-   uint16_t get_ac_voltage() {
-      return last_ac_voltage;
+   uint16_t get_input_voltage() {
+      return std::max(last_ac_voltage, last_dc_voltage);
    }
 
-   uint16_t get_dc_voltage() {
-      return last_dc_voltage;
+   InputType get_input_voltage_type() {
+      if ( last_dc_voltage > last_ac_voltage ) {
+         return InputType::dc;
+      }
+      return InputType::ac;
    }
 
-   uint16_t get_min_voltage() {
+   uint16_t get_lowest_voltage() {
       return min_voltage;
    }
 
-   uint16_t get_max_voltage() {
+   uint16_t get_highest_voltage() {
       return max_voltage;
    }
 

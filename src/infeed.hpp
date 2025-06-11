@@ -4,10 +4,16 @@
 
 namespace infeed {
    /// @brief < Type of infeed to monitor
-   enum class Type : uint8_t {
+   enum class CfgType : uint8_t {
       dc = 0,
       ac_50hz = 1,
       ac_60hz = 2
+   };
+
+   /// @brief < Type of infeed to report
+   enum class InputType : uint8_t {
+      dc = 0,
+      ac = 1
    };
 
    namespace literal {
@@ -20,13 +26,13 @@ namespace infeed {
       }
    }
 
-   uint16_t get_ac_voltage();
-   uint16_t get_dc_voltage();
-   uint16_t get_min_voltage();
-   uint16_t get_max_voltage();
+   uint16_t get_lowest_voltage();
+   uint16_t get_highest_voltage();
+   uint16_t get_input_voltage();
+   InputType get_input_voltage_type();
 
    void reset_min_max();
 
    void init();
 
-} // namespace ingress
+} // namespace infeed

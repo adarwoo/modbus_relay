@@ -12,11 +12,12 @@ namespace config {
       .baud = 5, // 9600
       .stopbits = uart::stop::_1,
       .parity = uart::parity::even,
-      .infeed_type = infeed::Type::ac_50hz,
-      .infeed_min = 10_volts,
-      .infeed_max = 250_volts,
+      .infeed_type = infeed::CfgType::ac_50hz,
+      .infeed_min_volt_threshold = 10_volts,
+      .infeed_max_volt_threshold = 250_volts,
       .estop_on_undervolt = false,
       .estop_on_overvolt = false,
+      .estop_on_bad_voltage_type = false,
       .estop_modbus_watchdog = 0,
       .relays_config = {relay::Config{0}, relay::Config{0}, relay::Config{0}}
    };
@@ -91,15 +92,19 @@ namespace config {
    }
 
    void set_infeed_min(uint8_t threshold) {
-      eeprom_config.infeed_min = threshold;
+      eeprom_config.infeed_min_volt_threshold = threshold;
       eeprom_config.update();
    }
 
    void set_infeed_max(uint8_t threshold) {
-      eeprom_config.infeed_max = threshold;
+      eeprom_config.infeed_max_volt_threshold = threshold;
       eeprom_config.update();
    }
 
+   void set_estop_on_bad_voltage_type(bool yes) {
+      eeprom_config.estop_on_bad_voltage_type = yes;
+      eeprom_config.update();
+   }
    void set_relay_config(uint8_t address, uint8_t conf, uint8_t filter) {
       eeprom_config.relays_config[address].debounce_time = filter;
       eeprom_config.relays_config[address].config = conf;

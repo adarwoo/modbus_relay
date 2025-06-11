@@ -91,34 +91,36 @@ namespace net {
 
       while ( qty-- ) {
          switch(addr++) {
+         // Device identification
          case 0x00: dg::pack( DEVICE_ID ); break;
          case 0x01: dg::pack( HW_VERSION ); break;
          case 0x02: dg::pack( FW_VERSION ); break;
          case 0x03: dg::pack( NUMBER_OF_RELAYS ); break;
-         case 0x04: dg::pack( NUMBER_OF_BANKS ); break;
 
+         // Status & Monitoring
          case 0x08: dg::pack( static_cast<uint16_t>(estop::get_status()) ); break;
-
          case 0x09: dg::pack( stat::get_running_minutes() >> 16 ); break;
          case 0x0A: dg::pack( stat::get_running_minutes() & 0xFFFF ); break;
-         case 0x0B: dg::pack( infeed::get_ac_voltage() ); break;
-         case 0x0C: dg::pack( infeed::get_dc_voltage() ); break;
+         case 0x0B: dg::pack( infeed::get_input_voltage() ); break;
+         case 0x0C: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
          case 0x0D: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
          case 0x0E: dg::pack( estop::get_diagnostic_code() ); break;
 
-         case 0x0F: dg::pack( infeed::get_min_voltage() ); break;
-         case 0x10: dg::pack( infeed::get_max_voltage() ); break;
+         case 0x0F: dg::pack( infeed::get_lowest_voltage() ); break;
+         case 0x10: dg::pack( infeed::get_highest_voltage() ); break;
 
+         // Relay Diagnostics & Stats
          case 0x18: dg::pack( relay::is_ok(0) ); break;
-         case 0x19: dg::pack( relay::is_ok(1) ); break;
-         case 0x1A: dg::pack( relay::is_ok(2) ); break;
+         case 0x19: dg::pack( relay::get_cycles(0) >> 16 ); break;
+         case 0x1A: dg::pack( relay::get_cycles(0) & 0xFFFF ); break;
 
-         case 0x20: dg::pack( relay::get_cycles(0) >> 16 ); break;
-         case 0x21: dg::pack( relay::get_cycles(0) & 0xFFFF ); break;
-         case 0x22: dg::pack( relay::get_cycles(1) >> 16 ); break;
-         case 0x23: dg::pack( relay::get_cycles(1) & 0xFFFF ); break;
-         case 0x24: dg::pack( relay::get_cycles(2) >> 16 ); break;
-         case 0x25: dg::pack( relay::get_cycles(3) & 0xFFFF ); break;
+         case 0x1B: dg::pack( relay::is_ok(1) ); break;
+         case 0x1C: dg::pack( relay::get_cycles(1) >> 16 ); break;
+         case 0x1D: dg::pack( relay::get_cycles(1) & 0xFFFF ); break;
+
+         case 0x1E: dg::pack( relay::is_ok(2) ); break;
+         case 0x1F: dg::pack( relay::get_cycles(2) >> 16 ); break;
+         case 0x20: dg::pack( relay::get_cycles(3) & 0xFFFF ); break;
 
          default:
             dg::pack(uint16_t{0});
@@ -133,19 +135,24 @@ namespace net {
 
       while ( qty-- ) {
          switch(index++) {
+         // Communication settings
          case 0x00: dg::pack<uint16_t>( cfg.address ); break;
-         case 0x01: dg::pack<uint16_t>( cfg.baud ); break;
-         case 0x02: dg::pack( static_cast<uint16_t>(cfg.parity) ); break;
-         case 0x03: dg::pack( static_cast<uint16_t>(cfg.stopbits) ); break;
+         case 0x01: dg::pack<uint16_t>( static_cast<uint16_t>(cfg.baud) ); break;
+         case 0x02: dg::pack<uint16_t>( static_cast<uint16_t>(cfg.parity) ); break;
+         case 0x03: dg::pack<uint16_t>( static_cast<uint16_t>(cfg.stopbits) ); break;
 
-         case 0x08: dg::pack( static_cast<uint16_t>(cfg.infeed_type) ); break;
-         case 0x09: dg::pack<uint16_t>( cfg.infeed_min ); break;
-         case 0x0A: dg::pack<uint16_t>( cfg.infeed_max ); break;
+         // Power Infeed Configuration
+         case 0x08: dg::pack<uint16_t>( static_cast<uint16_t>(cfg.infeed_type) ); break;
+         case 0x09: dg::pack<uint16_t>( cfg.infeed_min_volt_threshold ); break;
+         case 0x0A: dg::pack<uint16_t>( cfg.infeed_max_volt_threshold ); break;
 
+         // Safety Logic Configuration
          case 0x10: dg::pack<uint16_t>( cfg.estop_on_undervolt); break;
          case 0x11: dg::pack<uint16_t>( cfg.estop_on_overvolt); break;
-         case 0x12: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
+         case 0x12: dg::pack<uint16_t>( cfg.estop_on_bad_voltage_type); break;
+         case 0x13: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
 
+         // Relay Configuration
          case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].value ); break;
          case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].value ); break;
          case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].value ); break;
@@ -172,6 +179,10 @@ namespace net {
       config::set_estop_on_overvolt(static_cast<bool>(onoff));
    }
 
+   void on_write_estop_on_bad_voltage_type(uint8_t onoff) {
+      config::set_estop_on_bad_voltage_type(static_cast<bool>(onoff));
+   }
+
    void on_write_estop_on_timeout(uint16_t seconds) {
       config::set_watchdog(seconds);
    }
@@ -193,7 +204,7 @@ namespace net {
    }
 
    // Trigger an estop
-   void on_estop_set(uint8_t type, uint8_t diag) {
+   void on_estop(uint8_t type, uint8_t diag) {
       // If the device is already on terminal EStop - return an error
       if ( estop::get_status() == estop::Status::terminated ) {
          dg::reply_error(error_t::negative_acknowledge);
