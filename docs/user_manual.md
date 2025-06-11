@@ -100,7 +100,7 @@ The module features many LED to see the device operation and faults easilty.
 
 For detailed LED states, see:
 - [EStop LED](#estop-led)
-- [INFEED LED](#infeed-led)
+- [Infeed LED](#infeed-led)
 - [Modbus LEDs](#modbus-leds)
 - [Relay LEDs](#relay-leds)
 
@@ -286,7 +286,7 @@ The following function codes are supported:
 <br/>Writes a single value to a specific holding register.
 <br/>Used for updating configuration or control parameters.
 * **16** - [Write Multiple Registers](https://www.modbustools.com/modbus.html#function16)
-<br/>Writes a whole configuration group at once. See the sub-chapter for details
+<br/>Writes a whole configuration group at once. This is only available for writting the communication settings.
 
 > [!WARNING]
 > Do no issue the function 04: Read input registers when reading holding registers as the memory addresses of both types overlaps.
@@ -303,13 +303,11 @@ This group of registers allow configuring the communication settings of the rela
 | 40002          | 0x0001    | RW     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
 | 40003          | 0x0002    | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
 | 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
-| 40005–40006    | 0x0004–0x0005 | R  | *Reserved*          |               |        |
+| 40005–40008    | 0x0004–0x0007 | R  | *Reserved*          |               |        |
 
 > [!NOTE]
 > Function ~~**06: Write single register**~~ is not availble for this group.
 > You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
-
-> [!WARNING]
 > Once the command is acknowledged, the relay will immediatly start using the new settings.
 
 ### Power Infeed Configuration
@@ -317,27 +315,25 @@ This group of registers allow configuring the communication settings of the rela
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
 |----------------|-----------|--------|---------------------|---------------|--------|
 | 40009          | 0x0008    | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 40010          | 0x0009    | RW     | Ingress minimum voltage threshold | 10       | 1/10 volts [100-3000] |
-| 40011          | 0x000A    | RW     | Ingress maximum voltage threshold | 300      | 1/10 volts [100-3000] |
+| 40010          | 0x0009    | RW     | Ingress minimum voltage threshold | 100      | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Ingress maximum voltage threshold | 3000     | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
-This group can be written with the command **16**, only by writting register 40009 to 40011 in 1 command.
-
-Other combinations will return an error.
+> [!WARNING]
+> The registers must be written individually. The command **16** is not supported.
 
 ### Safety Logic Configuration
 
-| Modbus Address | Hex Value | Access | Description                                | Factory Value | Values |
+| Modbus Address | Hex Value | Access | Description                               | Factory Value | Values |
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
-| 40017          | 0x0010    | RW     | Activater EStop on undervoltage                     | 1             | 0=no<br/>1=yes |
-| 40018          | 0x0011    | RW     | Activate EStop on overvoltage                      | 1             | 0=no<br/>1=yes |
-| 40019          | 0x0011    | RW     | Activate EStop on incorrect type of supply<br>If AC is configured, but DC is detected for example  | 1             | 0=no<br/>1=yes |
-| 40020          | 0x0012    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
-| 40021–40024    | 0x0013–0x0017 | R  | *Reserved*                                |               |        |
+| 40017          | 0x0010    | RW     | Activate EStop on undervoltage            | 0             | 0=no<br/>1=yes |
+| 40018          | 0x0011    | RW     | Activate EStop on overvoltage             | 0             | 0=no<br/>1=yes |
+| 40019          | 0x0012    | RW     | Activate EStop on incorrect type of supply voltage<br>Example: AC detected with DC configured | 0 | 0=no<br/>1=yes |
+| 40020          | 0x0013    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
+| 40021–40024    | 0x0014–0x0017 | R  | *Reserved*                                |               |        |
 
-This group can be written with the command **16**, only by writting register 40017 to 40019 in 1 command.
-
-Other combinations will return an error.
+> [!WARNING]
+> The registers must be written individually. The command **16** is not supported.
 
 ### Relay Configuration
 
@@ -347,16 +343,17 @@ The value written is RCFG described below.
 | Modbus Address | Hex Value | Access | Description         | Factory default | Values |
 |----------------|-----------|--------|---------------------|------------------|-------|
 | 40025          | 0x0018    | RW     | Relay 1 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
-| 40025 + n      | 0x0018 + n| RW     | Relay 1 + n config  | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
-| 40056          | 0x0038    | RW     | Relay 32 config     | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| 40026          | 0x0019    | RW     | Relay 2 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| 40027          | 0x001A    | RW     | Relay 3 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+
+<sup>1</sup> Available on devices with more than 3 relays
+
+> [!WARNING]
+> The registers must be written individually. The command **16** is not supported.
 
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
-
-This group can be written with the command **16**, only by writting register 40025 to the register of the last relay.
-So, for a 3 relays devices, you must write registers 40025, 40026 and 40027 (3 registers) in the same transaction.
-
-Any other combinations will return an error.
 
 #### RCFG / Relay configuration values
 
@@ -383,13 +380,6 @@ The following table illustrates the effect of the invert and default settings:
 | **1**     |0                |	OFF = **Closed**   |
 | **1**     |**1**            |	ON  = **Opened**   |
 
----
-
-> [!NOTE]
-> 1. All relay diagnostics and counters are grouped in blocks of 8 for efficient Modbus access.
-> 2. To add more relays, simply add another bank of 8 at the next available block.
-> 3. Control registers are write-only and can be mapped to holding registers or coils as appropriate for your Modbus implementation.
-
 ### Device control register
 
 This group of register allow controlling the EStop and the relay.
@@ -414,7 +404,7 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 
 | Byte | Function | Values |
 |--------------|----------|-------------|
-| MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the ESTop could not be reset<br/>0x11 : Pulsed EStop. Create a 1 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a device reset will clear the ESTop (Register 40103) |
+| MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the EStop could not be reset<br/>0x11 : Pulsed EStop. Create a 4 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a device reset will clear the ESTop (Register 40103) |
 | LSB          | Diagnostic code | A code can be applied to allow investigating the cause of EStop/Reset.<br/>Values: <0-255> |
 
 ## Troubleshooting
