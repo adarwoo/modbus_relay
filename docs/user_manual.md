@@ -39,13 +39,29 @@ This section describes how to configure and operate the device, including its de
 
 ## Simple operation
 The relay works like any modbus coil by writting the coil registers.
-The coils can be written individually using command **05**: Write single coil, or by bunch using command **15**: Write multiple coils.
+The coils can be written individually using command **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05) or by bunch using command **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function01)
 
-The status of the relay can be read back with command **01**: Read coils.
+The status of the relay can be read back with command **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)
 
-The relay polarity can be inverted, and the default relay position set in the configuration.
+The relay polarity can be inverted, and the default relay position can be set in the configuration.
 
 ## System Health Monitoring
+
+This relay distinshes itself from simpler version by its built-in ability to monitor the health of the system it operates within, and to halt operations by opening an EStop relay.
+
+The active elements being monitored are:
+1. The modbus communication from the master
+2. The infeed voltage (upsteam supply voltage)
+3. The health of the relays
+4. As instructed from the modbus master
+
+### Modbus communication monitoring
+
+The device can monitor for correct activity on the Modbus network, triggering a resetable EStop if the master stops issuing commands to the device.
+
+> [!NOTE]
+> The bus is considered active if commands addressed to the device are received at least once in the configured watchdog duration.
+> For good operation, it is recommended to read the register 30009 (Status) periodically, like every second.
 
 ### Infeed monitoring
 
@@ -59,25 +75,23 @@ The relays can be individually configured to go Open or Close when a infeed faul
 
 ### Relay health monitoring
 
-All the relay are equiped with a status read back. If a relay was to fail, the ESTop is trigggered in terminal mode.
-Only a reset of the relay can temporary reset the EStop.
+All the relay are equiped with a status read back, backed mecanically (using a forced conduit). If a relay is to fail, the fault is detected and the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
 The faulty relay can be isolated with a disable command, but it should be replaced.
 
 The relays can be individually configured to go Open or Close when a relay fault is detected.
 
-### Modbus communication monitoring
+### External EStop
 
-The device can monitor for correct activity on the Modbus network, triggering a resetable EStop if the master stops issuing commands to the device.
-
-> [!NOTE]
-> The bus is considered active if commands addressed to the device are received at least once in the configured watchdog duration.
-> For good operation, it is recommended to read the register 30009 (Status) periodically, like every second.
+The modbus master can issue an EStop command. This external EStop condition can be:
+. Pulsed EStop. The system will halt, but can be resumed right after
+. Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
+. Terminal. Only a power cycle can clear the condition.
 
 ## Recovery mode
 
 When a relay cannot be reached or is un-responsive, the following procedure can be used.<br/>
 
-1. Push the relay push button for > 5s
+1. Push the relay 'EStop reset' push button for > 3s
    * The Alert LED Flashes fast
    * The communication values have been temporary reset to:
 
@@ -94,9 +108,25 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 > [!NOTE]
 > When activating the recovery mode, all relay operations are maintained.
 
+## EStop mode
+
+The EStop relay circuit is opened on a EStop condiiton.
+When the relay controller is in EStop, the relay status is changed according to the configuration.
+It is no longer possible to command the relays over the modbus network. This will create an error.
+When the EStop condition is reset (automatic, push on the reset button, or power cycle), operations resumes to normal.
+
+In all cases, the EStop condition can be read over the modbus network.
+
 ## LEDs
 
 The module features many LED to see the device operation and faults easilty.
+> [!TIP]
+> During boot, for the first 2seconds, all LEDs are lit. This allow checking for a faulty LED.
+
+All LEDs serve multiple purspose with the exception of the modbus Tx LED which only indicates outgoing RS485 traffic. 
+The expression 'All LEDs' de-fact excludes the modbus Tx LED.
+
+To help find a relay controller, a locate command can be send. This will flash all LEDs at 10Hz for 1s, and the actual LED value for the next.
 
 For detailed LED states, see:
 - [EStop LED](#estop-led)
@@ -116,16 +146,10 @@ The fault LED state is as follow:
 | On    | Device is terminated. A hard reboot is required. If the termination was caused by a failing relay, the correspond relay LED will flash at 2Hz |
 | Flash fast at 10Hz | Device is in recovery mode |
 | Flash at 2Hz | Fault detected. The fault can be cleared by pressing the ESTOP reset button.<br/>Another LED will synchronously blink to point to the fault.<br/><ul><li><b>INFEED LED</b>: Infeed fault, over or under</li><li><b>TX LED</b>: Modbus watchdog</li></ul>
+| Flash once for 2s | A pulsed EStop condition was received from the modbus master |
 
-When the EStop is set, the relay does the following:
-1. It opens the EStop relay
-2. It lights the fault LED if the failure cannot be recovered
-   * This is the case if a relay becomes faulty
-3. It blinks the fault LED if the EStop can be reset
-   * A push on the switch resets the EStop, unless the triggering condition has not be resolved
-4. It records the fault
-5. It flashes the corresponding LED to pin point the problem
-  * If a relay is at fault, the corresponding relay flashes
+When an EStop is is progress, a source LED is flashing fast to point to the source:
+  * If a relay is at fault, the corresponding relay LED flashes
   * If the infeed supply is at fault, it will flash. Note, the LED will flash (Long on short off) it a voltage is detected.
   * The modbus Rx LED will flash to indicate the EStop was triggered remotely
 
@@ -147,6 +171,8 @@ The infeed LED provides visual information about the infeed voltage.
 ### Modbus LEDs
 
 The modbus LEDs should activity on the Modbus RS485 network, including data not addresses to the relay.
+The Rx should any incomming traffic. The packets may not be for the device itself.
+The Tx LED is lit during power-up boot, and show the outgoing traffic activity. It does serve other purpose.
 
 ### Relay LEDS
 
