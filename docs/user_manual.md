@@ -103,10 +103,15 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 
 2. Start the 'Relay Guarian' application, and select 'Recovery' from the menu.
 3. Configure the device as required
-4. Apply the new configuration and reset the device
+4. Apply the new configuration. This ends the recovery mode, and the device is operational with the new settings.
 
 > [!NOTE]
-> When activating the recovery mode, all relay operations are maintained.
+> The recovery mode maintains on-going relay operations.
+
+> [!TIP]
+> The recovery mode can also be ended by pressing the 'EStop reset' push button for another 3s.
+> The device then applies the programmed settings.
+
 
 ## EStop mode
 
