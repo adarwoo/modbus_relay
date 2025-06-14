@@ -116,8 +116,8 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 ## EStop mode
 
 The EStop relay circuit is opened on a EStop condiiton.
-When the relay controller is in EStop, the relay status is changed according to the configuration.
-It is no longer possible to command the relays over the modbus network. This will create an error.
+When the relay controller is in EStop, the relay status is changed according to the configuration - that is, unchanged, or switched to the configured default state.
+It is no longer possible to command the relays over the modbus network. The command will create an 'slave_device_failure' error.
 When the EStop condition is reset (automatic, push on the reset button, or power cycle), operations resumes to normal.
 
 In all cases, the EStop condition can be read over the modbus network.
@@ -201,6 +201,7 @@ The Modbus registers are grouped into:
 - [Coil Registers](#coil-registers)
 - [Input Registers](#input-registers)
 - [Holding Registers](#holding-registers)
+- [Device Control Registers](#device-control-registers)
 
 For communication settings, see [Communication Settings](#communication-settings).
 
@@ -242,6 +243,7 @@ The following values can be used:
 
 ## Input registers
 
+Input registers are read-only registers used to report information about the controller.
 The registers have been grouped so they can easily be accessed.
 Reserved values reads as 0.
 
@@ -279,29 +281,34 @@ This registers provides details about the device in use.
 | 30017          | 0x0010    | R      | Infeed highest voltage      | Infeed voltage in 1/10th of volts |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
-### Relay Diagnostics & Stats
+### Relay Diagnostics & Statistics
 
-> [!NOTE]
-> The table is structure to expand if more relays are added
+The status of each relays is accessible, and well as their indivual number of cycles.
+A cycle is defined as a change of a relay state during operation (exclude powerloss transitions).
+<br/>
+The address space is structured to expand up to 32 relays for other variants of controllers.
 
-| Modbus Address | Hex value | Access | Description                | Values |
-|----------------|-----------|--------|:--------------------------:|--------|
-| 30025          | 0x0018    | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty |
-| 30026 (+1)     | 0x0019 (+1)| R     | Relay 1 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30028          | 0x001B    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
-| 30029 (+1)     | 0x001C (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30031          | 0x001E    | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty |
-| 30032 (+1)     | 0x001F (+1)| R     | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1 |
+| Modbus Address | Hex value    | Access | Description                | Values                           |
+|----------------|--------------|--------|:--------------------------:|----------------------------------|
+| 30025          | 0x0018       | R      | Relay 1 diagnostic         | 0=OK<br/>1=Faulty<br/>2=Disabled |
+| 30026-30027    | 0x0019-0x001A| R      | Relay 1 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1    |
+| 30028          | 0x001B       | R      | Relay 2 diagnostic         | 0=OK<br/>1=Faulty<br/>2=Disabled |
+| 30029-30030    | 0x001C-0x001D| R      | Relay 2 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1    |
+| 30031          | 0x001E       | R      | Relay 3 diagnostic         | 0=OK<br/>1=Faulty<br/>2=Disabled |
+| 30032-30033    | 0x001F-0x0020| R      | Relay 3 number of cycles   | UINT32<br/>0-2<sup>32</sup>-1    |
 
 > [!WARNING]
-> Reading passed the last supported relay will generate an error.
+> Reading passed the last supported relay will generate a **illegal data address** error.
 
 > [!TIP]
 > For generic software, the number of available relays can be read in input registers 30004.
 
 ## Holding registers
 
-The holding registers can be read all together. Reserved value reads as 0.
+Holding register contain values can be read or written. The hold configuration details.
+They are grouped by functions.
+It is possible to read all the holding registers with 1 command as the reserved values will read as one.
+Writing these registers is restricted to prevent mis-behavious.
 
 > [!WARNING]
 > Reserved values cannot be written and will generate an error.
@@ -386,6 +393,9 @@ The value written is RCFG described below.
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
 
+> [!IMPORTANT]
+> A disabled relay is electrically opened for safety reasons
+
 #### RCFG / Relay configuration values
 
 The following configuration is available. By default, all features are off. These changes are all permanent.
@@ -411,8 +421,9 @@ The following table illustrates the effect of the invert and default settings:
 | **1**     |0                |	OFF = **Closed**   |
 | **1**     |**1**            |	ON  = **Opened**   |
 
-### Device control register
+## Device control registers
 
+These register share the holding registers mapping address but are write-only.
 This group of register allow controlling the EStop and the relay.
 
 > [!NOTE]
@@ -429,7 +440,7 @@ This group of register allow controlling the EStop and the relay.
 
 **Note <sup>1</sup>** : See the format below
 
-#### EStop control
+### EStop control
 
 The following table documents the type **ESTOP_CTRL** used to control the EStop.
 
