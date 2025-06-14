@@ -423,8 +423,8 @@ The following table illustrates the effect of the invert and default settings:
 
 ## Device control registers
 
-These register share the holding registers mapping address but are write-only.
-This group of register allow controlling the EStop and the relay.
+These register share the holding registers mapping address space but are write-only.
+This group of register allows controlling the EStop and the controller device.
 
 > [!NOTE]
 > These registers are write only. The function ~~**03: Read multiple registers**~~ is not availble for this group.
