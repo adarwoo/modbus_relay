@@ -149,7 +149,6 @@ The fault LED state is as follow:
 |-------|-------------|
 | Off   | Normal operations |
 | On    | Device is terminated. A hard reboot is required. If the termination was caused by a failing relay, the correspond relay LED will flash at 2Hz |
-| Flash fast at 10Hz | Device is in recovery mode |
 | Flash at 2Hz | Fault detected. The fault can be cleared by pressing the ESTOP reset button.<br/>Another LED will synchronously blink to point to the fault.<br/><ul><li><b>INFEED LED</b>: Infeed fault, over or under</li><li><b>TX LED</b>: Modbus watchdog</li></ul>
 | Flash once for 2s | A pulsed EStop condition was received from the modbus master |
 
@@ -175,9 +174,9 @@ The infeed LED provides visual information about the infeed voltage.
 
 ### Modbus LEDs
 
-The modbus LEDs should activity on the Modbus RS485 network, including data not addresses to the relay.
-The Rx should any incomming traffic. The packets may not be for the device itself.
-The Tx LED is lit during power-up boot, and show the outgoing traffic activity. It does serve other purpose.
+The modbus LEDs show activity on the Modbus RS485 network, including for data not addressed to the controller.
+* The Rx LED shows incomming traffic. It flashes fast when the device is in recovery or device locate mode.
+* The Tx LED is lit during power-up boot, and show the outgoing traffic activity. It serves not other purposes.
 
 ### Relay LEDS
 
