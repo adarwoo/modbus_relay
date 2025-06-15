@@ -409,6 +409,12 @@
     <Compile Include="src\relay_ctrl.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\state.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\state.hpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\stats.cpp">
       <SubType>compile</SubType>
     </Compile>
