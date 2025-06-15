@@ -5,27 +5,19 @@
  */
 #include <cstdint>
 
-namespace led {
-   enum class LedState : uint8_t {
-      off   = 0,
-      on    = 1,
-      blink = 2,
-      pulse = 3,
-      fast  = 4
-   };
+#include <asx/reactor.hpp>
 
-   namespace LedId {
-      constexpr auto led_a  = 0;
-      constexpr auto led_b  = 1;
-      constexpr auto led_c  = 2;
-      constexpr auto infeed = 3;
-      constexpr auto estop  = 4;
-   };
+namespace led {
+   namespace detail {
+      ///< Reactor to refresh the LED status
+      inline auto react_on_refresh = asx::reactor::Handle{};
+   } // namespace detail
 
    /// @brief Initialise the LEDs
    void init();
 
-   /// @brief Control a single LED
-   void set(uint8_t index, LedState state);
-
+   /// @brief Force to re-evaluate the LED states
+   inline void refresh() {
+      detail::react_on_refresh();
+   };
 } // namespace led

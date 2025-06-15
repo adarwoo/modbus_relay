@@ -13,7 +13,7 @@ ASX_USE = modbus_rtu eeprom
 
 # Project own files
 SRCS = \
-	src/stats.cpp \
+	src/counters.cpp \
 	src/config.cpp \
 	src/leds.cpp \
    src/net.cpp \

@@ -13,6 +13,9 @@
 #undef  DEBUG_REACTOR_IDLE          // No pin for this
 #define DEBUG_REACTOR_BUSY          IOPORT(A, 2)
 #define UART0_TXD                   IOPORT(B, 2)
+#define UART1_TXD                   IOPORT(A, 1)
+#define UART1_XDIR                  IOPORT(A, 4)
+
 
 /************************************************************************/
 /* Alert pin                                                            */
@@ -26,8 +29,8 @@
 /************************************************************************/
 // The Rx LED is driven by the TimerB1
 #define LED_MODBUS_RX               IOPORT(A, 3)
-// Tx LED is driven by the UART XDIR Pin directly
-#define LED_MODBUS_TX               IOPORT(A, 4)
+// Tx LED is driven by the UART XDIR Pin through the CCL LUT1
+#define LED_MODBUS_TX               IOPORT(A, 7)
 
 /************************************************************************/
 /* Relay I/Os                                                           */
@@ -47,7 +50,7 @@
 /************************************************************************/
 /* In-Feed sensing                                                      */
 /************************************************************************/
-#define INFEED_DIAG                 IOPORT(A, 7)
+#undef INFEED_DIAG                  // No pin for this
 #define INFEED_LED                  IOPORT(B, 4)
 
 /************************************************************************/

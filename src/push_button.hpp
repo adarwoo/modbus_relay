@@ -7,25 +7,28 @@
 #include <cstdint>
 #include <chrono>
 
- #include <asx/reactor.hpp>
+#include <asx/reactor.hpp>
+#include <asx/timer.hpp>
 #include <asx/debouncer.hpp>
 #include <asx/ioport.hpp>
+
+#include "net.hpp"
+#include "state.hpp"
 
 #include "conf_board.h"
 
 
 namespace sw {
    constexpr auto sampling_period = std::chrono::milliseconds(20);
-   constexpr auto debounce_time = std::chrono::seconds(3);
+   constexpr auto debounce_time = std::chrono::milliseconds(40);
+   constexpr auto long_time = std::chrono::milliseconds(40);
 
    auto react_on_sw = asx::reactor::Handle{};
 
-   // Sample the push button every 20ms and debounce it to 3s
+   // Sample the push button every 10ms and debounce it to 40ms
    auto debouncer = asx::Debouncer<1, debounce_time / sampling_period>{};
 
-   static inline void init(asx::reactor::Handle react_on_sw_pushed) {
-      react_on_sw = react_on_sw_pushed;
-
+   static inline void init() {
       // Set the pin to input
       PUSH_BUTTON.init(
          asx::ioport::dir_t::in,
@@ -35,12 +38,34 @@ namespace sw {
 
       // Start the switch sampling
       asx::reactor::bind([]() {
+         constexpr auto time_zero =
+            asx::timer::steady_clock::time_point(asx::timer::steady_clock::duration::zero());
+         static auto last_time = time_zero;
+
          // Sample the switch
          debouncer.append(*PUSH_BUTTON);
 
          // If the switch is pressed, react
          if (debouncer.status().get()) {
-            react_on_sw.notify();
+            if ( last_time == time_zero ) {
+               last_time = asx::timer::steady_clock::now();
+            }
+         } else {
+            if ( last_time != time_zero ) {
+               auto now = asx::timer::steady_clock::now();
+               auto duration = now - last_time;
+
+               if ( duration >= long_time ) {
+                  // Long press detected
+                  if ( state::set_recovery_mode(!state::is_in_recovery_mode()) ) {
+                     net::Uart::init(); // Reinitialize the network
+                  };
+               } else {
+                  state::set_locate_mode(true);
+               }
+
+               last_time = time_zero;
+            }
          }
       }).repeat(sampling_period);
    }

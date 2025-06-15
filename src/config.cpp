@@ -30,8 +30,12 @@ namespace config {
       return check < hundredth_baudrates.size();
    }
 
-   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 6>(default_config);
+   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 7>(
+      default_config);
 
+   /*
+    * Getters for the runtime configuration
+    */
    uart::parity UartRunTimeConfig::get_parity() {
       return eeprom_config.parity;
    }

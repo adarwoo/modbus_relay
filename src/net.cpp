@@ -3,7 +3,6 @@
  */
 #include <avr/io.h>
 #include <trace.h>
-#include <stats.hpp>
 
 #include <chrono>
 
@@ -11,9 +10,11 @@
 
 #include "estop.hpp"
 #include "infeed.hpp"
+#include "counters.hpp"
 #include "relay_ctrl.hpp"
 #include "conf_version.hpp"
 #include "net.hpp"
+#include "state.hpp"
 
 namespace net {
    using namespace asx::modbus;
@@ -26,7 +27,12 @@ namespace net {
 
    // Reactor for the watchdog
    auto react_on_watchdog = asx::reactor::bind(
-      []() { estop::trigger(estop::Cause::modbus_watchdog); }
+      []() {
+         estop::trigger(
+            estop::Cause::modbus_watchdog,
+            config::get_config().estop_modbus_watchdog
+         );
+      }
    );
 
    //
@@ -58,16 +64,21 @@ namespace net {
 
    void on_set_single(uint8_t index, uint16_t operation) {
       TRACE_INFO(RELAY, "%d - %d", index, operation);
+      bool success = true;
 
       switch ( operation ) {
-         case 0x0000: relay::set(index, false);
+         case 0x0000: success = relay::set(index, false);
             break;
-         case 0xFF00: relay::set(index);
+         case 0xFF00: success = relay::set(index);
             break;
-         case 0x5500: relay::set(index, !relay::get(index));
+         case 0x5500: success = relay::set(index, !relay::get(index));
             break;
          default:
             break;
+      }
+
+      if ( !success ) {
+         dg::reply_error(error_t::slave_device_failure);
       }
    }
 
@@ -99,8 +110,8 @@ namespace net {
 
          // Status & Monitoring
          case 0x08: dg::pack( static_cast<uint16_t>(estop::get_status()) ); break;
-         case 0x09: dg::pack( stat::get_running_minutes() >> 16 ); break;
-         case 0x0A: dg::pack( stat::get_running_minutes() & 0xFFFF ); break;
+         case 0x09: dg::pack( counter::get_running_minutes() >> 16 ); break;
+         case 0x0A: dg::pack( counter::get_running_minutes() & 0xFFFF ); break;
          case 0x0B: dg::pack( infeed::get_input_voltage() ); break;
          case 0x0C: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
          case 0x0D: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
@@ -110,17 +121,17 @@ namespace net {
          case 0x10: dg::pack( infeed::get_highest_voltage() ); break;
 
          // Relay Diagnostics & Stats
-         case 0x18: dg::pack( relay::is_ok(0) ); break;
-         case 0x19: dg::pack( relay::get_cycles(0) >> 16 ); break;
-         case 0x1A: dg::pack( relay::get_cycles(0) & 0xFFFF ); break;
+         case 0x18: dg::pack( static_cast<uint16_t>(relay::get_status(0)) ); break;
+         case 0x19: dg::pack( counter::get(0) >> 16 ); break;
+         case 0x1A: dg::pack( counter::get(0) & 0xFFFF ); break;
 
-         case 0x1B: dg::pack( relay::is_ok(1) ); break;
-         case 0x1C: dg::pack( relay::get_cycles(1) >> 16 ); break;
-         case 0x1D: dg::pack( relay::get_cycles(1) & 0xFFFF ); break;
+         case 0x1B: dg::pack( static_cast<uint16_t>(relay::get_status(1)) ); break;
+         case 0x1C: dg::pack( counter::get(1) >> 16 ); break;
+         case 0x1D: dg::pack( counter::get(1) & 0xFFFF ); break;
 
-         case 0x1E: dg::pack( relay::is_ok(2) ); break;
-         case 0x1F: dg::pack( relay::get_cycles(2) >> 16 ); break;
-         case 0x20: dg::pack( relay::get_cycles(3) & 0xFFFF ); break;
+         case 0x1E: dg::pack( static_cast<uint16_t>(relay::get_status(2)) ); break;
+         case 0x1F: dg::pack( counter::get(2) >> 16 ); break;
+         case 0x20: dg::pack( counter::get(2) & 0xFFFF ); break;
 
          default:
             dg::pack(uint16_t{0});
@@ -169,6 +180,10 @@ namespace net {
       config::set_baud(baud);
       config::set_parity(parity);
       config::set_stopbits(stopbits);
+
+      // Need to re-initialise the UART
+      state::set_recovery_mode(false);
+      net::Uart::init(); // Reinitialize the network
    }
 
    void on_write_estop_on_under(uint8_t onoff) {
@@ -209,7 +224,11 @@ namespace net {
       if ( estop::get_status() == estop::Status::terminated ) {
          dg::reply_error(error_t::negative_acknowledge);
       } else {
-         estop::trigger(static_cast<estop::ExternalTriggerType>(type), diag);
+         estop::trigger(
+            estop::Cause::command,
+            diag,
+            static_cast<estop::ExternalTriggerType>(type)
+         );
       }
    }
 
@@ -217,15 +236,8 @@ namespace net {
       infeed::reset_min_max();
    }
 
-   bool locate_device = false;
-
    void on_locate(uint8_t onoff) {
-      locate_device = static_cast<bool>(onoff);
-   }
-
-   // Corresponding accessor API
-   bool get_locate_device_status() {
-      return locate_device;
+      state::set_locate_mode(onoff);
    }
 
    void on_factory_reset() {

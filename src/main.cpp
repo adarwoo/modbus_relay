@@ -5,9 +5,9 @@
 #include <asx/reactor.hpp>
 
 // Defines the modbus_slave
-#include "stats.hpp"
+#include "counters.hpp"
 #include "relay_ctrl.hpp"
-#include "sw.hpp"
+#include "push_button.hpp"
 #include "leds.hpp"
 #include "infeed.hpp"
 #include "config.hpp"
@@ -37,7 +37,7 @@ int main()
    estop::init();
 
    // Ready the stats
-   stat::init();
+   counter::init();
 
    // Ready the relay control
    relay::init();
@@ -45,11 +45,11 @@ int main()
    // Ready the ingress measurement system
    infeed::init();
 
-   // Ready the switch
-   sw::init(asx::reactor::null);
-
    // Ready the modbus handlers and set the datagram ID
    net::init();
+
+   // Ready the switch
+   sw::init();
 
    // Run the reactor/scheduler
    reactor::run();

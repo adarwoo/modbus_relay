@@ -1,6 +1,13 @@
 /**
  * @file leds.cpp
- * @brief Instantiates the LED control in a single place to avoid copy issues
+ * @brief Manages the LED control
+ * @details
+ * This module provides functions to control the LEDs on the relay module,
+ * including setting their states (on, off, blink, pulse) and handling
+ * periodic updates to the LED states.
+ * The module uses the information provided from the estop, relay, net and state
+ * modules to determine the appropriate LED states based on the device's
+ * operational status.
  * @author software@arreckx.com
  */
 #include <avr/io.h>
@@ -15,34 +22,54 @@
 #include "conf_board.h"
 #include "leds.hpp"
 #include "net.hpp"
+#include "state.hpp"
+#include "estop.hpp"
 
 using namespace std::chrono;
 using namespace asx::ioport;
 
-namespace led {
-   enum class State : uint8_t {
-      all_on,
-      normal,
-      estop_transient,
-      estop_resetable,
-      terminal,
-      locate,
-      recovery
+
+namespace {
+   // ----------------------------------------------------------------------------
+   // Local types
+   // ----------------------------------------------------------------------------
+   enum class LedState : uint8_t {
+      managed = 0, // Managed by the system
+      off,         // LED is off
+      on,          // LED is on
+      blink,       // LED is blinking
+      pulse,       // LED is pulsing
+      fast         // LED is fast blinking
    };
 
-   // Store the normal state of an LED
-   std::array<std::pair<Pin, LedState>, 5> leds = {{
-      {LED_A,      LedState::off},
-      {LED_B,      LedState::off},
-      {LED_C,      LedState::off},
-      {INFEED_LED, LedState::off},
-      {ALERT_OUTPUT_PIN, LedState::off}
+   namespace id {
+      constexpr auto led_a  = 0;
+      constexpr auto led_b  = 1;
+      constexpr auto led_c  = 2;
+      constexpr auto infeed = 3;
+      constexpr auto estop  = 4;
+      constexpr auto rx     = 5;
+      constexpr auto tx     = 6;
+   };
+
+   // ----------------------------------------------------------------------------
+   // Local variables
+   // ----------------------------------------------------------------------------
+
+   /// Store the normal state of an LED
+   std::array<std::pair<Pin, LedState>, 7> leds = {{
+      {ALERT_OUTPUT_PIN, LedState::off},
+      {INFEED_LED,       LedState::off},
+      {LED_MODBUS_TX,    LedState::managed},
+      {LED_MODBUS_RX,    LedState::managed},
+      {LED_A,            LedState::off},
+      {LED_B,            LedState::off},
+      {LED_C,            LedState::off},
    }};
 
-   int8_t fault_index = -1;
-
-   //
-   bool locate_is_on = false;
+   // ----------------------------------------------------------------------------
+   // Local functions
+   // ----------------------------------------------------------------------------
 
    /**
     * Combine the event system with the configurable custom logic to drive
@@ -73,6 +100,8 @@ namespace led {
       EVSYS.USERCCLLUT0A  = EVSYS_USER_CHANNEL0_gc;     // LUT0-EVENTA  = Ch0 [Rx/Tx activity]
       EVSYS.USERCCLLUT0B  = EVSYS_USER_CHANNEL1_gc;     // LUT0-EVENTB  = Ch1 [XDIR]
 
+      EVSYS.USERCCLLUT1A  = EVSYS_USER_CHANNEL1_gc;     // LUT1-EVENTA  = Ch1 [XDIR]
+
       EVSYS.USERTCB1CAPT  = EVSYS_USER_CHANNEL2_gc;     // TCB1 Capture = Ch2 [LUT2-OUT=RxTx & ~XDIR]
       EVSYS.USERTCB1COUNT = EVSYS_USER_CHANNEL3_gc;     // TCB1 count uses channel 3
 
@@ -81,6 +110,12 @@ namespace led {
       CCL.LUT0CTRLC = 0;
       CCL.TRUTH0    = 1; // LUT0_OUT = (~A & ~B) => CH0 & ~CH1 => ~RTX & ~DIR
       CCL.LUT0CTRLA = CCL_ENABLE_bm;
+
+      // LUT1 configurations : IN0[A]=Ch2/LUT0-OUT | IN1[B]=Ch3/PIT | IN2[-] => Channel 2
+      CCL.LUT1CTRLB = CCL_INSEL0_EVENTA_gc;
+      CCL.LUT1CTRLC = 0;
+      CCL.TRUTH1    = 0b00000001; // LUT1_OUT = XDIR
+      CCL.LUT1CTRLA = CCL_ENABLE_bm | CCL_OUTEN_bm; // Enable the output
 
       // TCB1 -> Drives the Tx pin directly
       TCB1.CCMP = pulse_duration.count();
@@ -93,13 +128,71 @@ namespace led {
       CCL.CTRLA = CCL_ENABLE_bm;
    }
 
+
+   /**
+    * @brief Update the status of the LEDs based on the current system state
+    */
+   void on_refresh_leds_status() {
+      // Locate takes precedence on everything else
+      if ( state::is_in_locate_mode() ) {
+         // Unplug from the LUT and Timer
+         CCL.CTRLA = 0;
+
+         // If in locate mode, set all LEDs to fast blink
+         for ( auto& led_pair : leds ) {
+            led_pair.second = LedState::fast;
+         }
+
+         return;
+      }
+
+      // Recovery mode overwrites the modbus LEDs
+      if ( state::is_in_recovery_mode() ) {
+         // Unplug from the LUT and Timer
+         CCL.CTRLA = 0;
+
+         // Fast flash Rx and Tx LEDs
+         leds[id::tx].second = LedState::fast;
+         leds[id::rx].second = LedState::fast;
+      } else {
+         // Go full automatic mode
+         CCL.CTRLA = CCL_ENABLE_bm;
+         leds[id::tx].second = LedState::managed;
+         leds[id::rx].second = LedState::managed;
+      }
+
+      // EStop led
+      leds[id::estop].second =
+         (estop::get_status() == estop::Status::estop) ? LedState::blink :
+            (estop::get_status() == estop::Status::terminated) ? LedState::on : LedState::off;
+
+      // Infeed LED
+      leds[id::infeed].second = (estop::get_cause() == estop::Cause::voltage_monitor) ? LedState::blink :
+         (infeed::get_status() == infeed::Status::in_range) ? LedState::on :
+         (infeed::get_status() == infeed::Status::above) ? LedState::fast :
+         (infeed::get_status() == infeed::Status::below) ? LedState::pulse : LedState::off;
+
+      // Relay LEDs
+      for ( uint8_t i=0; i<3; ++i ) {
+         auto& state = leds[i].second;
+
+         // Set the LED state based on the relay status
+         if ( relay::get(i) ) {
+            state = LedState::on;
+         } else if ( relay::get_status(i) == relay::Status::faulty ) {
+            state = LedState::blink;
+         } else {
+            state = LedState::off;
+         }
+      }
+   }
+
    /**
     * @brief Blinker tasklet. Drives the LEDs
     * @note This function is called every 100ms
     */
-   static void blinker() {
+   void blinker() {
       static auto pulse = uint8_t{10};
-
       --pulse;
 
       for ( uint8_t i=0; i<leds.size(); ++i ) {
@@ -107,14 +200,8 @@ namespace led {
          auto& led = led_pair.first;
          auto& state = led_pair.second;
 
-         // Override to pulse if responsible for the estop
-         if ( i == fault_index ) {
-            state = LedState::pulse;
-         }
-
-         // If locate is on - turn on the fast blink
-         if ( net::get_locate_device_status() ) {
-            state =  LedState::fast;
+         if ( state == LedState::managed ) {
+            continue;
          }
 
          switch (state) {
@@ -146,56 +233,19 @@ namespace led {
          pulse = 10;
       }
    }
+} // End of anonymous namespace
 
-   /**
-    * @brief Resume the LEDs after the 2 seconds check
-    * @note This function is called after the 2 seconds check from main
-    */
-   static void resume() {
-      using namespace std::chrono;
 
-      LED_MODBUS_RX.clear();
-      LED_MODBUS_TX.clear();
-      setup_modbus_rx_led();
-      ALERT_OUTPUT_PIN.clear();
-
-      // Start the blink tasklet called every 100ms
-      asx::reactor::bind(blinker).repeat(100ms);
-   }
-
-   /**
-    * @brief Control a single LED
-    * @param index The LED index
-    * @param state The LED state
-    */
-   void set(uint8_t index, LedState state) {
-      if (index < leds.size()) {
-         leds[index].second = state;
-      }
-   }
-
-   /**
-    * @brief Set the faulty LED
-    * @param index The LED index
-    */
-   void override(int8_t index) {
-      fault_index = index;
-   }
-
-   void set_locate_mode(bool onoff) {
-      if ( locate_is_on != onoff ) {
-         // Handle the change
-         locate_is_on = onoff;
-         LED_MODBUS_RX.set(onoff);
-      }
-   }
-
+namespace led {
    /**
     * Initialise all the modules LEDs and turn them on for 2 seconds
     * Passed the 2 seconds, the LED resume their normal operations
     */
    void init() {
       using namespace asx::ioport;
+
+      // Set the reactor
+      detail::react_on_refresh = asx::reactor::bind(on_refresh_leds_status);
 
       // Initialise the relay module LEDs
       LED_A.init(dir_t::out, value_t::high);
@@ -214,7 +264,16 @@ namespace led {
       ALERT_OUTPUT_PIN.init(dir_t::out, value_t::high);
 
       // Arm a timer to transition after 2 seconds
-      asx::reactor::bind([] {resume();}).delay(2s);
-   }
+      asx::reactor::bind([] {
+         LED_MODBUS_RX.clear();
+         LED_MODBUS_TX.clear();
+         ALERT_OUTPUT_PIN.clear();
 
+         // Turn on the CCL and TCB1 for the Rx/Tx LEDs
+         setup_modbus_rx_led();
+
+         // Start the blink tasklet called every 100ms
+         asx::reactor::bind(blinker).repeat(100ms);
+      }).delay(2s);
+   }
 } // namespace led

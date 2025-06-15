@@ -7,6 +7,10 @@
 #include "datagram.hpp"
 
 namespace net {
+   namespace detail {
+      inline bool locate_device = false;
+   }
+
    // All APIs declared in datagram.hpp
    using Uart = asx::uart::Uart<1, config::UartRunTimeConfig>;
 
@@ -14,9 +18,11 @@ namespace net {
    using modbus_slave = asx::modbus::Slave<Datagram, Uart>;
 
    // Get modbus control information
-   bool get_locate_device_status();
+   // Corresponding accessor API
+   inline bool get_locate_device_status() {
+      return detail::locate_device;
+   }
 
    // Initialise the network
    void init();
-
 } // End of namespace net

@@ -1,4 +1,12 @@
 #pragma once
+/**
+ * @file config.hpp
+ * @brief Configuration management for the relay module.
+ * @details This file provides functions to manage the configuration of the relay module,
+ *          including reading and writing configuration parameters to EEPROM.
+ *          It includes settings for Modbus, UART, infeed type, EStop conditions,
+ *           and relay configurations.
+ */
 
 #include <cstdint>
 
@@ -8,26 +16,30 @@
 #include "relay_ctrl.hpp"
 
 namespace config {
+   /**
+    * @brief Configuration structure stored in EEPROM.
+    * This structure contains all the configuration parameters for the relay module.
+    */
    struct EepromConfig {
-      // Modbus config
+      /// @brief Modbus config
       uint8_t address;
-      // UART setup
+      /// @brief UART setup
       uint8_t baud; // 100th of the baudrate
       asx::uart::stop stopbits;
       asx::uart::parity parity;
 
-      // Infeed config
+      /// @brief Infeed config
       infeed::CfgType infeed_type; // 0=DC, 1=50 or 2=60Hz
       uint16_t infeed_min_volt_threshold; // Infeed Min voltage in 1/10 volts
       uint16_t infeed_max_volt_threshold; // Infeed Max voltage in 1/10 volts
 
-      // EStop config
+      /// @brief EStop config
       bool estop_on_undervolt; // EStop on infeed undervoltage
       bool estop_on_overvolt;  // EStop on infeed overvoltage
       bool estop_on_bad_voltage_type; // EStop on bad voltage type (AC/DC mismatch)
       uint16_t estop_modbus_watchdog; // EStop on watchdog timeout. Period in seconds
 
-      // Relay config
+      /// @brief Relay config
       relay::Config relays_config[3];
    };
 

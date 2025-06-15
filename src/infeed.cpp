@@ -3,47 +3,51 @@
 
 #include <cmath>
 #include <chrono>
-#include <limits>
 
 #include <asx/hw_timer.hpp>
 #include <asx/single_bin_fft.hpp>
 
-#include "stats.hpp"
+#include "counters.hpp"
 #include "leds.hpp"
 #include "config.hpp"
+#include "estop.hpp"
 #include "infeed.hpp"
 
+using namespace std::chrono;
+using namespace infeed::literal;
+
+using ticks_t = asx::chrono::cpu_tick_t;
+
+
+// ----------------------------------------------------------------------------
+// Constants and configuration
+// ----------------------------------------------------------------------------
+namespace {
+   ///< Center frequency for the FFT
+   constexpr auto CENTER_FREQ = 50;
+   ///< Size of the FFT
+   constexpr auto FFT_SIZE = 64;
+   ///< Sample rate in Hz
+   constexpr auto ADC_SAMPLES_RATE = 320;
+   ///< Number of CPU ticks per sample
+   constexpr auto SAMPLE_PERIOD = ticks_t(static_cast<long long>(F_CPU / ADC_SAMPLES_RATE));
+   ///< ADC clock prescale factor
+   constexpr auto ADC_CLK_PRESCALE = 2;
+   ///< ADC clock period in prescaled ticks
+   constexpr auto ADC_CLK_PER = F_CPU / ADC_CLK_PRESCALE;
+   ///< ADC timebase in microseconds
+   constexpr auto ADC_TIMEBASE = static_cast<uint8_t>(std::ceil(ADC_CLK_PER * 1e-6));
+   ///< ADC sample duration in CPU ticks
+   ///< We have a low impedance input with input capacitance of 8pF, we can sample fast.
+   constexpr auto ADC_SAMPLE_DURATION = 2;
+   ///< Minimum voltage to detect a signal
+   constexpr auto MIN_DETECTION = 10_volts;
+}
 
 namespace infeed {
-   static constexpr auto CENTER_FREQ = 50; // Center frequency for the FFT
-   static constexpr auto FFT_SIZE = 64; // Size of the FFT
-   static constexpr auto ADC_SAMPLES_RATE = 320; // Sample rate in Hz
-   static constexpr auto SAMPLE_PERIOD = asx::chrono::cpu_tick_t(
-      static_cast<long long>(F_CPU / ADC_SAMPLES_RATE));
-
-   static constexpr auto ADC_CLK_PRESCALE = 2;
-   static constexpr auto ADC_CLK_PER = F_CPU / ADC_CLK_PRESCALE;
-   static constexpr auto ADC_TIMEBASE = static_cast<uint8_t>(std::ceil(ADC_CLK_PER * 1e-6));
-
-   static constexpr auto ADC_SAMPLE_DURATION = 2; // We have a low impedance input with input capacitange of 8pF, we can sample fast.
-
-   static constexpr auto MIN_DETECTION = 25 * 100; // 25V
-
-   static asx::reactor::Handle react_on_infeed_status = asx::reactor::null;
 
    // Create the FFT instance
    using fft_t = asx::fft::SingleBinFFT<FFT_SIZE, ADC_SAMPLES_RATE>;
-
-   static uint16_t last_ac_voltage = 0;
-   static uint16_t last_dc_voltage = 0;
-
-   static uint16_t max_voltage;
-   static uint16_t min_voltage;
-
-   void reset_min_max() {
-      max_voltage = std::numeric_limits<uint16_t>::min();
-      min_voltage = std::numeric_limits<uint16_t>::max();
-   }
 
    /**
     * @brief Reactor handler to process the ADC sample
@@ -54,21 +58,14 @@ namespace infeed {
       static int32_t dc_sum = 0;
       static int16_t dc_count = 0;
       bool processing_required = false;
-      bool inrange = false;
+      bool above = false;
+      bool below = false;
+      auto status = Status{Status::none};
 
       // Compute the FFT for AC signals
       if ( fft_t::next(adc_sample) ) {
          processing_required = true;
-         last_ac_voltage = fft_t::get_result();
-
-         // TODO: Use optional and test all AC/DC
-         if ( config::get_config().infeed_type != infeed::CfgType::dc ) {
-            // If the frequency is not set, we assume it's a DC signal
-            inrange = (
-               last_ac_voltage > config::get_config().infeed_min_volt_threshold &&
-               last_ac_voltage < config::get_config().infeed_max_volt_threshold
-            );
-         }
+         detail::last_ac_voltage = fft_t::get_result();
       }
 
       // Compute an average of the last 256 samples for the DC signal
@@ -76,34 +73,58 @@ namespace infeed {
 
       if ( ++dc_count >= 256 ) {
          processing_required = true;
-         last_dc_voltage = static_cast<int16_t>(dc_sum / 256);
+         detail::last_dc_voltage = static_cast<int16_t>(dc_sum / 256);
          dc_sum = dc_count = 0;
-
-         if ( config::get_config().infeed_type != infeed::CfgType::dc ) {
-            // If the frequency is not set, we assume it's a DC signal
-            inrange = (
-               last_dc_voltage > config::get_config().infeed_min_volt_threshold &&
-               last_dc_voltage < config::get_config().infeed_max_volt_threshold
-            );
-         }
       }
 
       // Sum up the AC and DC voltages for an overall detection
       if ( processing_required ) {
-         bool detected = ( last_ac_voltage + last_dc_voltage > MIN_DETECTION );
+         bool detected = ( detail::last_ac_voltage + detail::last_dc_voltage > MIN_DETECTION );
 
-         // Report the voltage detection status (Ignore the estop case - it overrides)
-         led::set(
-            led::LedId::infeed,
-            detected ? (
-               inrange ? led::LedState::on : led::LedState::blink
-            ) : led::LedState::off
-         );
+         if ( config::get_config().infeed_type == infeed::CfgType::dc ) {
+            // If the infeed type is DC, we only check the DC voltage
+            above = ( detail::last_dc_voltage > config::get_config().infeed_max_volt_threshold );
+            below = ( detail::last_dc_voltage < config::get_config().infeed_min_volt_threshold );
+         } else { // ACs
+            // If the infeed type is AC, we check the AC voltage
+            above = ( detail::last_ac_voltage > config::get_config().infeed_max_volt_threshold );
+            below = ( detail::last_ac_voltage < config::get_config().infeed_min_volt_threshold );
+         }
+
+         // Update the min and max voltage
+         detail::max_voltage = std::max(detail::max_voltage, std::max(detail::last_ac_voltage, detail::last_dc_voltage));
+         detail::min_voltage = std::min(detail::min_voltage, std::min(detail::last_ac_voltage, detail::last_dc_voltage));
+
+         status = detected ? (
+            above ? Status::above : below ? Status::below : Status::in_range
+         ) : Status::none;
+
+         if ( detail::current_status != status ) {
+            detail::current_status = status;
+
+            // Check applicability of the situation
+            if ( status == Status::wrong_type && config::get_config().estop_on_bad_voltage_type ) {
+               estop::trigger(
+                  estop::Cause::voltage_monitor,
+                  static_cast<uint16_t>(0xFFFF), // Diagnostic code for wrong type
+                  estop::ExternalTriggerType::resetable
+               );
+            } else if ( status == Status::above && config::get_config().estop_on_overvolt ) {
+               estop::trigger(
+                  estop::Cause::voltage_monitor,
+                  static_cast<uint16_t>(detail::max_voltage),
+                  estop::ExternalTriggerType::resetable
+               );
+            } else if ( status == Status::below && config::get_config().estop_on_undervolt ) {
+               estop::trigger(
+                  estop::Cause::voltage_monitor,
+                  static_cast<uint16_t>(detail::min_voltage),
+                  estop::ExternalTriggerType::resetable
+               );
+            }
+         }
       }
    }
-
-   /** Reactor handler to call from the ADC interrupt */
-   auto react_on_adc_sample_ready = asx::reactor::bind(process_sample);
 
    /**
     * @brief Initialize the ingress system
@@ -167,24 +188,8 @@ namespace infeed {
       ADC0.INTCTRL |= ADC_RESRDY_bm;
    }
 
-   uint16_t get_input_voltage() {
-      return std::max(last_ac_voltage, last_dc_voltage);
-   }
-
-   InputType get_input_voltage_type() {
-      if ( last_dc_voltage > last_ac_voltage ) {
-         return InputType::dc;
-      }
-      return InputType::ac;
-   }
-
-   uint16_t get_lowest_voltage() {
-      return min_voltage;
-   }
-
-   uint16_t get_highest_voltage() {
-      return max_voltage;
-   }
+   /** Reactor handler to call from the ADC interrupt */
+   auto react_on_adc_sample_ready = asx::reactor::bind(process_sample);
 
    /**
     * @brief ADC interrupt handler

@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <chrono>
 
+#include <boost/sml.hpp>
+
 #include <asx/ioport.hpp>
 #include <asx/reactor.hpp>
 
@@ -11,73 +13,91 @@
 
 namespace estop {
    using namespace asx::ioport;
+   using namespace boost::sml;
 
    // Local variables
    namespace {
-      auto status = Status{Status::operational};
-      auto cause  = Cause{Cause::none};
-      auto diagnostic_code = uint8_t{0};
+      asx::timer::Instance timer_end_of_pulse{};
    }
 
    auto react_on_end_of_pulse = asx::reactor::bind(
-      [] {
-         ES_COMMAND.clear();
-         led::set(led::LedId::estop, led::LedState::off);
-      }
+      [] { reset(); }
    );
+
+   // Events
+   struct trigger_event {
+      Cause cause;
+      uint16_t diagnostic;
+      ExternalTriggerType type;
+   };
+
+   struct reset_event {};
+
+   constexpr auto is_terminal = [](const trigger_event &event) {
+      return event.cause == Cause::faulty_relay || event.type == ExternalTriggerType::terminal;
+   };
+
+   // Actions
+   constexpr auto stop = [](const trigger_event &event) {
+      timer_end_of_pulse.cancel(); // Cancel any previous pulse delay
+
+      if ( event.type == ExternalTriggerType::pulse ) {
+         // Delay for 4 seconds before resetting
+         timer_end_of_pulse = react_on_end_of_pulse.delay(std::chrono::seconds(4));
+      }
+
+      detail::current_status = Status::estop;
+      detail::current_cause = event.cause;
+      detail::diagnostic = event.diagnostic;
+
+      // Activate the command pin
+      ES_COMMAND.set(value_t::high);
+   };
+
+   constexpr auto on_reset = [](const reset_event &) {
+      // Reset the cause
+      detail::current_cause = Cause::none;
+
+      // Reset the diagnostic code
+      detail::diagnostic = 0;
+
+      // Set the status to operational
+      detail::current_status = Status::operational;
+
+      // Clear the command pin
+      ES_COMMAND.clear();
+   };
+
+   // State Machine
+   struct EStopStateMachine {
+      auto operator()() const {
+         using namespace boost::sml;
+
+         return make_transition_table(
+            *"operational"_s + event<trigger_event> [is_terminal] / stop                 = "terminated"_s,
+            "operational"_s  + event<trigger_event> / stop                               = "estop"_s,
+            "estop"_s        + event<trigger_event> [is_terminal] / stop                 = "terminated"_s,
+            "estop"_s        + event<trigger_event> / stop                               = "estop"_s,
+            "estop"_s        + event<reset_event>   / on_reset                           = "operational"_s
+         );
+      }
+   };
+
+   // State machine instance
+   sm<EStopStateMachine> sm;
 
    void init() {
       // Invert the pin - ES closes on power-up
       ES_COMMAND.init(dir_t::in, invert::inverted, value_t::low);
    }
 
-   Status get_status() {
-      return status;
+   void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {
+      sm.process_event(trigger_event{cause, diagnostic, type});
+      led::refresh();
    }
 
-   void set_status(const Status new_status) {
-      status = new_status;
-   }
-
-   uint8_t get_diagnostic_code() {
-      return diagnostic_code;
-   }
-
-   Cause get_cause() {
-      return cause;
-   }
-
-   void trigger(Cause cause) {
-      // TODO
-   }
-
-   void trigger(ExternalTriggerType trigger, uint8_t diagnostic) {
-      using namespace std::chrono;
-
-      diagnostic_code = diagnostic;
-
-      // If the device is already in terminal EStop - ignore
-      if ( get_status() == Status::terminated ) {
-         return;
-      }
-
-      switch (trigger) {
-      case ExternalTriggerType::reset:
-         // Reset the cause
-         break;
-      case ExternalTriggerType::pulse:
-         ES_COMMAND.set(value_t::high);
-         led::set(led::LedId::estop, led::LedState::on);
-         react_on_end_of_pulse.delay(1s);
-         break;
-      case ExternalTriggerType::resetable:
-         ES_COMMAND.set(value_t::high);
-         led::set(led::LedId::estop, led::LedState::on);
-         break;
-      case ExternalTriggerType::terminal:
-         ES_COMMAND.set(value_t::high);
-         led::set(led::LedId::estop, led::LedState::on);
-         break;
-      }
+   void reset() {
+      sm.process_event(reset_event{});
+      led::refresh();
    }
 } // namespace estop
