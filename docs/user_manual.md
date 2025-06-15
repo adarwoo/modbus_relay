@@ -157,7 +157,7 @@ When an EStop is is progress, a source LED is flashing fast to point to the sour
   * If the infeed supply is at fault, it will flash. Note, the LED will flash (Long on short off) it a voltage is detected.
   * The modbus Rx LED will flash to indicate the EStop was triggered remotely
 
-### INFEED Led
+### Infeed Led
 
 The infeed LED provides visual information about the infeed voltage.
 
@@ -170,13 +170,16 @@ The infeed LED provides visual information about the infeed voltage.
 | Flash at 2Hz | Along with the EStop. A infeed fault was detected. |
 
 > [!CAUTION]
-> The INFEED LED is for indication only. ***You must assume voltage is present at all times***.
+> The Infeed LED is for indication only. ***You must assume voltage is present at all times***.
 
 ### Modbus LEDs
 
-The modbus LEDs show activity on the Modbus RS485 network, including for data not addressed to the controller.
+The modbus LEDs show activity on the Modbus RS485 network.
 * The Rx LED shows incomming traffic. It flashes fast when the device is in recovery or device locate mode.
 * The Tx LED is lit during power-up boot, and show the outgoing traffic activity. It serves not other purposes.
+
+> [!IMPORTANT]
+> The Rx LED show traffic activity which may include packets not addressed to the controller
 
 ### Relay LEDS
 
