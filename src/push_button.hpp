@@ -14,6 +14,7 @@
 
 #include "net.hpp"
 #include "state.hpp"
+#include "estop.hpp"
 
 #include "conf_board.h"
 
@@ -21,7 +22,7 @@
 namespace sw {
    constexpr auto sampling_period = std::chrono::milliseconds(20);
    constexpr auto debounce_time = std::chrono::milliseconds(40);
-   constexpr auto long_time = std::chrono::milliseconds(40);
+   constexpr auto long_time = std::chrono::seconds(3);
 
    auto react_on_sw = asx::reactor::Handle{};
 
@@ -29,12 +30,10 @@ namespace sw {
    auto debouncer = asx::Debouncer<1, debounce_time / sampling_period>{};
 
    static inline void init() {
+      using namespace asx::ioport;
+
       // Set the pin to input
-      PUSH_BUTTON.init(
-         asx::ioport::dir_t::in,
-         asx::ioport::invert::inverted,
-         asx::ioport::pullup::enabled
-      );
+      PUSH_BUTTON.init( dir_t::in, invert::inverted, pullup::enabled );
 
       // Start the switch sampling
       asx::reactor::bind([]() {
@@ -61,7 +60,8 @@ namespace sw {
                      net::Uart::init(); // Reinitialize the network
                   };
                } else {
-                  state::set_locate_mode(true);
+                  // Reset any on-going EStop
+                  estop::reset();
                }
 
                last_time = time_zero;

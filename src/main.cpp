@@ -6,7 +6,7 @@
 
 // Defines the modbus_slave
 #include "counters.hpp"
-#include "relay_ctrl.hpp"
+#include "relay.hpp"
 #include "push_button.hpp"
 #include "leds.hpp"
 #include "infeed.hpp"
@@ -43,7 +43,7 @@ int main()
    relay::init();
 
    // Ready the ingress measurement system
-   infeed::init();
+   // TOOD infeed::init();
 
    // Ready the modbus handlers and set the datagram ID
    net::init();

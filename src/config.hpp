@@ -13,7 +13,8 @@
 #include <asx/uart.hpp>
 
 #include "infeed.hpp"
-#include "relay_ctrl.hpp"
+#include "relay.hpp"
+
 
 namespace config {
    /**

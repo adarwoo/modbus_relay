@@ -11,7 +11,7 @@
 #include "estop.hpp"
 #include "infeed.hpp"
 #include "counters.hpp"
-#include "relay_ctrl.hpp"
+#include "relay.hpp"
 #include "conf_version.hpp"
 #include "net.hpp"
 #include "state.hpp"

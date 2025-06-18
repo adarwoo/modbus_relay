@@ -74,11 +74,11 @@ namespace estop {
          using namespace boost::sml;
 
          return make_transition_table(
-            *"operational"_s + event<trigger_event> [is_terminal] / stop                 = "terminated"_s,
-            "operational"_s  + event<trigger_event> / stop                               = "estop"_s,
-            "estop"_s        + event<trigger_event> [is_terminal] / stop                 = "terminated"_s,
-            "estop"_s        + event<trigger_event> / stop                               = "estop"_s,
-            "estop"_s        + event<reset_event>   / on_reset                           = "operational"_s
+            *"operational"_s + event<trigger_event> [is_terminal] / stop = "terminated"_s,
+            "operational"_s  + event<trigger_event> / stop               = "estop"_s,
+            "estop"_s        + event<trigger_event> [is_terminal] / stop = "terminated"_s,
+            "estop"_s        + event<trigger_event> / stop               = "estop"_s,
+            "estop"_s        + event<reset_event>   / on_reset           = "operational"_s
          );
       }
    };
@@ -88,7 +88,7 @@ namespace estop {
 
    void init() {
       // Invert the pin - ES closes on power-up
-      ES_COMMAND.init(dir_t::in, invert::inverted, value_t::low);
+      ES_COMMAND.init(dir_t::out, invert::inverted, value_t::low);
    }
 
    void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {

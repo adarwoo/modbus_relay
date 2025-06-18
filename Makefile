@@ -13,14 +13,14 @@ ASX_USE = modbus_rtu eeprom
 
 # Project own files
 SRCS = \
-	src/counters.cpp \
-	src/config.cpp \
-	src/leds.cpp \
+   src/counters.cpp \
+   src/config.cpp \
+   src/leds.cpp \
    src/net.cpp \
-   src/relay_ctrl.cpp \
+   src/relay.cpp \
    src/main.cpp \
-	src/infeed.cpp \
-	src/estop.cpp \
+   src/estop.cpp \
+#src/infeed.cpp \
 
 ifdef SIM
 SRCS += \

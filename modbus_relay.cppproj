@@ -403,10 +403,10 @@
     <Compile Include="src\net.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\relay_ctrl.cpp">
+    <Compile Include="src\relay.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\relay_ctrl.hpp">
+    <Compile Include="src\relay.hpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\state.cpp">

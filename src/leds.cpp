@@ -114,7 +114,7 @@ namespace {
       // LUT1 configurations : IN0[A]=Ch2/LUT0-OUT | IN1[B]=Ch3/PIT | IN2[-] => Channel 2
       CCL.LUT1CTRLB = CCL_INSEL0_EVENTA_gc;
       CCL.LUT1CTRLC = 0;
-      CCL.TRUTH1    = 0b00000001; // LUT1_OUT = XDIR
+      CCL.TRUTH1    = 0b10; // LUT1_OUT = XDIR
       CCL.LUT1CTRLA = CCL_ENABLE_bm | CCL_OUTEN_bm; // Enable the output
 
       // TCB1 -> Drives the Tx pin directly
@@ -197,8 +197,8 @@ namespace {
 
       for ( uint8_t i=0; i<leds.size(); ++i ) {
          auto& led_pair = leds[i];
-         auto& led = led_pair.first;
-         auto& state = led_pair.second;
+         auto led = led_pair.first;
+         auto state = led_pair.second;
 
          if ( state == LedState::managed ) {
             continue;

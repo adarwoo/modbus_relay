@@ -1,5 +1,5 @@
 /**
- * @file relay_ctrl.cpp
+ * @file relay.cpp
  * Relay control functions
  * @author software@arreckx.com
  *
@@ -15,7 +15,7 @@
 #include <asx/bitstore.hpp>
 #include <alert.h>
 
-#include "relay_ctrl.hpp"
+#include "relay.hpp"
 #include "counters.hpp"
 #include "estop.hpp"
 #include "config.hpp"
@@ -80,6 +80,7 @@ namespace relay {
             }
 
             if ( ++err_counts[i] > 3 ) {
+               asm("break");
                // Store the fault to make it available in the modbus register
                relays_fault.set(i);
 
@@ -144,7 +145,7 @@ namespace relay {
 
          // Initialise all pins
          check_pins[i].set_invert(
-            relay_config.invert ? invert::inverted : invert::normal
+            relay_config.invert ? invert::normal : invert::inverted
          );
          check_pins[i].set_dir(dir_t::in);
       }

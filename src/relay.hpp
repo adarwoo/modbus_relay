@@ -1,5 +1,5 @@
 #pragma once
-/** @file relay_ctrl.hpp
+/** @file relay.hpp
  *  @brief Control interface for relay outputs.
  *
  *  This module provides functions to control relay outputs, including
