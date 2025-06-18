@@ -43,13 +43,13 @@ namespace {
    };
 
    namespace id {
-      constexpr auto led_a  = 0;
-      constexpr auto led_b  = 1;
-      constexpr auto led_c  = 2;
-      constexpr auto infeed = 3;
-      constexpr auto estop  = 4;
-      constexpr auto rx     = 5;
-      constexpr auto tx     = 6;
+      constexpr auto estop  = 0;
+      constexpr auto infeed = 1;
+      constexpr auto tx     = 2;
+      constexpr auto rx     = 3;
+      constexpr auto led_a  = 4;
+      constexpr auto led_b  = 5;
+      constexpr auto led_c  = 6;
    };
 
    // ----------------------------------------------------------------------------
@@ -148,8 +148,9 @@ namespace {
 
       // Recovery mode overwrites the modbus LEDs
       if ( state::is_in_recovery_mode() ) {
-         // Unplug from the LUT and Timer
+         // Unplug Rx and Tx from the LUT output and the timer
          CCL.CTRLA = 0;
+         TCB1.CTRLB &= ~TCB_CCMPEN_bm; // Disable the timer output
 
          // Fast flash Rx and Tx LEDs
          leds[id::tx].second = LedState::fast;
@@ -157,6 +158,8 @@ namespace {
       } else {
          // Go full automatic mode
          CCL.CTRLA = CCL_ENABLE_bm;
+         TCB1.CTRLB |= TCB_CCMPEN_bm;
+         
          leds[id::tx].second = LedState::managed;
          leds[id::rx].second = LedState::managed;
       }
@@ -173,13 +176,14 @@ namespace {
          (infeed::get_status() == infeed::Status::below) ? LedState::pulse : LedState::off;
 
       // Relay LEDs
-      for ( uint8_t i=0; i<3; ++i ) {
+      for ( uint8_t i=id::led_a; i<=id::led_c; ++i ) {
          auto& state = leds[i].second;
+         auto led_index = i - id::led_a;
 
          // Set the LED state based on the relay status
-         if ( relay::get(i) ) {
+         if ( relay::get(led_index) ) {
             state = LedState::on;
-         } else if ( relay::get_status(i) == relay::Status::faulty ) {
+         } else if ( relay::get_status(led_index) == relay::Status::faulty ) {
             state = LedState::blink;
          } else {
             state = LedState::off;
@@ -206,9 +210,7 @@ namespace {
 
          switch (state) {
          case LedState::fast:
-            if ( pulse % 2 ) {
-               led.toggle();
-            }
+            led.toggle();
             break;
          case LedState::blink:
             if ( pulse == 0 or pulse == 5 ) {
