@@ -376,6 +376,12 @@
     <Compile Include="src\config.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\counters.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\counters.hpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\estop.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -403,25 +409,19 @@
     <Compile Include="src\net.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\push_button.hpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\relay.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\relay.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\state.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\state.hpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\stats.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\stats.hpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\sw.hpp">
+    <Compile Include="src\test_fft.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\test_relay.cpp">

@@ -91,19 +91,38 @@ The modbus master can issue an EStop command. This external EStop condition can 
 
 When a relay cannot be reached or is un-responsive, the following procedure can be used.<br/>
 
-1. Push the relay 'EStop reset' push button for > 3s
-   * The Alert LED Flashes fast
+1. Start the RelayGuardian application
+2. Make sure the communication port is properly setup in the RelayGuardian
+ * The connection should be marked as OK
+3. Issue a scan command in the RelayGuardian
+ * The Modbus Rx LED should show some activity
+ * If this is not the case, check the modbus is plagged correctly in the PC and the comm port is the correct one
+4. If the device is not identified in this phase,
+5. Push the relay 'EStop reset' push button for > 3s
+   * The Modbus LEDs are flashing flat
    * The communication values have been temporary reset to:
+      | Configuration     | value             | Explanation                                    |
+      |-------------------|-------------------|------------------------------------------------|
+      | **Slave ID**      | `44`              | The device address is 44 (decimal) by default  |
+      | **Baud rate**     | `9600`            | The device talks at 9600 by default            |
+      | **Serial setup**  | `8N1`             | 8bits, no parity and 1 stop bit                |
 
-| Configuration     | value             | Explanation                                    |
-|-------------------|-------------------|------------------------------------------------|
-| **Slave ID**      | `44`              | The device address is 44 (decimal) by default  |
-| **Baud rate**     | `9600`            | The device talks at 9600 by default            |
-| **Serial setup**  | `8N1`             | 8bits, no parity and 1 stop bit                |
+6. In the 'Relay Guarian' application, click the 'Recovery' button
+7. Confirm proper connection
+8. In the 'RelayGuardian', click the 'Locate' button. All LEDs of relay module should be flashing fast!
+   . The module is being reovered.
+9. Stop the device location mode
+10. Go to the settings tabs, check the configuration, or adjust.
+11. Hit the 'Synchronize' button in the relay guardian to match the relay configuration.
+   . The guardian takes the relay out of recovery mode automatically.
+   . You're all set!
 
-2. Start the 'Relay Guarian' application, and select 'Recovery' from the menu.
-3. Configure the device as required
-4. Apply the new configuration. This ends the recovery mode, and the device is operational with the new settings.
+```Mermaid
+flowchart TD
+   START([Begin]) --> RG[[Start RelayGuardian]] & <-.- Make sure the comm port is setup properly
+
+```
+
 
 > [!NOTE]
 > The recovery mode maintains on-going relay operations.
@@ -128,7 +147,7 @@ The module features many LED to see the device operation and faults easilty.
 > [!TIP]
 > During boot, for the first 2seconds, all LEDs are lit. This allow checking for a faulty LED.
 
-All LEDs serve multiple purspose with the exception of the modbus Tx LED which only indicates outgoing RS485 traffic. 
+All LEDs serve multiple purspose with the exception of the modbus Tx LED which only indicates outgoing RS485 traffic.
 The expression 'All LEDs' de-fact excludes the modbus Tx LED.
 
 To help find a relay controller, a locate command can be send. This will flash all LEDs at 10Hz for 1s, and the actual LED value for the next.
