@@ -1,15 +1,15 @@
-# Modbus NRelay Controller with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"> #
+# Modbus N-Relay Controller with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"> #
 
-This project features is a MODBUS RTU relays controller, which includes failsafe mode and an EStop.
-It is aimed for industrial systems such as a CNC or equivalent.
+This project features a MODBUS-RTU relays controller with emergency stop, infeed measurements, monitoring and failsafe modes.
+It is aimed at industrial systems such as a CNC or equivalent.
 
 ---
 
-This document provides a description of the operations of the device.
+This document provides a description for the operations of the device.
 
 ## Device ID
 
-This document covers the series mbNR_37, which includes the mbNR_37/03
+This document covers the series mbNR_37, which includes the mbNR_37/03, the 3 relays version.
 
 ## Features summary
 
@@ -17,7 +17,7 @@ This document covers the series mbNR_37, which includes the mbNR_37/03
 2. 3 relays - 9.4A 250VAC per output
 3. Operational integrity minded
    * Uses a safety relay with force conduits and read back
-   * Infeed voltage measurement with acceptable range
+   * Galvanically isolated infeed voltage measurement with acceptable range
    * Communication watchdog
 4. EStop management
    * Used for failsafe of the relay operation
@@ -49,15 +49,32 @@ The relay polarity can be inverted, and the default relay position can be set in
 
 This relay distinshes itself from simpler version by its built-in ability to monitor the health of the system it operates within, and to halt operations by opening an EStop relay.
 
-The active elements being monitored are:
-1. The modbus communication from the master
-2. The infeed voltage (upsteam supply voltage)
-3. The health of the relays
-4. As instructed from the modbus master
+The active elements being monitored and/or mesured are:
+1. Controller integrity
+4. Modbus communications
+5. Infeed voltage, that is the upsteam supply voltage
+6. Proper operation of the relays
+
+### Controller integrity monitoring
+
+The controller monitors itself to guarantee proper execution.
+All memories are versified:
+* The flash memory integrity is verified at every boot
+* The RAM is tested once on boot-up
+* The EEprom storage contains a checksum and would be reformatted if a corruption is detected
+The health of the power supply is monitored
+* The CPU power supply is monitoring by the brown-out-detector
+* A failsafe exist which activates the EStop if the power supply was to fail
+The execution is monitored
+* The watchdog feature of the microcontroller is tested once on cold reset from power-up
+* The watchdog then checks the application main loop is running. The system is reset by the watchdog if a crash is detected. The CPU is then fully suspended.
+
+Any non-recoverable failure to the controller's intergrity leads to the EStop being activated.
 
 ### Modbus communication monitoring
 
-The device can monitor for correct activity on the Modbus network, triggering a resetable EStop if the master stops issuing commands to the device.
+The controller monitors the activity of the Modbus RS485 link.
+This monitoring activity can be configured to trigger an resetable EStop.
 
 > [!NOTE]
 > The bus is considered active if commands addressed to the device are received at least once in the configured watchdog duration.
@@ -65,20 +82,23 @@ The device can monitor for correct activity on the Modbus network, triggering a 
 
 ### Infeed monitoring
 
-The module can sense the voltage of the relay infeed and act upon a failure.
-The failure ranges from:
+The module measures the infeed voltage of the relay and the type of infeed (AC vs DC).
+The AC measurement measure the true RMS value for 50Hz and 60Hz supplies.
+It stores the minimum and maximum value.
+Modbus registers are provided to read the instantanous value, minimum and maximum and reset all measurements.
+
+The measurement can be used to trigger an EStop on:
 1. Overvoltage : The infeed voltage is higher than a configured threshold
 2. Undervoltage : The infeed voltage is lower than a configured threshold
+3. Incorrect type (AC vs DC) of the infeed
 
 When an infeed defect is detected, the device will open the EStop relay. This should stop operations.
-The relays can be individually configured to go Open or Close when a infeed fault is detected.
 
 ### Relay health monitoring
 
-All the relay are equiped with a status read back, backed mecanically (using a forced conduit). If a relay is to fail, the fault is detected and the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
+All the relays are equiped with a position verification which is backed mecanically using a forced conduit.
+If a relay is to fail, the fault is detected and the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
 The faulty relay can be isolated with a disable command, but it should be replaced.
-
-The relays can be individually configured to go Open or Close when a relay fault is detected.
 
 ### External EStop
 
@@ -86,6 +106,11 @@ The modbus master can issue an EStop command. This external EStop condition can 
 . Pulsed EStop. The system will halt, but can be resumed right after
 . Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
 . Terminal. Only a power cycle can clear the condition.
+
+## Failsafe management
+
+The relays can be individually configured to go Open or Close when a fault is detected.
+If a relay fault is detected, the relay coil is un-energized, and the relay will be opened.
 
 ## Recovery mode
 
