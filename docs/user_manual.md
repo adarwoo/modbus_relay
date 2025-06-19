@@ -491,12 +491,14 @@ These register share the holding registers mapping address space but are write-o
 This group of register allows controlling the EStop and the controller device.
 
 > [!NOTE]
-> These registers are write only. The function ~~**03: Read multiple registers**~~ is not availble for this group.
-> The register must be written individually. Function ~~**16 - Write Multiple Registers**~~ is not available.
+> These registers are write only.
+> The function ~~**03: Read multiple registers**~~ is not availble for this group.
+> Function ~~**16 - Write Multiple Registers**~~ is not available.
+> The registers must be written individually. 
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
-| 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
+| 40101          | 0x0064    | W      | Set/Reset the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
 | 40102          | 0x0065    | W      | Zero measurements. Allow re-measuring min and max | 0xAA55  |
 | 40103          | 0x0066    | W      | Locate device. Fast flash all the LEDs to locate the device | 0 = Turn off<br/>1 = Turn on |
 | 40104          | 0x0067    | W      | Reset configuration to factory default and reboot  | 0x178C |
