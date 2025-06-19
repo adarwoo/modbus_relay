@@ -117,10 +117,28 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
    . The guardian takes the relay out of recovery mode automatically.
    . You're all set!
 
-```Mermaid
-flowchart TD
-   START([Begin]) --> RG[[Start RelayGuardian]] & <-.- Make sure the comm port is setup properly
 
+```mermaid
+---
+title: Recovery procedure
+displayMode: compact
+config:
+  theme: forest
+  look: handDrawn
+  flowchart:
+    defaultRenderer: "elk"
+---
+%%{init: {'theme': 'default', 'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart TD
+  START([Begin]) --> RG[[Start RelayGuardian]]
+  RG --> SCAN[[Scan the ports]]
+  SCAN --> ACTIVITY{Rx LED<br/>blinking?}
+  ACTIVITY -- Yes --> RR[[Push reset >5s]] --> RGR[[Click recovery in RG]]
+  ACTIVITY -- No --> BADCOMM{Check<br/>Win comm port} --> SCAN
+  RGR --> RGCC{Comm<br/>established?}
+  RGCC -- No --> WIRING[/Check A/B/GND wiring/] --> START
+  RGCC -- Yes --> SETTINGS[[Edit device settings]] --> SYNC[[Synchronize RG with device]] --> END[(End)]
+  RG -.-> C1[Ensure comm port is setup] 
 ```
 
 
@@ -456,8 +474,9 @@ This group of register allows controlling the EStop and the controller device.
 | 40101          | 0x0064    | W      | Trigger the EStop   | ESTOP_CTRL<br/>See note <sup>1</sup>|
 | 40102          | 0x0065    | W      | Zero measurements. Allow re-measuring min and max | 0xAA55  |
 | 40103          | 0x0066    | W      | Locate device. Fast flash all the LEDs to locate the device | 0 = Turn off<br/>1 = Turn on |
-| 40104          | 0x0067    | W      | Reset configuration to factory default and reboot  | 0xAA55 |
-| 40105          | 0x0068    | W      | Reset the device    | 0xAA55  |
+| 40104          | 0x0067    | W      | Reset configuration to factory default and reboot  | 0x178C |
+| 40105          | 0x0068    | W      | Exit recovery mode and apply comms settings  | 0xAA55  |
+| 40106          | 0x0069    | W      | Reset the device    | 0xAA55  |
 
 **Note <sup>1</sup>** : See the format below
 
