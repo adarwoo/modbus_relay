@@ -416,14 +416,13 @@ This group of registers allow configuring the communication settings of the rela
 > [!WARNING]
 > The registers must be written individually. The command **16** is not supported.
 
-### Relay Configuration
+### Relays Configuration
 
 This group allow configuring the individual relays.
-The value written is RCFG described below.
 
 | Modbus Address | Hex Value | Access | Description         | Factory default      | Values |
 |----------------|-----------|--------|---------------------|----------------------|-------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | <ul><li><b>0</b><br/>Enabled with no filtering</li><li><b>100-60000</b><br/>Enabled with filtering.<br/>The filter period is the value in ms<li><b>0xFFFF</b><br/>The relay is disabled</li></ul><br/>Any other values will generated an 'invalid value' error |
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | <ul><li><b>0</b><br/>Enabled with no filtering</li><li><b>100-60000</b><br/>Enabled with filtering.<br/>The filter period is the value in ms<li><b>0xFFFF</b><br/>The relay is disabled</li></ul><br/>Any other values will generated an 'illegal value' error |
 | 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
 | 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
 | 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
@@ -435,6 +434,9 @@ The value written is RCFG described below.
 
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
+
+> [IMPORTANT]
+> A reset is required for the device to account for any changes made to the relay configuration.
 
 ## Device control registers
 
