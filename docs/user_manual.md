@@ -58,7 +58,7 @@ The active elements being monitored and/or mesured are:
 3. Infeed voltage, that is the upsteam supply voltage
 4. Proper operation of the relays
 
-### device integrity monitoring
+### Device integrity monitoring
 
 The device monitors itself to guarantee proper execution.
 All memories are verified:
