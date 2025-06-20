@@ -435,7 +435,7 @@ This group allow configuring the individual relays.
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
 
-> [IMPORTANT]
+> [!IMPORTANT]
 > A reset is required for the device to account for any changes made to the relay configuration.
 
 ## Device control registers
