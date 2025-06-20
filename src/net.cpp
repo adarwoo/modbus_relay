@@ -164,9 +164,9 @@ namespace net {
          case 0x13: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
 
          // Relay Configuration
-         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].value ); break;
-         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].value ); break;
-         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].value ); break;
+         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].filter_ms ); break;
+         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].filter_ms ); break;
+         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].filter_ms ); break;
          }
       }
    }
@@ -208,14 +208,10 @@ namespace net {
       config::set_watchdog(timeout);
    }
 
-   void on_write_single_relay_cfg(uint8_t address, uint8_t conf, uint8_t filter) {
-      config::set_relay_config(address, conf, filter);
-   }
-
-   void on_write_relay_cfgs(uint8_t conf1, uint8_t filter1, uint8_t conf2, uint8_t filter2, uint8_t conf3, uint8_t filter3) {
-      config::set_relay_config(0, conf1, filter1);
-      config::set_relay_config(1, conf2, filter2);
-      config::set_relay_config(2, conf3, filter3);
+   void on_write_single_relay_cfg(uint8_t address, uint16_t filter) {
+      if ( not config::set_relay_config(address, filter) ) {
+         dg::reply_error(error_t::illegal_data_value);
+      }
    }
 
    // Trigger an estop
@@ -247,6 +243,10 @@ namespace net {
    void on_reset() {
       // Manually trigger a reset
       ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
+   }
+
+   void on_exit_recovery() {
+      state::set_recovery_mode(false);
    }
 
    // Implement this method to reset the watchdog

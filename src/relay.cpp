@@ -117,36 +117,15 @@ namespace relay {
             // Mark as disabled
             relays_disabled.set(i);
 
-            // Open the relay pin for safety reasons
-            relay_pins[i].set_invert(invert::normal);
-            relay_pins[i].set(false);
-            relay_pins[i].set_dir(dir_t::out);
+            // Leave the reset value (high impedance as is)
 
             continue; // Skip to the next relay
          }
 
-         // Preserve the current state of the relay
-         bool initial_state = relay_config.default_position;
+         relay_pins[i].set_dir(dir_t::out);
 
-         if ( relay_pins[i].is_an_output() ) {
-            // If the pin is already configured as output, preserve the state
-            initial_state = *relay_pins[i] ^ relay_pins[i].is_inverted();
-            // Apply the polarity as configured
-            relay_pins[i].set_invert(relay_config.invert ? invert::inverted : invert::normal);
-            relay_pins[i].set(initial_state);
-         } else {
-            // Not configured as output, set the initial state
-            relay_pins[i].set(initial_state);
-            relay_pins[i].set_invert(
-               relay_config.invert ? invert::inverted : invert::normal
-            );
-            relay_pins[i].set_dir(dir_t::out);
-         }
-
-         // Initialise all pins
-         check_pins[i].set_invert(
-            relay_config.invert ? invert::normal : invert::inverted
-         );
+         // Initialise all read back pins
+         check_pins[i].set_invert(invert::inverted);
          check_pins[i].set_dir(dir_t::in);
       }
 

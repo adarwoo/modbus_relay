@@ -109,8 +109,25 @@ namespace config {
       eeprom_config.estop_on_bad_voltage_type = yes;
       eeprom_config.update();
    }
-   void set_relay_config(uint8_t address, uint8_t conf, uint8_t filter) {
-      eeprom_config.relays_config[address].debounce_time = filter;
-      eeprom_config.relays_config[address].config = conf;
+
+   /**
+    * Set the relay configuration using the modbus value
+    * @return false if the configuration is invalid
+    */
+   bool set_relay_config(uint8_t address, uint16_t filter) {
+      if ( filter == 0 ) {
+         eeprom_config.relays_config[address].filter_ms = 0;
+         eeprom_config.relays_config[address].disabled = false;
+      } else if ( filter == 0xFFFF ) {
+         eeprom_config.relays_config[address].filter_ms = 0;
+         eeprom_config.relays_config[address].disabled = true;
+      } else if ( filter >= 100 and filter <= 60000 ) {
+         eeprom_config.relays_config[address].filter_ms = filter;
+         eeprom_config.relays_config[address].disabled = false;
+      } else {
+         return false;
+      }
+
+      return true;
    }
 } // End of relay namespace
