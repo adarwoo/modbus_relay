@@ -131,7 +131,7 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
    * The communication values have been temporary reset to:
       | Configuration     | value             | Explanation                                    |
       |-------------------|-------------------|------------------------------------------------|
-      | **Slave ID**      | `44`              | The device address is 44 (decimal) by default  |
+      | **Slave ID**      | `248`             | This value is reserved in the modbus standard, so no other devices should use it |
       | **Baud rate**     | `9600`            | The device talks at 9600 by default            |
       | **Serial setup**  | `8N1`             | 8bits, no parity and 1 stop bit                |
 
@@ -373,7 +373,7 @@ This group of registers allow configuring the communication settings of the rela
 
 | Modbus Address | Hex Value | Access | Description        | Factory<br/>Recovery | Values |
 |----------------|-----------|--------|--------------------|---------------|--------|
-| 40001          | 0x0000    | RW     | device address  | 44            | [1-127] |
+| 40001          | 0x0000    | RW     | device address  | 44            | [1-247] |
 | 40002          | 0x0001    | RW     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
 | 40003          | 0x0002    | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
 | 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
