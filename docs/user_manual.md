@@ -7,38 +7,45 @@ It is aimed at industrial systems such as a CNC or equivalent.
 
 This document provides a description for the operations of the device.
 
-## Device SKU
+## Device identification
 
-This document covers the series mbNR_37, which includes the mbNR_37/03, the 3 relays version.
+Since the hardware and the software are released together, the github TAG references this design uniquely.
 
 ## Features summary
 
 1. Standard DIN Rail mountable PCB
-2. 3 relays - 9.4A 250VAC per output
+2. 3 relays - up to 9.4A @ 250V per output
 3. Operational integrity minded
-   * Uses a safety relay with force conduits and read back
+   * Uses safety relays with forcibly guided contacts, 10.10<sup>6</sup> operations, re-inforced isolation and position read back
    * Galvanically isolated infeed voltage measurement with acceptable range
    * Communication watchdog
-4. EStop management
-   * Used for failsafe of the relay operation
+4. Emergency Stop (EStop) management
+   * Used to safe guard relay operations
       * Relay failure
       * Infeed voltage out-of-range
       * Communication loss
-   * Externally controlled
+      * Application crash/corruption
+   * Can be controlled by the Modbus server
      * Pulsed EStop
-     * Resetable
-     * Terminal
-6. Operational statistics
+     * Resetable EStop with a push button
+     * Terminal EStop for terminal cases
+5. Operations statistics
    * Number of cycles
    * Running time
    * Fault codes
-
+6. Diagnostics over Modbus
+   * Infeed highs and lows
+   * Infeed type and level
+   * EStop causes and diagnostic
+  
 # Operations overview
-The Modbus Relay Device is a configurable relay device with Modbus RTU communication.<br/>
+Operations are performed over RTU communication bus.<br/>
+A push button is also featured - with limited use: to reset EStops (when possible), to turn on the recovery mode when a relay is in a unknown configuration state.
+---
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
 ## Simple operation
-The relay works like any modbus coil by writting the coil registers.
+The relay works like any Modbus coil based devices, by writting the coil registers.
 The following modbus commands are supported:
 * **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05)<br/>Individual relays can opened, closed or toggled with this command 
 * **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function01)<br/>Multiples relays can be individually controlled with a single command (opened and closed)
@@ -459,6 +466,19 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 |--------------|----------|-------------|
 | MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the EStop could not be reset<br/>0x11 : Pulsed EStop. Create a 4 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a reset will clear the ESTop (Register 40103) |
 | LSB          | Diagnostic code | A code can be applied to allow investigating the cause of EStop/Reset.<br/>Values: <0-255> |
+
+# Electrical and mecanical characteristics
+
+Refer to the datasheet of the [SiSF2 relay](https://www.ermec.com/catalogos/2021/ELESTA/sisf2_-_en.pdf) for detailed data.
+Both contacts of the relay are paired.
+
+## Absolute maximum ratings
+
+| Item | Min | Max |
+|------|-----|-----|
+| Supply voltage | 15 VDC | 30 VDC |
+| Infeed voltage | -      | 240V (AC/DC) |
+| Relay contact current | - | 9.4A (AC/DC) | 
 
 ## Troubleshooting
 
