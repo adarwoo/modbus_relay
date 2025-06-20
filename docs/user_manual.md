@@ -43,7 +43,7 @@ The coils can be written individually using command **05**: [Write single coil](
 
 The status of the relay can be read back with command **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)
 
-The relay polarity can be inverted, and the default relay position can be set in the configuration.
+> [!NOTE]: The relay always operates with a positive polarity, so writing ON will close the relay. The failsafe position is always OFF (relay opened).
 
 ## System Health Monitoring
 
@@ -287,9 +287,6 @@ The device supports the following function code:
 <br/>Force each coil in a sequence of coils to either On or Off
 
 > [!WARNING]
-> When reading a relay with inverted command, the value is inverted too
-
-> [!WARNING]
 > The relays may respond differently based on the relay configuration such as polarity and deboucing.
 
 ### Detail of the function 05 : Write single coil
@@ -301,9 +298,6 @@ The following values can be used:
 | 0x0000| This specific 16-bit value is the Modbus standard representation for "OFF". |
 | 0xFF00| This specific 16-bit value is the Modbus standard representation for "ON" when writing to a coil. |
 | 0xAA00| This value will toggle the coil |
-
-> [!IMPORTANT]
-> The inversion setting is taken into account with writing coils.
 
 ## Input registers
 
@@ -442,12 +436,12 @@ This group of registers allow configuring the communication settings of the rela
 This group allow configuring the individual relays.
 The value written is RCFG described below.
 
-| Modbus Address | Hex Value | Access | Description         | Factory default | Values |
-|----------------|-----------|--------|---------------------|------------------|-------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
-| 40026          | 0x0019    | RW     | Relay 2 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
-| 40027          | 0x001A    | RW     | Relay 3 config      | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
-| 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 0 (Enabled, Off by default, Non-inverted, Off on fault) | RCFG   |
+| Modbus Address | Hex Value | Access | Description         | Factory default      | Values |
+|----------------|-----------|--------|---------------------|----------------------|-------|
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | <ul><li><b>0</b><br/>Enabled with no filtering</li><li><b>100-60000</b><br/>Enabled with filtering.<br/>The filter period is the value in ms<li><b>0xFFFF</b><br/>The relay is disabled</li></ul><br/>Any other values will generated an 'invalid value' error |
+| 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
+| 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
+| 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
 
 <sup>1</sup> Available on devices with more than 3 relays
 
@@ -456,34 +450,6 @@ The value written is RCFG described below.
 
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
-
-> [!IMPORTANT]
-> A disabled relay is electrically opened for safety reasons
-
-#### RCFG / Relay configuration values
-
-The following configuration is available. By default, all features are off. These changes are all permanent.
-
-| Bit position | Function | Explanation |
-|--------------|----------|-------------|
-| 0 (lsb)      | Disable  | A '1' disable the relay. It can no longer be used and will be in opened state irrespective of the default and invert settings |
-| 1            | Default position | Sets default the coil value on power-up. Reading the coil value right after powerup will return this value. <sup>note</sup> |
-| 2            | Inversion setting | If '1', invert the coils polarity such that witing a '1' will open the relay |
-| 3            | Mode on fault | If '1', leave the relay as is. If '0', an attempt is made to position the relay to the configured default position |
-| 8-15 (MSB)   | Debounce time (s) | Number of debouce seconds in 1/10th second (0=no debounce, 1=0.1s debound, 255=25.5 seconds debounce. The relay can change state more often than <values> seconds. If a rapid succession of command are sent, the relay will remain in a given state for the given duration in 1/10th of secoonds, the apply the latest received setting. This prevents fast switch overs for inductive load, and could protect the circuit |
-
-<sup>note</sup>: When both "default position" and "inversion" are set to 1, the relay is physically OFF at power-up. See the logic table in the following paragraph.
-
-#### Combined settings table
-
-The following table illustrates the effect of the invert and default settings:
-
-| Inversion	|Default Position	| Physical State at Power-up|
-|:---------:|:---------------:|---------------------------|
-| 0         |0	               |  OFF = **Opened**   |
-| 0         |**1**            |  ON  = **Closed**   |
-| **1**     |0                |	OFF = **Closed**   |
-| **1**     |**1**            |	ON  = **Opened**   |
 
 ## Device control registers
 
@@ -519,8 +485,8 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 ## Troubleshooting
 
 ### Cannot Communicate with Device
-- If the modbus LEDs are flickering, make sure the Relay Guarian and relay share the same settings.
-- Active the recovery mode on the device and in Guardian Relay
+- If the modbus LEDs are flickering, make sure the RelayGuarian and relay share the same settings.
+- Active the recovery mode on the device and in the RelayGuardian
 - If no communication is established, check the serial adapter communication port
 - Check the wriring. Modbus pins cannot be swapped.
 
@@ -529,7 +495,6 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 2. Use the default Device ID (`0`) to reset the device via the reset register.
 
 ### Relay Does Not Respond
-- Verify relay default positions and inversion settings in the holding registers.
 - Check the watchdog timeout setting to ensure it isn’t triggering prematurely.
 
 ---
