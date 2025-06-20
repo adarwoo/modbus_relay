@@ -41,7 +41,7 @@ Since the hardware and the software are released together, the github TAG refere
 # Operations overview
 Operations are performed over RTU communication bus.<br/>
 A push button is also featured - with limited use: to reset EStops (when possible), to turn on the recovery mode when a relay is in a unknown configuration state.
----
+<br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
 ## Simple operation
