@@ -43,7 +43,9 @@ The coils can be written individually using command **05**: [Write single coil](
 
 The status of the relay can be read back with command **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)
 
-> [!NOTE]: The relay always operates with a positive polarity, so writing ON will close the relay. The failsafe position is always OFF (relay opened).
+> [!NOTE]
+> The relay always operates with a positive polarity, so writing ON will close the relay.
+> The failsafe position is always OFF (relay opened).
 
 ## System Health Monitoring
 
@@ -141,31 +143,6 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 11. Hit the 'Synchronize' button in the relay guardian to match the relay configuration.
    . The guardian takes the relay out of recovery mode automatically.
    . You're all set!
-
-
-```mermaid
----
-title: Recovery procedure
-displayMode: compact
-config:
-  theme: forest
-  look: handDrawn
-  flowchart:
-    defaultRenderer: "elk"
----
-%%{init: {'theme': 'default', 'themeVariables': { 'fontSize': '10px' }}}%%
-flowchart TD
-  START([Begin]) --> RG[[Start RelayGuardian]]
-  RG --> SCAN[[Scan the ports]]
-  SCAN --> ACTIVITY{Rx LED<br/>blinking?}
-  ACTIVITY -- Yes --> RR[[Push reset >5s]] --> RGR[[Click recovery in RG]]
-  ACTIVITY -- No --> BADCOMM{Check<br/>Win comm port} --> SCAN
-  RGR --> RGCC{Comm<br/>established?}
-  RGCC -- No --> WIRING[/Check A/B/GND wiring/] --> START
-  RGCC -- Yes --> SETTINGS[[Edit device settings]] --> SYNC[[Synchronize RG with device]] --> END[(End)]
-  RG -.-> C1[Ensure comm port is setup] 
-```
-
 
 > [!NOTE]
 > The recovery mode maintains on-going relay operations.
