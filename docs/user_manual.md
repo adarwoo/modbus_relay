@@ -39,43 +39,43 @@ This section describes how to configure and operate the device, including its de
 
 ## Simple operation
 The relay works like any modbus coil by writting the coil registers.
-The coils can be written individually using command **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05) or by bunch using command **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function01)
-
-The status of the relay can be read back with command **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)
+The following modbus commands are supported:
+* **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05)<br/>Individual relays can opened, closed or toggled with this command 
+* **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function01)<br/>Multiples relays can be individually controlled with a single command (opened and closed)
+* **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)<br/>The status of the relays is accessible through this command
 
 > [!NOTE]
-> The relay always operates with a positive polarity, so writing ON will close the relay.
+> All relays always operates with a positive polarity, so writing ON will close the relay.
 > The failsafe position is always OFF (relay opened).
 
 ## System Health Monitoring
 
-This relay distinshes itself from simpler version by its built-in ability to monitor the health of the system it operates within, and to halt operations by opening an EStop relay.
+This controller distinguishes itself from simpler models by its ability to monitor the health of the system, and to halt operations by opening an EStop relay.
 
 The active elements being monitored and/or mesured are:
 1. Controller integrity
-4. Modbus communications
-5. Infeed voltage, that is the upsteam supply voltage
-6. Proper operation of the relays
+2. Modbus communications
+3. Infeed voltage, that is the upsteam supply voltage
+4. Proper operation of the relays
 
 ### Controller integrity monitoring
 
 The controller monitors itself to guarantee proper execution.
-All memories are versified:
+All memories are verified:
 * The flash memory integrity is verified at every boot
 * The RAM is tested once on boot-up
-* The EEprom storage contains a checksum and would be reformatted if a corruption is detected
+* The EEprom storage contains a checksum and is reformatted if a corruption is detected
 The health of the power supply is monitored
 * The CPU power supply is monitoring by the brown-out-detector
 * A failsafe exist which activates the EStop if the power supply was to fail
 The execution is monitored
-* The watchdog feature of the microcontroller is tested once on cold reset from power-up
-* The watchdog then checks the application main loop is running. The system is reset by the watchdog if a crash is detected. The CPU is then fully suspended.
+* An application crash will EStop the controller
 
 Any non-recoverable failure to the controller's intergrity leads to the EStop being activated.
 
 ### Modbus communication monitoring
 
-The controller monitors the activity of the Modbus RS485 link.
+The controller monitors the activity of the Modbus RS485 link, and through this, the health of the Modbus server.
 This monitoring activity can be configured to trigger an resetable EStop.
 
 > [!NOTE]
@@ -86,8 +86,9 @@ This monitoring activity can be configured to trigger an resetable EStop.
 
 The module measures the infeed voltage of the relay and the type of infeed (AC vs DC).
 The AC measurement measure the true RMS value for 50Hz and 60Hz supplies.
-It stores the minimum and maximum value.
-Modbus registers are provided to read the instantanous value, minimum and maximum and reset all measurements.
+
+The last measured value, but also the lowest and highest measured values are accessible over the Modbus network.
+Additional Modbus registers allow resetting those values during investigations.
 
 The measurement can be used to trigger an EStop on:
 1. Overvoltage : The infeed voltage is higher than a configured threshold
