@@ -272,7 +272,11 @@ The device supports the following function code:
 <br/>Force each coil in a sequence of coils to either On or Off
 
 > [!WARNING]
-> The relays may respond differently based on the relay configuration such as polarity and deboucing.
+> The relays may respond differently based on the relay configuration such as filtering or if disabled.
+
+> [!WARNING]
+> Attempting to write a disabled relay with function <b>05</b> will generate an <i>illegal_data_value</i> error.
+> The value is ignore with function <b>15</15>.
 
 ### Detail of the function 05 : Write single coil
 
