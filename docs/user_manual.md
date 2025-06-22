@@ -318,8 +318,8 @@ This registers provides details about the device in use.
 | 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
 | 30012          | 0x000B    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
 | 30013          | 0x000C    | R      | Actual infeed voltage type  | Reports the type of infeed voltage detected<br/>0=AC+DC is below 10V, 1=DC, 2=AC                    |
-| 30014          | 0x000D    | R      | EStop root cause            | 0=normal. No ongoing EStop<br/>1=relay. A relay fault was detected<br/>2=modbus. The communication watchdog reported a lack of communication<br/>3=voltage. An incorrect voltage or voltage type was detected<br/>4=external. A modbus command was issued.<br/>5=Recovering from an application crash<br/><br/>Unless an EStop condition is still in progress, this register is cleared to 0 by reading the diagnostic code. |
-| 30015          | 0x000E    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>relay</b><br/>Holds the faulty relay number. The first relay number is 1.</li> <li><b>modbus</b><br/>The timeout in seconds</li> <li><b>voltage</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>external</b><br/>Contains the EStop control value</li> <li><b>Recovering from an application crash</b><br/>0xDEAD</li></ul><br/><b>Note:</b> This register and the root cause are cleared when reading it unless an active EStop is in progress |
+| 30014          | 0x000D    | R      | EStop root cause            | <ul><li><b>0</b>: Normal<br>No ongoing EStop</li><li><b>1</b>: Relay<br/>A relay fault as detected<br/></li><li><b>2</b>: Modbus<br/>The communication watchdog reported a lack of communication</li><li><b>3</b>: Infeed voltage type<br/>An ncorrect voltage or voltage type was detected<br/></li><li><b>4</b>: Infeed voltage over<br/>The voltage has gone over the configured threshold</li><li><b>5</b>: Infeed voltage under<br/>The voltage has gone below the configured threshold</li><li><b>6</b>: Command<br/>A modbus command was issued to lace the device in EStop</li><li><b>7</b>: Application crash<br/>The device is recovering from an application crash</li></ul><br/>Unless an EStop condition is still in progress, this register is cleared to 0 by reading the diagnostic code. |
+| 30015          | 0x000E    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>Relay</b><br/>Holds the faulty relay number. The first relay number is 1.</li> <li><b>Modbus</b><br/>The timeout in seconds</li> <li><b>Infeed (all of them)</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>Command</b><br/>Contains the EStop control value</li> <li><b>Application crash</b><br/>0xDEAD</li></ul><br/><b>Note:</b> This register and the root cause are cleared when reading it unless an active EStop is in progress |
 | 30016          | 0x000F    | R      | Infeed lowest voltage       | Infeed voltage in 1/10th of volts |
 | 30017          | 0x0010    | R      | Infeed highest voltage      | Infeed voltage in 1/10th of volts |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
@@ -395,9 +395,9 @@ This group of registers allow configuring the communication settings of the rela
 
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
 |----------------|-----------|--------|---------------------|---------------|--------|
-| 40009          | 0x0008    | RW     | Ingress type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 40010          | 0x0009    | RW     | Ingress minimum voltage threshold | 100      | 1/10 volts [100-3000] |
-| 40011          | 0x000A    | RW     | Ingress maximum voltage threshold | 3000     | 1/10 volts [100-3000] |
+| 40009          | 0x0008    | RW     | Infeed voltage type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
+| 40010          | 0x0009    | RW     | Infeed maximum voltage threshold | 3000     | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Infeed minimum voltage threshold | 100      | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
 > [!WARNING]
