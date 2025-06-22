@@ -275,8 +275,8 @@ The device supports the following function code:
 > The relays may respond differently based on the relay configuration such as filtering or if disabled.
 
 > [!WARNING]
-> Attempting to write a disabled relay with function <b>05</b> will generate an <i>illegal_data_value</i> error.
-> The value is ignore with function <b>15</15>.
+> Attempting to write a disabled relay with function <b>05</b> will generate an <i>slave device failure (4)</i> error.
+> The value is ignore with function <b>15</b>.
 
 ### Detail of the function 05 : Write single coil
 
