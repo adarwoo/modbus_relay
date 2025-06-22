@@ -98,9 +98,9 @@ The last measured value, but also the lowest and highest measured values are acc
 Additional Modbus registers allow resetting those values during investigations.
 
 The measurement can be used to trigger an EStop on:
-1. Overvoltage : The infeed voltage is higher than a configured threshold
+1. Incorrect type (AC vs DC) of the infeed
 2. Undervoltage : The infeed voltage is lower than a configured threshold
-3. Incorrect type (AC vs DC) of the infeed
+3. Overvoltage : The infeed voltage is higher than a configured threshold
 
 When an infeed defect is detected, the device will open the EStop relay. This should stop operations.
 
@@ -196,7 +196,7 @@ The fault LED state is as follow:
 |-------|-------------|
 | Off   | Normal operations |
 | On    | The device is terminated. A hard reboot is required. If the termination was caused by a failing relay, the correspond relay LED will flash at 2Hz |
-| Flash at 2Hz | Fault detected. The fault can be cleared by pressing the ESTOP reset button.<br/>Another LED will synchronously blink to point to the fault.<br/><ul><li><b>INFEED LED</b>: Infeed fault, over or under</li><li><b>TX LED</b>: Modbus watchdog</li></ul>
+| Flash at 2Hz | Fault detected. The fault can be cleared by pressing the ESTOP reset button.<br/>Another LED will synchronously blink to point to the fault.<br/><ul><li><b>Infeed LED</b>: Infeed fault, under or over</li><li><b>TX LED</b>: Modbus watchdog</li></ul>
 | Flash once for 2s | A pulsed EStop condition was received from the modbus master |
 
 When an EStop is is progress, a source LED is flashing fast to point to the source:
@@ -320,7 +320,7 @@ This registers provides details about the device in use.
 | 30013          | 0x000C    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
 | 30014          | 0x000D    | R      | Infeed highest voltage      | Returns the lowest measured infeed voltage until now in 1/10th of volts.<br/>This value can be reset with the command: - [40102 - Reset measurements](#device-control-registers) |
 | 30015          | 0x000E    | R      | Infeed lowest voltage       | Same as 30014, but returns the lowest |
-| 30016          | 0x000F    | R      | EStop root cause            | <ul><li><b>0</b>: Normal<br>No ongoing EStop</li><li><b>1</b>: Relay<br/>A relay fault as detected<br/></li><li><b>2</b>: Modbus<br/>The communication watchdog reported a lack of communication</li><li><b>3</b>: Infeed voltage type<br/>An ncorrect voltage or voltage type was detected<br/></li><li><b>4</b>: Infeed voltage over<br/>The voltage has gone over the configured threshold</li><li><b>5</b>: Infeed voltage under<br/>The voltage has gone below the configured threshold</li><li><b>6</b>: Command<br/>A modbus command was issued to lace the device in EStop</li><li><b>7</b>: Application crash<br/>The device is recovering from an application crash</li></ul><br/>Unless an EStop condition is still in progress, this register is cleared to 0 by reading the diagnostic code. |
+| 30016          | 0x000F    | R      | EStop root cause            | <ul><li><b>0</b>: Normal<br>No ongoing EStop</li><li><b>1</b>: Relay<br/>A relay fault as detected<br/></li><li><b>2</b>: Modbus<br/>The communication watchdog reported a lack of communication</li><li><b>3</b>: Infeed voltage type<br/>An ncorrect voltage or voltage type was detected<br/></li><li><b>4</b>: Infeed voltage under<br/>The voltage has gone below the configured threshold</li><li><b>5</b>: Infeed voltage over<br/>The voltage has gone over the configured threshold</li><li><b>6</b>: Command<br/>A modbus command was issued to lace the device in EStop</li><li><b>7</b>: Application crash<br/>The device is recovering from an application crash</li></ul><br/>Unless an EStop condition is still in progress, this register is cleared to 0 by reading the diagnostic code. |
 | 30017          | 0x0010    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>Relay</b><br/>Holds the faulty relay number. The first relay number is 1.</li> <li><b>Modbus</b><br/>The timeout in seconds</li> <li><b>Infeed (all of them)</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>Command</b><br/>Contains the EStop control value</li> <li><b>Application crash</b><br/>0xDEAD</li></ul><br/><b>Note:</b> This register and the root cause are cleared when reading it unless an active EStop is in progress |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
@@ -520,7 +520,7 @@ A fire is unlikely.
 | Control Load Relays  | Relay not switching           | Load not powered leading to CNC or cutter damage | Relay failure, dry joint    | Feedback circuit             | 8 | 4 | 3 | 96  | Add redundant relay check, use industrial-grade relays     |
 | Control Load Relays  | Relay stuck ON                | Unsafe load activation                | Relay contact welding                  | Feedback circuit             | 9 | 3 | 4 | 108 | Use a forced conduit relay and read back the status of the relay  |
 | E-Stop Relay         | E-stop not triggered          | CNC continues in unsafe state         | Logic fault, relay failure             | Self-test, watchdog          | 10| 2 | 3 | 60  | Use safety-rated relay, periodic self-test                 |
-| Power Monitoring     | Over/under voltage undetected | Damage to CNC or relay                | Sensor failure, ADC error              | Voltage threshold check      | 9 | 3 | 4 | 108 | Add voltage sensing, calibration check                    |
+| Power Monitoring     | Under/over voltage undetected | Damage to CNC or relay                | Sensor failure, ADC error              | Voltage threshold check      | 9 | 3 | 4 | 108 | Add voltage sensing, calibration check                    |
 | Power Converter      | Converter fails               | Relay board unpowered, failsafe triggers | Component failure                   | Relay state monitoring       | 7 | 4 | 2 | 56  | Use robust converter, thermal protection. =<br/>Power the estop relay from the mains power |
 | Modbus Communication | Loss of communication         | E-stop triggered, CNC halts           | Cable fault, EMI, software crash       | Timeout watchdog             | 6 | 5 | 2 | 60  | Loss of comms indicates the bus is damaged or the master has crashed. esop. |
 | Test of the esop switch | estop relay opens and close cycle is considered a estop switch test  | False E-stop test                    | Non cold reboot of the firmware | Analysis of the reboot cause | 8 | 3 | 3 | 72  | Do not allow the modbus board to reboot |
