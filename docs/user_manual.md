@@ -396,8 +396,8 @@ This group of registers allow configuring the communication settings of the rela
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
 |----------------|-----------|--------|---------------------|---------------|--------|
 | 40009          | 0x0008    | RW     | Infeed voltage type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 40010          | 0x0009    | RW     | Infeed maximum voltage threshold | 3000     | 1/10 volts [100-3000] |
-| 40011          | 0x000A    | RW     | Infeed minimum voltage threshold | 100      | 1/10 volts [100-3000] |
+| 40010          | 0x0009    | RW     | Infeed lower voltage threshold | 3000     | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Infeed upper voltage threshold | 100      | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
 
 > [!WARNING]
