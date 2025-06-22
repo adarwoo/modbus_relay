@@ -378,18 +378,24 @@ Other functions codes such as 23 ( Read/Write Multiple Registers) are not suppor
 
 This group of registers allow configuring the communication settings of the relay.
 
-| Modbus Address | Hex Value | Access | Description        | Factory<br/>Recovery | Values |
-|----------------|-----------|--------|--------------------|---------------|--------|
-| 40001          | 0x0000    | RW     | device address  | 44            | [1-247] |
-| 40002          | 0x0001    | RW     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
-| 40003          | 0x0002    | RW     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
-| 40004          | 0x0003    | RW     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
-| 40005–40008    | 0x0004–0x0007 | R  | *Reserved*          |               |        |
+> [!IMPORTANT]
+> These registers are <ins>write protected</ins>.
+> You must activate the 'recovery' mode to change them, by pressing the 'EStop Reset' button for more that 3 seconds.
 
 > [!NOTE]
 > Function ~~**06: Write single register**~~ is not availble for this group.
 > You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
-> Once the command is acknowledged, the relay will immediatly start using the new settings.
+> Once a write is done, the device comes out of recovery mode and applies the changes right away.
+
+| Modbus Address | Hex Value | Access | Description        | Factory<br/>Recovery | Values |
+|----------------|-----------|--------|--------------------|---------------|--------|
+| 40001          | 0x0000    | RW<sup>1</sup> | device address  | 44            | [1-247] |
+| 40002          | 0x0001    | RW<sup>1</sup>     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
+| 40003          | 0x0002    | RW<sup>1</sup>     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
+| 40004          | 0x0003    | RW<sup>1</sup>     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
+| 40005–40008    | 0x0004–0x0007 | R  | *Reserved*          |               |        |
+
+<sup>1</sup>Writable only in recovery mode
 
 ### Power Infeed Configuration
 
