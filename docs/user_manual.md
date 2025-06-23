@@ -245,7 +245,7 @@ The LED status is as follow:
 > [!IMPORTANT]
 > The ON state accounts for the configured polarity of the relay.
 
-# Modbus Register Map
+## Modbus Register Map
 
 The Modbus registers are grouped into:
 - [Coil Registers](#coil-registers)
@@ -254,10 +254,6 @@ The Modbus registers are grouped into:
 - [Device Control Registers](#device-control-registers)
 
 For communication settings, see [Communication Settings](#communication-settings).
-
----
-
-## Modbus operations
 
 ### Coil registers
 
