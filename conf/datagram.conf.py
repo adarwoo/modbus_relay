@@ -1,10 +1,11 @@
-[]#!/usr/bin/env python3
+#!/usr/bin/env python3
 from modbus_rtu_rc import *  # Import everything from modbus_generator
 
 Modbus({
     "namespace": "net",
     "on_received": "on_payload_received",
     "slave": True,
+    "buffer_size": 80, # Max reg read = 0x20 (32 x 2) + Frame (ID+CODE+NUM+CRC)
 
     "callbacks": {
         # -----------------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ Modbus({
         # Communication settings
         (WRITE_MULTIPLE_REGISTERS,
             u16(0), u16(4), u8(8),
-                u16(1,127), # Device address
+                u16(1,247), # Device address
                 u16(0,9),   # Baud rate
                 u16(0,2),   # Parity
                 u16(1,2),   # Stop bits
