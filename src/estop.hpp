@@ -21,8 +21,11 @@ namespace estop {
       none = 0,
       faulty_relay = 1,
       modbus_watchdog = 2,
-      voltage_monitor = 3,
-      command = 4
+      infeed_voltage_type = 3,
+      infeed_voltage_over = 4,
+      infeed_voltage_under = 5,
+      command = 6,
+      crash = 7
    };
 
    enum class ExternalTriggerType {
