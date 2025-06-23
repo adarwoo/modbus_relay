@@ -39,8 +39,10 @@ Since the hardware and the software are released together, the github TAG refere
    * EStop causes and diagnostic
   
 # Operations overview
-Operations are performed over RTU communication bus.<br/>
-A push button is also featured - with limited use: to reset EStops (when possible), to turn on the recovery mode when a relay is in a unknown configuration state.
+Operations are performed over an RTU communication bus.<br/>
+A push button is also featured with limited use:
+* to reset EStops (when possible)
+* to activate a recovery mode by placing the relay in a known state, all allowing writting communication registers
 <br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
@@ -60,7 +62,7 @@ The following modbus commands are supported:
 This device distinguishes itself from simpler models by its ability to monitor the health of the system, and to halt operations by opening an EStop relay.
 
 The active elements being monitored and/or mesured are:
-1. device integrity
+1. Device integrity
 2. Modbus communications
 3. Infeed voltage, that is the upsteam supply voltage
 4. Proper operation of the relays
@@ -75,10 +77,9 @@ All memories are verified:
 The health of the power supply is monitored
 * The CPU power supply is monitoring by the brown-out-detector
 * A failsafe exist which activates the EStop if the power supply was to fail
-The execution is monitored
-* An application crash will EStop the device
+* The execution is monitored; an application crash will EStop the device
 
-Any non-recoverable failure to the device's intergrity leads to the EStop being activated.
+Any failure to the device's intergrity leads to the EStop being activated.
 
 ### Modbus communication monitoring
 
@@ -102,38 +103,41 @@ The measurement can be used to trigger an EStop on:
 2. Undervoltage : The infeed voltage is lower than a configured threshold
 3. Overvoltage : The infeed voltage is higher than a configured threshold
 
-When an infeed defect is detected, the device will open the EStop relay. This should stop operations.
+When an infeed defect is detected, the device will open the EStop relay.
 
 ### Relay health monitoring
 
 All the relays are equiped with a position verification which is backed mecanically using a forced conduit.
-If a relay is to fail, the fault is detected and the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
-The faulty relay can be isolated with a disable command, but it should be replaced.
+If a relay fault is detected (open or close):
+* the relay coil is de-energized, and the relay should become opened.
+* the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
 
-### External EStop
+The faulty relay can be isolated by disabling it in the configuration, but it should be replaced.
+
+### External EStop command
 
 The modbus master can issue an EStop command. This external EStop condition can be:
 . Pulsed EStop. The system will halt, but can be resumed right after
 . Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
 . Terminal. Only a power cycle can clear the condition.
 
-## Failsafe management
-
-The relays can be individually configured to go Open or Close when a fault is detected.
-If a relay fault is detected, the relay coil is un-energized, and the relay will be opened.
-
 ## Recovery mode
 
-When a relay cannot be reached or is un-responsive, the following procedure can be used.<br/>
+The recovery mode is entered by pressing the 'EStop reset' push button for more than 3 seconds.<br/>
+It is used in the following situations:
+* when a relay cannot be reached or is un-responsive
+* to overwrite the communication settings of the relay
+
+In these situations, the following procedure can be used:
 
 1. Start the RelayGuardian application
 2. Make sure the communication port is properly setup in the RelayGuardian
  * The connection should be marked as OK
 3. Issue a scan command in the RelayGuardian
  * The Modbus Rx LED should show some activity
- * If this is not the case, check the modbus is plagged correctly in the PC and the comm port is the correct one
-4. If the device is not identified in this phase,
-5. Push the relay 'EStop reset' push button for > 3s
+ * If this is not the case, check the modbus is plugged correctly in the PC and the comm port is the correct one
+4. If the device is not identified in this phase
+  1. Push the relay 'EStop reset' push button for > 3s
    * The Modbus LEDs are flashing flat
    * The communication values have been temporary reset to:
       | Configuration     | value             | Explanation                                    |
@@ -142,13 +146,13 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
       | **Baud rate**     | `9600`            | The device talks at 9600 by default            |
       | **Serial setup**  | `8N1`             | 8bits, no parity and 1 stop bit                |
 
-6. In the 'Relay Guarian' application, click the 'Recovery' button
-7. Confirm proper connection
-8. In the 'RelayGuardian', click the 'Locate' button. All LEDs of relay module should be flashing fast!
+  2. In the 'Relay Guarian' application, click the 'Recovery' button
+  3. Confirm proper connection
+  4. In the 'RelayGuardian', click the 'Locate' button. All LEDs of relay module should be flashing fast!
    . The module is being reovered.
-9. Stop the device location mode
-10. Go to the settings tabs, check the configuration, or adjust.
-11. Hit the 'Synchronize' button in the relay guardian to match the relay configuration.
+  5. Stop the device location mode
+5. Go to the settings tabs, check the configuration, or adjust.
+6. Hit the 'Synchronize' button in the relay guardian to match the relay configuration.
    . The guardian takes the relay out of recovery mode automatically.
    . You're all set!
 
@@ -157,8 +161,6 @@ When a relay cannot be reached or is un-responsive, the following procedure can 
 
 > [!TIP]
 > The recovery mode can also be ended by pressing the 'EStop reset' push button for another 3s.
-> The device then applies the programmed settings.
-
 
 ## EStop mode
 
@@ -172,8 +174,9 @@ In all cases, the EStop condition can be read over the modbus network.
 ## LEDs
 
 The module features many LED to see the device operation and faults easilty.
+
 > [!TIP]
-> During boot, for the first 2seconds, all LEDs are lit. This allow checking for a faulty LED.
+> During boot, for the first 2 seconds, all LEDs are lit. This allow checking for a faulty LED.
 
 All LEDs serve multiple purspose with the exception of the modbus Tx LED which only indicates outgoing RS485 traffic.
 The expression 'All LEDs' de-fact excludes the modbus Tx LED.
@@ -185,8 +188,6 @@ For detailed LED states, see:
 - [Infeed LED](#infeed-led)
 - [Modbus LEDs](#modbus-leds)
 - [Relay LEDs](#relay-leds)
-
----
 
 ### EStop LED
 
@@ -256,7 +257,9 @@ For communication settings, see [Communication Settings](#communication-settings
 
 ---
 
-## Coil registers
+## Modbus operations
+
+### Coil registers
 
 The relay coils can be accessed from 0 (Relay 1) upto relay 31.
 Coils can be written and read at will.
@@ -278,7 +281,7 @@ The device supports the following function code:
 > Attempting to write a disabled relay with function <b>05</b> will generate an <i>slave device failure (4)</i> error.
 > The value is ignore with function <b>15</b>.
 
-### Detail of the function 05 : Write single coil
+#### Detail of the function 05 : Write single coil
 
 The following values can be used:
 
@@ -288,7 +291,7 @@ The following values can be used:
 | 0xFF00| This specific 16-bit value is the Modbus standard representation for "ON" when writing to a coil. |
 | 0xAA00| This value will toggle the coil |
 
-## Input registers
+### Input registers
 
 Input registers are read-only registers used to report information about the device.
 The registers have been grouped so they can easily be accessed.
@@ -299,7 +302,7 @@ Only the function **04**: [Read input registers](https://www.modbustools.com/mod
 > [!WARNING]
 > Make sure to issue function 04: Read input registers when reading input registers and not function ~~**03: Read Holding Regsiters**~~, as the memory of both types overlaps.
 
-### device Identification
+#### Device Identification
 
 This registers provides details about the device in use.
 
@@ -314,7 +317,7 @@ This registers provides details about the device in use.
 * <sup>1</sup> EStop relay code=0x37. Simple modbus code=0x36.
 * <sup>2</sup> A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
 
-### Status & Monitoring
+#### Status & Monitoring
 
 | Modbus Address | Hex value | Access | Description                 | Values                        |
 |----------------|-----------|--------|-----------------------------|-------------------------------|
@@ -328,7 +331,7 @@ This registers provides details about the device in use.
 | 30017          | 0x0010    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>Relay</b><br/>Holds the faulty relay number. The first relay number is 1.</li> <li><b>Modbus</b><br/>The timeout in seconds</li> <li><b>Infeed (all of them)</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>Command</b><br/>Contains the EStop control value</li> <li><b>Application crash</b><br/>0xDEAD</li></ul><br/><b>Note:</b> This register and the root cause are cleared when reading it unless an active EStop is in progress |
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
-### Relay Diagnostics & Statistics
+#### Relay Diagnostics & Statistics
 
 The status of each relays is accessible, and well as their indivual number of cycles.
 A cycle is defined as a change of a relay state during operation (exclude powerloss transitions).
@@ -350,7 +353,7 @@ The address space is structured to expand up to 32 relays for other variants of 
 > [!TIP]
 > For generic software, the number of available relays can be read in input registers 30004.
 
-## Holding registers
+### Holding registers
 
 Holding register contain values can be read or written. The hold configuration details.
 They are grouped by functions.
@@ -360,7 +363,7 @@ Writing these registers is restricted to prevent mis-behavious.
 > [!WARNING]
 > Reserved values cannot be written and will generate an error.
 
-### Supported function codes
+#### Supported function codes
 
 The following function codes are supported:
 
@@ -378,7 +381,7 @@ The following function codes are supported:
 
 Other functions codes such as 23 ( Read/Write Multiple Registers) are not supported.
 
-### Communication Settings
+#### Communication Settings
 
 This group of registers allow configuring the communication settings of the relay.
 
@@ -401,7 +404,7 @@ This group of registers allow configuring the communication settings of the rela
 
 <sup>1</sup>Writable only in recovery mode
 
-### Power Infeed Configuration
+#### Power Infeed Configuration
 
 | Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
 |----------------|-----------|--------|---------------------|---------------|--------|
@@ -413,7 +416,7 @@ This group of registers allow configuring the communication settings of the rela
 > [!WARNING]
 > The registers must be written individually. The command **16** is not supported.
 
-### Safety Logic Configuration
+#### Safety Logic Configuration
 
 | Modbus Address | Hex Value | Access | Description                               | Factory Value | Values |
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
@@ -426,7 +429,7 @@ This group of registers allow configuring the communication settings of the rela
 > [!WARNING]
 > The registers must be written individually. The command **16** is not supported.
 
-### Relays Configuration
+#### Relays Configuration
 
 This group allow configuring the individual relays.
 
@@ -448,7 +451,7 @@ This group allow configuring the individual relays.
 > [!IMPORTANT]
 > A reset is required for the device to account for any changes made to the relay configuration.
 
-## Device control registers
+### Device control registers
 
 These register share the holding registers mapping address space but are write-only.
 This group of register allows controlling the EStop and the device device.
@@ -470,7 +473,7 @@ This group of register allows controlling the EStop and the device device.
 
 **Note <sup>1</sup>** : See the format below
 
-### EStop control
+#### EStop control
 
 The following table documents the type **ESTOP_CTRL** used to control the EStop.
 
@@ -479,12 +482,12 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 | MSB  | Type of EStop | 0x00 : Reset the EStop if possible. Returns an error if the EStop could not be reset<br/>0x11 : Pulsed EStop. Create a 4 second EStop pulse<br/>0x22 : Resetable EStop mode. The EStop can be reset by pushing the EStop reset button<br/>0xFF : Terminal EStop. Only a reset will clear the ESTop (Register 40103) |
 | LSB          | Diagnostic code | A code can be applied to allow investigating the cause of EStop/Reset.<br/>Values: <0-255> |
 
-# Electrical and mecanical characteristics
+## Electrical and mecanical characteristics
 
 Refer to the datasheet of the [SiSF2 relay](https://www.ermec.com/catalogos/2021/ELESTA/sisf2_-_en.pdf) for detailed data.
 Both contacts of the relay are paired.
 
-## Absolute maximum ratings
+### Absolute maximum ratings
 
 | Item | Min | Max |
 |------|-----|-----|
@@ -509,7 +512,7 @@ Both contacts of the relay are paired.
 
 ---
 
-# FMEA – Modbus Relay Board for CNC Safety
+## FMEA – Modbus Relay Board for CNC Safety
 
 This FMEA analyzes potential failure modes of a Modbus-controlled relay board designed for CNC safety, including load control and emergency stop (E-stop) functionality.
 Any failure should result in the CNC stopping by letting go of the estop switch.
@@ -535,13 +538,13 @@ A fire is unlikely.
 | Modbus Communication | Loss of communication         | E-stop triggered, CNC halts           | Cable fault, EMI, software crash       | Timeout watchdog             | 6 | 5 | 2 | 60  | Loss of comms indicates the bus is damaged or the master has crashed. esop. |
 | Test of the esop switch | estop relay opens and close cycle is considered a estop switch test  | False E-stop test                    | Non cold reboot of the firmware | Analysis of the reboot cause | 8 | 3 | 3 | 72  | Do not allow the modbus board to reboot |
 
-## Legend
+### Legend
 - **S (Severity)**: 1 (low) to 10 (catastrophic)
 - **O (Occurrence)**: 1 (rare) to 10 (frequent)
 - **D (Detection)**: 1 (certain detection) to 10 (undetectable)
 - **RPN (Risk Priority Number)**: S × O × D
 
-## Summary
+### Summary
 Focus should be placed on:
 - Improving detection of stuck or failed relays
 - Enhancing voltage monitoring redundancy
