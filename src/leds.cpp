@@ -159,7 +159,7 @@ namespace {
          // Go full automatic mode
          CCL.CTRLA = CCL_ENABLE_bm;
          TCB1.CTRLB |= TCB_CCMPEN_bm;
-         
+
          leds[id::tx].second = LedState::managed;
          leds[id::rx].second = LedState::managed;
       }
@@ -170,7 +170,12 @@ namespace {
             (estop::get_status() == estop::Status::terminated) ? LedState::on : LedState::off;
 
       // Infeed LED
-      leds[id::infeed].second = (estop::get_cause() == estop::Cause::voltage_monitor) ? LedState::blink :
+      bool is_infeed = false
+         or (estop::get_cause() == estop::Cause::infeed_voltage_type)
+         or (estop::get_cause() == estop::Cause::infeed_voltage_over)
+         or (estop::get_cause() == estop::Cause::infeed_voltage_under);
+
+      leds[id::infeed].second = is_infeed ? LedState::blink :
          (infeed::get_status() == infeed::Status::in_range) ? LedState::on :
          (infeed::get_status() == infeed::Status::above) ? LedState::fast :
          (infeed::get_status() == infeed::Status::below) ? LedState::pulse : LedState::off;
