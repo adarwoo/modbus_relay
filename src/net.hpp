@@ -11,6 +11,9 @@ namespace net {
       inline bool locate_device = false;
    }
 
+   // Modbus UART baudrate share the same config as the EEProm
+   using baud_t = config::baud_t;
+
    // All APIs declared in datagram.hpp
    using Uart = asx::uart::Uart<1, config::UartRunTimeConfig>;
 

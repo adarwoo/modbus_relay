@@ -22,6 +22,9 @@ namespace net {
    // Create an alias for the static method
    using dg = Datagram;
 
+   // Constants
+   auto constexpr RECOVERY_DEVICE_ID = uint8_t{248};
+
    // Timer instance for the watchdog
    auto watchdog_timer = asx::timer::Instance{};
 
@@ -86,7 +89,7 @@ namespace net {
       TRACE_INFO(RELAY, "%.2x", values);
 
       for ( uint8_t i=0; i<3; ++i ) {
-         relay::set( i, values & 1 );
+         relay::set( i, values & 1 ); // Ignore the reply
          values >>= 1;
       }
 
@@ -112,13 +115,14 @@ namespace net {
          case 0x08: dg::pack( static_cast<uint16_t>(estop::get_status()) ); break;
          case 0x09: dg::pack( counter::get_running_minutes() >> 16 ); break;
          case 0x0A: dg::pack( counter::get_running_minutes() & 0xFFFF ); break;
-         case 0x0B: dg::pack( infeed::get_input_voltage() ); break;
-         case 0x0C: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
-         case 0x0D: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
-         case 0x0E: dg::pack( estop::get_diagnostic_code() ); break;
 
-         case 0x0F: dg::pack( infeed::get_lowest_voltage() ); break;
-         case 0x10: dg::pack( infeed::get_highest_voltage() ); break;
+         case 0x0B: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
+         case 0x0C: dg::pack( infeed::get_input_voltage() ); break;
+         case 0x0D: dg::pack( infeed::get_highest_voltage() ); break;
+         case 0x0E: dg::pack( infeed::get_lowest_voltage() ); break;
+
+         case 0x0F: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
+         case 0x10: dg::pack( estop::get_diagnostic_code() ); break;
 
          // Relay Diagnostics & Stats
          case 0x18: dg::pack( static_cast<uint16_t>(relay::get_status(0)) ); break;
@@ -167,6 +171,9 @@ namespace net {
          case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].filter_ms ); break;
          case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].filter_ms ); break;
          case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].filter_ms ); break;
+
+         default:
+            dg::pack(uint16_t{0});
          }
       }
    }
@@ -174,16 +181,21 @@ namespace net {
    // -------------------------------------------------------------------------
    // Write holding
    // -------------------------------------------------------------------------
-
    void on_write_comms_settings(uint8_t addr, uint8_t baud, uint8_t parity, uint8_t stopbits) {
-      config::set_device_id(addr);
-      config::set_baud(baud);
-      config::set_parity(parity);
-      config::set_stopbits(stopbits);
+      // Note : All ranges have already been enforced
+      if ( state::is_in_recovery_mode() ) {
+         config::set_comm(
+            addr,
+            static_cast<baud_t>(baud),
+            static_cast<asx::uart::parity>(parity),
+            static_cast<asx::uart::stop>(stopbits)
+         );
 
-      // Need to re-initialise the UART
-      state::set_recovery_mode(false);
-      net::Uart::init(); // Reinitialize the network
+         // Drop out of recovery mode. This will reset the UART
+         state::set_recovery_mode(false);
+      } else {
+         dg::reply_error(error_t::negative_acknowledge);
+      }
    }
 
    void on_write_estop_on_under(uint8_t onoff) {
@@ -259,9 +271,17 @@ namespace net {
       }
    }
 
+   /**
+    * Called at start, and during recovery mode activation/deactivation
+    * by the state manager.
+    */
    void init() {
       // Set the modbus install ID
-      dg::set_device_id(config::get_config().address);
+      dg::set_device_id(
+         state::is_in_recovery_mode()
+            ? RECOVERY_DEVICE_ID
+            : config::get_config().address
+      );
 
       // Initialise the modbus slave template API. Overrides the UART settings
       modbus_slave::init();

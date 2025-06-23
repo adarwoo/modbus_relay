@@ -1,6 +1,9 @@
 #include <asx/eeprom.hpp>
 #include <config.hpp>
+
 #include "datagram.hpp"
+#include "state.hpp"
+#include "net.hpp"
 
 using namespace asx;
 
@@ -9,9 +12,9 @@ namespace config {
 
    static const auto default_config = EepromConfig {
       .address = 44,
-      .baud = 5, // 9600
+      .baud = baud_t::_9600,
       .stopbits = uart::stop::_1,
-      .parity = uart::parity::even,
+      .parity = uart::parity::none,
       .infeed_type = infeed::CfgType::ac_50hz,
       .infeed_min_volt_threshold = 10_volts,
       .infeed_max_volt_threshold = 250_volts,
@@ -22,30 +25,36 @@ namespace config {
       .relays_config = {relay::Config{0}, relay::Config{0}, relay::Config{0}}
    };
 
-   constexpr auto hundredth_baudrates = std::array<uint32_t, 10>{
+   constexpr auto baudrates = std::array<uint32_t, 10>{
       300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
    };
 
    constexpr bool is_valid_baudrate(uint8_t check) {
-      return check < hundredth_baudrates.size();
+      return check < baudrates .size();
    }
 
-   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 7>(
+   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 2>(
       default_config);
 
    /*
     * Getters for the runtime configuration
     */
    uart::parity UartRunTimeConfig::get_parity() {
-      return eeprom_config.parity;
+      return state::is_in_recovery_mode()
+         ? uart::parity::none
+         : eeprom_config.parity;
    }
 
    uart::stop UartRunTimeConfig::get_stop() {
-      return eeprom_config.stopbits;
+      return state::is_in_recovery_mode()
+         ? uart::stop::_1
+         : eeprom_config.stopbits;
    }
 
    uint32_t UartRunTimeConfig::get_baud() {
-      return eeprom_config.baud * 100UL;
+      return state::is_in_recovery_mode()
+         ? 9600
+         : baudrates[static_cast<uint8_t>(eeprom_config.baud)];
    }
 
    void reset_config() {
@@ -60,23 +69,11 @@ namespace config {
    /*
     * Modbus callbacks
     */
-   void set_device_id(uint8_t id) {
-      eeprom_config.address = id;
-      eeprom_config.update();
-   }
-
-   void set_baud(uint16_t baud) {
+   void set_comm(uint8_t device_id, baud_t baud, uart::parity parity, uart::stop stopbits) {
+      eeprom_config.address = device_id;
       eeprom_config.baud = baud;
-      eeprom_config.update();
-   }
-
-   void set_parity(uint16_t parity) {
-      eeprom_config.parity = (uart::parity)parity;
-      eeprom_config.update();
-   }
-
-   void set_stopbits(uint16_t stopbits) {
-      eeprom_config.stopbits = (uart::stop)stopbits;
+      eeprom_config.parity = parity;
+      eeprom_config.stopbits = stopbits;
       eeprom_config.update();
    }
 
@@ -114,16 +111,16 @@ namespace config {
     * Set the relay configuration using the modbus value
     * @return false if the configuration is invalid
     */
-   bool set_relay_config(uint8_t address, uint16_t filter) {
+   bool set_relay_config(uint8_t index, uint16_t filter) {
       if ( filter == 0 ) {
-         eeprom_config.relays_config[address].filter_ms = 0;
-         eeprom_config.relays_config[address].disabled = false;
+         eeprom_config.relays_config[index].filter_ms = 0;
+         eeprom_config.relays_config[index].disabled = false;
       } else if ( filter == 0xFFFF ) {
-         eeprom_config.relays_config[address].filter_ms = 0;
-         eeprom_config.relays_config[address].disabled = true;
+         eeprom_config.relays_config[index].filter_ms = 0;
+         eeprom_config.relays_config[index].disabled = true;
       } else if ( filter >= 100 and filter <= 60000 ) {
-         eeprom_config.relays_config[address].filter_ms = filter;
-         eeprom_config.relays_config[address].disabled = false;
+         eeprom_config.relays_config[index].filter_ms = filter;
+         eeprom_config.relays_config[index].disabled = false;
       } else {
          return false;
       }

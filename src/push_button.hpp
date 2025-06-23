@@ -56,9 +56,7 @@ namespace sw {
 
                if ( duration >= long_time ) {
                   // Long press detected
-                  if ( state::set_recovery_mode(!state::is_in_recovery_mode()) ) {
-                     net::Uart::init(); // Reinitialize the network
-                  };
+                  state::set_recovery_mode(!state::is_in_recovery_mode());
                } else {
                   // Reset any on-going EStop
                   estop::reset();

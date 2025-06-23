@@ -18,6 +18,22 @@
 
 namespace config {
    /**
+    * Specific type for storing the baud rate as 1 bytes
+    */
+   enum class baud_t : uint8_t {
+      _300    = 0,
+      _600    = 1,
+      _1200   = 2,
+      _2400   = 3,
+      _4800   = 4,
+      _9600   = 5,
+      _19200  = 6,
+      _38400  = 7,
+      _57600  = 8,
+      _115200 = 9
+   };
+
+   /**
     * @brief Configuration structure stored in EEPROM.
     * This structure contains all the configuration parameters for the relay module.
     */
@@ -25,7 +41,7 @@ namespace config {
       /// @brief Modbus config
       uint8_t address;
       /// @brief UART setup
-      uint8_t baud; // 100th of the baudrate
+      baud_t baud; // Baud rate selection
       asx::uart::stop stopbits;
       asx::uart::parity parity;
 
@@ -48,10 +64,7 @@ namespace config {
 
    const EepromConfig& get_config();
 
-   void set_device_id(uint8_t id);
-   void set_baud(uint16_t baud);
-   void set_parity(uint16_t parity);
-   void set_stopbits(uint16_t stopbits);
+   void set_comm(uint8_t device_id, baud_t baud, asx::uart::parity parity, asx::uart::stop stops);
 
    void set_watchdog(uint16_t period);
    void set_estop_on_undervolt(bool yes);

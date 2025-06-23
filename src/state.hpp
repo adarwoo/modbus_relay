@@ -8,13 +8,20 @@
  */
 
 #include <cstdbool>
+#include <chrono>
+#include <asx/reactor.hpp>
 
 #include "leds.hpp"
+#include "net.hpp"
 
 namespace state {
    namespace detail {
       inline bool recovery_mode = false;
       inline bool locate_mode = false;
+
+      inline auto on_reset_network = asx::reactor::bind(
+         [] { net::init(); }
+      );
    }
 
    /** Check if the device is in recovery mode */
@@ -23,19 +30,15 @@ namespace state {
    }
 
    /** Set the value. Return true on a false->true transition */
-   inline bool set_recovery_mode(bool _recovery_mode) {
-      bool retval = _recovery_mode;
-
+   inline void set_recovery_mode(bool _recovery_mode) {
       // Implementation here
-      if (detail::recovery_mode == _recovery_mode) {
-         return false; // No change
+      if (detail::recovery_mode != _recovery_mode) {
+         detail::recovery_mode = _recovery_mode;
+
+         // Delay through the reactor so the UART can complete any on-going messages
+         detail::on_reset_network.delay(std::chrono::milliseconds(100));
+         led::refresh();
       }
-
-      detail::recovery_mode = _recovery_mode;
-
-      led::refresh();
-
-      return retval;
    }
 
    /** Check if the device is in locate mode */
