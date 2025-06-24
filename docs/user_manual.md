@@ -317,7 +317,7 @@ This registers provides details about the device in use.
 
 | Modbus Address | Hex value | Access | Description                 | Values                        |
 |----------------|-----------|--------|-----------------------------|-------------------------------|
-| 30009          | 0x0008    | R      | Current status              | <ul><li><b>0</b><br/>Device is operational</li><li><b>1</b><br/>Device in EStop. Reset possible</li><li><b>0</b><br/>Device in terminal EStop</li></ul> |
+| 30009          | 0x0008    | R      | Current status              | <ul><li><b>0</b>: Device is operational</li><li><b>1</b>: Device is in EStop.<br/>A reset is possible</li><li><b>2</b>: Device in terminal EStop</li></ul> |
 | 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
 | 30012          | 0x000B    | R      | Actual infeed voltage type  | Reports the type of infeed voltage detected<br/><ul><li><b>0</b><br/>Measured AC/DC combined voltages are below 10V</li><li><b>1</b><br/>DC</li><li><b>2</b><br/>AC</li></ul> |
 | 30013          | 0x000C    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
