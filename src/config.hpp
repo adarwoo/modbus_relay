@@ -73,7 +73,7 @@ namespace config {
    void set_infeed_min_voltage_threshold(uint16_t threshold);
    void set_infeed_max_voltage_threshold(uint16_t threshold);
 
-   bool set_relay_config(uint8_t address, uint16_t filter);
+   bool set_relay_config(uint8_t address, uint8_t filter_on, uint8_t filter_off);
 
    void reset_config();
 

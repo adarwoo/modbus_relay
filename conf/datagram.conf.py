@@ -37,7 +37,7 @@ Modbus({
         "on_write_estop_on_timeout" : [(u16, "timeout")],
 
         # Single relay configuration
-        "on_write_single_relay_cfg" : [(u8, "address"), (u16, "filter")],
+        "on_write_single_relay_cfg" : [(u8, "address"), (u8, "filter_on"), (u8, "filter_off")],
 
         # Device control
         "on_estop"                  : [(u8, "estop_type"), (u8, "diag")],
@@ -89,20 +89,20 @@ Modbus({
         ),
 
         # Power infeed configuration
-        (WRITE_SINGLE_REGISTER,  u16(0x10), u16(0,1),             "on_write_estop_on_under"),
-        (WRITE_SINGLE_REGISTER,  u16(0x11), u16(0,1),             "on_write_estop_on_over"),
-        (WRITE_SINGLE_REGISTER,  u16(0x12), u16(0,1),             "on_write_estop_on_bad_voltage_type"),
-        (WRITE_SINGLE_REGISTER,  u16(0x13), u16(),                "on_write_estop_on_timeout"),
+        (WRITE_SINGLE_REGISTER,  u16(0x10), u16(0,1),   "on_write_estop_on_under"),
+        (WRITE_SINGLE_REGISTER,  u16(0x11), u16(0,1),   "on_write_estop_on_over"),
+        (WRITE_SINGLE_REGISTER,  u16(0x12), u16(0,1),   "on_write_estop_on_bad_voltage_type"),
+        (WRITE_SINGLE_REGISTER,  u16(0x13), u16(),      "on_write_estop_on_timeout"),
 
         # Relay configuration
-        (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u16(),           "on_write_single_relay_cfg"),
+        (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u8(), u8(), "on_write_single_relay_cfg"),
 
         # Device control
         (WRITE_SINGLE_REGISTER,  u16(0x64), u8([0,0x11,0x22,0xff]), u8(), "on_estop"),
-        (WRITE_SINGLE_REGISTER,  u16(0x65), u16(0xAA55),          "on_measurement_reset"),
-        (WRITE_SINGLE_REGISTER,  u16(0x66), u16(0,1),             "on_locate"),
-        (WRITE_SINGLE_REGISTER,  u16(0x67), u16(0x178C),          "on_factory_reset"),
-        (WRITE_SINGLE_REGISTER,  u16(0x68), u16(0xAA55),          "on_exit_recovery"),
-        (WRITE_SINGLE_REGISTER,  u16(0x69), u16(0xAA55),          "on_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x65), u16(0xAA55), "on_measurement_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x66), u16(0,1),    "on_locate"),
+        (WRITE_SINGLE_REGISTER,  u16(0x67), u16(0x178C), "on_factory_reset"),
+        (WRITE_SINGLE_REGISTER,  u16(0x68), u16(0xAA55), "on_exit_recovery"),
+        (WRITE_SINGLE_REGISTER,  u16(0x69), u16(0xAA55), "on_reset"),
     ],
 })

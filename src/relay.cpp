@@ -10,6 +10,9 @@
  *  a relay, the matching CHECK contact is read to check if the relay is closed.
  * If a discrepancy is detected, a notification is sent to the main application.
  */
+#include <chrono>
+#include <array>
+
 #include <asx/reactor.hpp>
 #include <asx/ioport.hpp>
 #include <asx/bitstore.hpp>
@@ -19,6 +22,7 @@
 #include "counters.hpp"
 #include "estop.hpp"
 #include "config.hpp"
+#include "leds.hpp"
 
 #include "conf_board.h"
 #include "conf_version.hpp"
@@ -26,6 +30,7 @@
 
 namespace relay {
    namespace {
+      using namespace asx;
       using namespace asx::ioport;
 
       // -------------------------------------------------------------------------
@@ -33,25 +38,142 @@ namespace relay {
       // -------------------------------------------------------------------------
 
       // The handle to the timer used for the background check
-      auto timer = asx::reactor::Handle{};
+      auto on_check_health = reactor::Handle{};
 
-      /// @brief < Keep track of faulty relays
-      auto relays_fault = asx::BitStore<NUMBER_OF_RELAYS>{};
+      // Lookup for the duration
+      using namespace std::chrono;
 
-      /// @brief Keep track of disabled relay
-      auto relays_disabled = asx::BitStore<NUMBER_OF_RELAYS>{};
+      // Prototype to bind
+      class RelayControl;
+      void on_cycle_end(uint8_t index);
 
+      class RelayControl {
+         uint8_t index; // Index of this relay - required to query the config
+         Pin relay_pin; // Pin the relay is connected to
+         Pin check_pin; // Verification pin
+         bool faulty; // True if the relay is faulty
+         bool disabled; // True if the relay has been disabled
+         uint8_t error_count; // Number of errors counted so far
+         timer::Instance timer; // Action to be delayed to to filtering
+         reactor::Handle react_on_cycle_end; // Reactor for this relay
+         bool projected_state;  // Where to go after the filter period
+
+      public:
+         /** Construct an instance */
+         RelayControl(uint8_t _index, Pin relay, Pin check) :
+            index(_index),
+            relay_pin{relay},
+            check_pin{check},
+            faulty{false},
+            error_count{0},
+            timer{timer::null},
+            projected_state{false}
+         {
+            relay_pin.set_dir(dir_t::out);
+
+            // Initialise all read back pins
+            check_pin.set_invert(invert::inverted);
+            check_pin.set_dir(dir_t::in);
+
+            react_on_cycle_end = reactor::bind(on_cycle_end);
+         };
+
+         /**
+          * Set the relay to the requested state
+          * This function will check if the relay is disabled or faulty.
+          * Updates the counting statistics and the LED state (through the led API).
+          *
+          * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
+          * @param onoff Set the state (account for the polarity of the relay)
+          * @return true if the relay was changed
+          *         false if it was already in the requested state or if it is faulty
+          */
+         bool set(bool onoff) {
+            if ( faulty or projected_state == onoff ) {
+               return false;
+            }
+
+            // Do we have a filter running?
+            if ( timer == timer::null ) {
+               // No - apply now
+               relay_pin.set(onoff);
+
+               if ( onoff == true ) {
+                  auto filt_on  = config::get_config().relays_config[index].on_filter;
+
+                  if ( filt_on > 0 ) {
+                     // Start a timer to hold this state
+                     timer.cancel();
+                     timer = react_on_cycle_end.delay(
+                        std::chrono::milliseconds(filt_on * 100),
+                        index
+                     );
+                  }
+               } else {
+                  auto filt_off = config::get_config().relays_config[index].off_filter;
+
+                  if ( filt_off > 0 ) {
+                     // Start a timer to hold this state
+                     timer.cancel();
+                     timer = react_on_cycle_end.delay(
+                        std::chrono::milliseconds(filt_off * 100),
+                        index
+                     );
+                  }
+               }
+            }
+
+            // Store the projected state which will be applied at the end of the cycle
+            projected_state = onoff;
+            return true;
+         }
+
+         void apply_projected_state() {
+            timer = timer::null;
+            set(projected_state);
+         }
+
+         bool get() {
+            return *relay_pin;
+         }
+
+         Status get_status() {
+            return disabled ? Status::disabled :
+               faulty ? Status::faulty :
+                  Status::ok;
+         }
+
+         void check() {
+            if ( disabled or faulty ) {
+               return;
+            }
+
+            if ( *relay_pin == *check_pin ) {
+               error_count = 0; // Reset the error counter
+               return;
+            }
+
+            if ( ++error_count > 3 ) {
+               // Store the fault to make it available in the modbus register
+               faulty = true;
+
+               // Notify the system about the fault
+               estop::trigger(estop::Cause::faulty_relay, index);
+            }
+         }
+      };
+
+      /// All the relays!
       /// @brief Keep track of the number of errors for each relay
-      std::array<uint8_t, NUMBER_OF_RELAYS> err_counts{};
-
-      // Create const arrays for the relay and check pins
-      auto relay_pins = std::array<Pin, NUMBER_OF_RELAYS>{
-         RELAY_A, RELAY_B, RELAY_C
+      std::array<RelayControl, NUMBER_OF_RELAYS> relays = {
+         RelayControl{0, RELAY_A, CHECK_A},
+         RelayControl{1, RELAY_B, CHECK_B},
+         RelayControl{2, RELAY_C, CHECK_C}
       };
 
-      auto check_pins = std::array<Pin, NUMBER_OF_RELAYS>{
-         CHECK_A, CHECK_B, CHECK_C
-      };
+      void on_cycle_end(uint8_t index) {
+         relays[index].apply_projected_state();
+      }
 
       /**
        * Check the status of all the relay. If a relay is closed, the check pin should be high.
@@ -64,29 +186,8 @@ namespace relay {
        * A failure is final and the function will cancel the repeating timer.
        */
       void backgroud_check() {
-         // Read the status of the object to switch
-         for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
-            if ( relays_disabled.get(i) ) {
-               continue; // Don't report disabled relay
-            }
-
-            if ( relays_fault.get(i) ) {
-               continue; // Don't report the fault again - it is final
-            }
-
-            if ( get(i) == *check_pins[i] ) {
-               err_counts[i] = 0; // Reset the error counter
-               continue; // All good
-            }
-
-            if ( ++err_counts[i] > 3 ) {
-               asm("break");
-               // Store the fault to make it available in the modbus register
-               relays_fault.set(i);
-
-               // Notify the system about the fault
-               estop::trigger(estop::Cause::faulty_relay, i);
-            }
+         for (auto &relay: relays) {
+            relay.check();
          }
       }
    }
@@ -105,74 +206,20 @@ namespace relay {
     * Faulty relays remains faulty until the next reset.
     */
    void init() {
-      for (uint8_t i = 0; i < NUMBER_OF_RELAYS; i++) {
-         // Reset the error count for all relays
-         err_counts[i] = 0;
-
-         // Grab the configuration for the relay
-         auto relay_config = config::get_config().relays_config[i];
-
-         // Check if the relay is disabled - don't touch anything if disabled
-         if ( relay_config.disabled ) {
-            // Mark as disabled
-            relays_disabled.set(i);
-
-            // Leave the reset value (high impedance as is)
-
-            continue; // Skip to the next relay
-         }
-
-         relay_pins[i].set_dir(dir_t::out);
-
-         // Initialise all read back pins
-         check_pins[i].set_invert(invert::inverted);
-         check_pins[i].set_dir(dir_t::in);
-      }
-
       using namespace std::chrono;
 
       // Start the background check timer
-      timer = asx::reactor::bind(
+      on_check_health = asx::reactor::bind(
          backgroud_check, asx::reactor::prio::low).repeat(100ms);
    }
 
-   /**
-    * Set the relay to the requested state
-    * This function will check if the relay is disabled or faulty.
-    * Updates the counting statistics and the LED state (through the led API).
-    *
-    * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
-    * @param onoff Set the state (account for the polarity of the relay)
-    * @return true if the relay was changed
-    *         false if it was already in the requested state or if it is faulty
-    */
    bool set(uint8_t index, bool onoff) {
-      if (index >= NUMBER_OF_RELAYS) {
-         alert_and_stop();
+      if ( index < NUMBER_OF_RELAYS ) {
+         relays[index].set(onoff);
+         return true;
       }
 
-      // Check if the relay is disabled or faulty or already in requested state
-      if ( config::get_config().relays_config[index].disabled ) {
-         return false;
-      }
-
-      // Check if the relay is faulty
-      if ( relays_fault.get(index) ) {
-         return false;
-      }
-
-      // Check if the relay is already in the requested state
-      if ( *relay_pins[index] == onoff ) {
-         return false; // No change needed
-      }
-
-      // Set the relay state
-      relay_pins[index].set(onoff);
-
-      // Increment the operation count
-      counter::increment(index);
-
-      return true; // State changed
+      return false;
    }
 
    /**
@@ -180,11 +227,8 @@ namespace relay {
     * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
     * @return True if the relay is on, false if it is off
     */
-   bool get(uint8_t index)
-   {
-      alert_and_stop_if( index >= NUMBER_OF_RELAYS );
-
-      return *relay_pins[index];
+   bool get(uint8_t index) {
+      return relays[index].get();
    }
 
    /**
@@ -195,16 +239,6 @@ namespace relay {
     *   - If the relay is disabled and faulty, the status is `Status::disabled`.
     */
    Status get_status(uint8_t index) {
-      alert_and_stop_if( index >= NUMBER_OF_RELAYS );
-
-      if ( relays_disabled.get(index) ) {
-         return Status::disabled;
-      }
-
-      if ( relays_fault.get(index) ) {
-         return Status::faulty;
-      }
-
-      return Status::ok;
+      return relays[index].get_status();
    }
 }

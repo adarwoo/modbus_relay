@@ -13,7 +13,13 @@ namespace relay {
    /** Specify the configuration of a single relay */
    struct Config {
       bool disabled;
-      uint16_t filter_ms; // Full 16-bit value
+      union {
+         uint16_t filter;
+         struct {
+            uint8_t on_filter;
+            uint8_t off_filter;
+         };
+      };
    };
 
    /** Report the status of a relay - maps the modbus values */
@@ -31,8 +37,10 @@ namespace relay {
 
    /**
     * Set the state of a relay.
+    * The reaction time is set by the filters in place
     * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
     * @param close True to close the relay, false to open it
+    * @return false if index is out of range
     */
    bool set(uint8_t index, bool close=true);
 

@@ -4,36 +4,21 @@
  */
 #include <asx/reactor.hpp>
 
-// Defines the modbus_slave
 #include "counters.hpp"
 #include "relay.hpp"
 #include "push_button.hpp"
 #include "leds.hpp"
 #include "infeed.hpp"
-#include "config.hpp"
-#include "datagram.hpp"
 #include "net.hpp"
 #include "estop.hpp"
-
-using namespace std::chrono;
-
-namespace relay {
-   // Callback when a valid packet is recieved
-   void on_ready_reply(std::string_view view) {
-      // Reset the watchdog
-      //watchdog_count = 0;
-   }
-}
 
 
 int main()
 {
-   using namespace asx;
-
    // Initialise the LEDs
    led::init();
 
-   // Reset the estop
+   // Ready the estop
    estop::init();
 
    // Ready the stats
@@ -43,14 +28,14 @@ int main()
    relay::init();
 
    // Ready the ingress measurement system
-   // TOOD infeed::init();
+   infeed::init();
 
-   // Ready the modbus handlers and set the datagram ID
+   // Ready network handling, the modbus and the UART
    net::init();
 
-   // Ready the switch
+   // Ready the push button
    sw::init();
 
    // Run the reactor/scheduler
-   reactor::run();
+   asx::reactor::run();
 }

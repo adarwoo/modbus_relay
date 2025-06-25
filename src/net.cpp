@@ -1,3 +1,5 @@
+#pragma GCC optimize("Os")
+
 /**
  * Implement all modbus callback functions
  */
@@ -38,6 +40,21 @@ namespace net {
       }
    );
 
+   // Callback when a valid packet is recieved
+   void on_ready_reply(std::string_view view) {
+      uint16_t t = config::get_config().estop_modbus_watchdog;
+
+      if ( t > 0 ) {
+         // Reset the watchdog
+
+         // Stop the previous one
+         watchdog_timer.cancel();
+
+         // Arm a fresh one
+         watchdog_timer = react_on_watchdog.delay(std::chrono::seconds(t));
+      }
+   }
+
    //
    // Implement all the callbacks
    //
@@ -67,17 +84,20 @@ namespace net {
 
    void on_set_single(uint8_t index, uint16_t operation) {
       TRACE_INFO(RELAY, "%d - %d", index, operation);
-      bool success = true;
+      bool success = false;
 
-      switch ( operation ) {
-         case 0x0000: success = relay::set(index, false);
-            break;
-         case 0xFF00: success = relay::set(index);
-            break;
-         case 0x5500: success = relay::set(index, !relay::get(index));
-            break;
-         default:
-            break;
+      // If the relay is disabled - or faulty - return on error
+      if ( relay::get_status(index) == relay::Status::ok ) {
+         switch ( operation ) {
+            case 0x0000: success = relay::set(index, false);
+               break;
+            case 0xFF00: success = relay::set(index);
+               break;
+            case 0x5500: success = relay::set(index, !relay::get(index));
+               break;
+            default:
+               break;
+         }
       }
 
       if ( !success ) {
@@ -113,8 +133,8 @@ namespace net {
 
          // Status & Monitoring
          case 0x08: dg::pack( static_cast<uint16_t>(estop::get_status()) ); break;
-         case 0x09: dg::pack( counter::get_running_minutes() >> 16 ); break;
-         case 0x0A: dg::pack( counter::get_running_minutes() & 0xFFFF ); break;
+         case 0x09: dg::pack<uint16_t>( counter::get_running_minutes() >> 16 ); break;
+         case 0x0A: dg::pack<uint16_t>( counter::get_running_minutes() & 0xFFFF ); break;
 
          case 0x0B: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
          case 0x0C: dg::pack( infeed::get_input_voltage() ); break;
@@ -122,20 +142,20 @@ namespace net {
          case 0x0E: dg::pack( infeed::get_lowest_voltage() ); break;
 
          case 0x0F: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
-         case 0x10: dg::pack( estop::get_diagnostic_code() ); break;
+         case 0x10: dg::pack( static_cast<uint16_t>(estop::get_diagnostic_code()) ); break;
 
          // Relay Diagnostics & Stats
          case 0x18: dg::pack( static_cast<uint16_t>(relay::get_status(0)) ); break;
-         case 0x19: dg::pack( counter::get(0) >> 16 ); break;
-         case 0x1A: dg::pack( counter::get(0) & 0xFFFF ); break;
+         case 0x19: dg::pack<uint16_t>( counter::get(0) >> 16 ); break;
+         case 0x1A: dg::pack<uint16_t>( counter::get(0) & 0xFFFF ); break;
 
          case 0x1B: dg::pack( static_cast<uint16_t>(relay::get_status(1)) ); break;
-         case 0x1C: dg::pack( counter::get(1) >> 16 ); break;
-         case 0x1D: dg::pack( counter::get(1) & 0xFFFF ); break;
+         case 0x1C: dg::pack<uint16_t>( counter::get(1) >> 16 ); break;
+         case 0x1D: dg::pack<uint16_t>( counter::get(1) & 0xFFFF ); break;
 
          case 0x1E: dg::pack( static_cast<uint16_t>(relay::get_status(2)) ); break;
-         case 0x1F: dg::pack( counter::get(2) >> 16 ); break;
-         case 0x20: dg::pack( counter::get(2) & 0xFFFF ); break;
+         case 0x1F: dg::pack<uint16_t>( counter::get(2) >> 16 ); break;
+         case 0x20: dg::pack<uint16_t>( counter::get(2) & 0xFFFF ); break;
 
          default:
             dg::pack(uint16_t{0});
@@ -168,9 +188,9 @@ namespace net {
          case 0x13: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
 
          // Relay Configuration
-         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].filter_ms ); break;
-         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].filter_ms ); break;
-         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].filter_ms ); break;
+         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].filter ); break;
+         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].filter ); break;
+         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].filter ); break;
 
          default:
             dg::pack(uint16_t{0});
@@ -220,8 +240,8 @@ namespace net {
       config::set_watchdog(timeout);
    }
 
-   void on_write_single_relay_cfg(uint8_t address, uint16_t filter) {
-      if ( not config::set_relay_config(address, filter) ) {
+   void on_write_single_relay_cfg(uint8_t address, uint8_t filter_on, uint8_t filter_off) {
+      if ( not config::set_relay_config(address, filter_on, filter_off) ) {
          dg::reply_error(error_t::illegal_data_value);
       }
    }

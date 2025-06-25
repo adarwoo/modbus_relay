@@ -4,6 +4,8 @@
 #include "datagram.hpp"
 #include "state.hpp"
 #include "net.hpp"
+#include "relay.hpp"
+
 
 using namespace asx;
 
@@ -111,20 +113,19 @@ namespace config {
     * Set the relay configuration using the modbus value
     * @return false if the configuration is invalid
     */
-   bool set_relay_config(uint8_t index, uint16_t filter) {
-      if ( filter == 0 ) {
-         eeprom_config.relays_config[index].filter_ms = 0;
-         eeprom_config.relays_config[index].disabled = false;
-      } else if ( filter == 0xFFFF ) {
-         eeprom_config.relays_config[index].filter_ms = 0;
+   bool set_relay_config(uint8_t index, uint8_t filter_on, uint8_t filter_off) {
+      if ( (filter_on < 7 and filter_off < 7) ) {
          eeprom_config.relays_config[index].disabled = true;
-      } else if ( filter >= 100 and filter <= 60000 ) {
-         eeprom_config.relays_config[index].filter_ms = filter;
-         eeprom_config.relays_config[index].disabled = false;
+         eeprom_config.relays_config[index].on_filter = filter_on;
+         eeprom_config.relays_config[index].off_filter = filter_off;
+      } else if ( filter_on == 255 and filter_off == 255 ) {
+         eeprom_config.relays_config[index].disabled = true;
+         eeprom_config.relays_config[index].filter = 0;
       } else {
          return false;
       }
 
+      eeprom_config.update();
       return true;
    }
 } // End of relay namespace

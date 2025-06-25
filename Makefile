@@ -20,7 +20,7 @@ SRCS = \
    src/relay.cpp \
    src/main.cpp \
    src/estop.cpp \
-#src/infeed.cpp \
+	src/infeed.cpp \
 
 ifdef SIM
 SRCS += \

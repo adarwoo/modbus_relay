@@ -105,19 +105,19 @@ namespace infeed {
             // Check applicability of the situation
             if ( status == Status::wrong_type && config::get_config().estop_on_bad_voltage_type ) {
                estop::trigger(
-                  estop::Cause::voltage_monitor,
+                  estop::Cause::infeed_voltage_type,
                   static_cast<uint16_t>(0xFFFF), // Diagnostic code for wrong type
                   estop::ExternalTriggerType::resetable
                );
             } else if ( status == Status::above && config::get_config().estop_on_overvolt ) {
                estop::trigger(
-                  estop::Cause::voltage_monitor,
+                  estop::Cause::infeed_voltage_over,
                   static_cast<uint16_t>(detail::max_voltage),
                   estop::ExternalTriggerType::resetable
                );
             } else if ( status == Status::below && config::get_config().estop_on_undervolt ) {
                estop::trigger(
-                  estop::Cause::voltage_monitor,
+                  estop::Cause::infeed_voltage_under,
                   static_cast<uint16_t>(detail::min_voltage),
                   estop::ExternalTriggerType::resetable
                );

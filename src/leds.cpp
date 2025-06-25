@@ -186,12 +186,17 @@ namespace {
          auto led_index = i - id::led_a;
 
          // Set the LED state based on the relay status
-         if ( relay::get(led_index) ) {
-            state = LedState::on;
-         } else if ( relay::get_status(led_index) == relay::Status::faulty ) {
-            state = LedState::blink;
-         } else {
+         switch ( relay::get_status(led_index) ) {
+         case relay::Status::ok:
+            state = relay::get(led_index) ? LedState::on : LedState::off;
+            break;
+         case relay::Status::faulty:
+            state = LedState::pulse;
+            break;
+         case relay::Status::disabled:
+         default:
             state = LedState::off;
+            break;
          }
       }
    }

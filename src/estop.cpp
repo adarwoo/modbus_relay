@@ -18,11 +18,8 @@ namespace estop {
    // Local variables
    namespace {
       asx::timer::Instance timer_end_of_pulse{};
+      asx::reactor::Handle react_on_end_of_pulse{};
    }
-
-   auto react_on_end_of_pulse = asx::reactor::bind(
-      [] { reset(); }
-   );
 
    // Events
    struct trigger_event {
@@ -32,9 +29,14 @@ namespace estop {
    };
 
    struct reset_event {};
+   struct end_of_pulse {};
 
    constexpr auto is_terminal = [](const trigger_event &event) {
       return event.cause == Cause::faulty_relay || event.type == ExternalTriggerType::terminal;
+   };
+
+   constexpr auto is_pulsed = [](const trigger_event &event) {
+      return event.type == ExternalTriggerType::pulse;
    };
 
    // Actions
@@ -52,20 +54,34 @@ namespace estop {
 
       // Activate the command pin
       ES_COMMAND.set(value_t::high);
+
+      // Set the LED
+      led::refresh();
    };
 
-   constexpr auto on_reset = [](const reset_event &) {
-      // Reset the cause
-      detail::current_cause = Cause::none;
+   constexpr auto terminate = [](const trigger_event &event) {
+      detail::current_status = Status::terminated;
+      detail::current_cause = event.cause;
+      detail::diagnostic = event.diagnostic;
 
-      // Reset the diagnostic code
-      detail::diagnostic = 0;
+      // Activate the command pin
+      ES_COMMAND.set(value_t::high);
+
+      // Set the LED
+      led::refresh();
+   };
+
+   constexpr auto rst = []() {
+      // The cause and diagnostic code are not reset so a diagnostic is possible post crisis
 
       // Set the status to operational
       detail::current_status = Status::operational;
 
       // Clear the command pin
       ES_COMMAND.clear();
+
+      // Set the LED
+      led::refresh();
    };
 
    // State Machine
@@ -74,17 +90,25 @@ namespace estop {
          using namespace boost::sml;
 
          return make_transition_table(
-            *"operational"_s + event<trigger_event> [is_terminal] / stop = "terminated"_s,
-            "operational"_s  + event<trigger_event> / stop               = "estop"_s,
-            "estop"_s        + event<trigger_event> [is_terminal] / stop = "terminated"_s,
-            "estop"_s        + event<trigger_event> / stop               = "estop"_s,
-            "estop"_s        + event<reset_event>   / on_reset           = "operational"_s
+            *"operational"_s  + event<trigger_event> [is_terminal] / terminate = "terminated"_s
+            ,"operational"_s  + event<trigger_event> [is_pulsed]   / stop  = "pulse"_s
+            ,"operational"_s  + event<trigger_event>               / stop  = "estop"_s
+            ,"pulse"_s        + event<end_of_pulse>                / rst   = "operational"_s
+            ,"pulse"_s        + event<trigger_event> [is_terminal]         = "terminated"_s
+            ,"pulse"_s        + event<trigger_event> [is_pulsed]   / stop
+            ,"pulse"_s        + event<trigger_event>                       = "estop"_s
+            ,"estop"_s        + event<trigger_event> [is_terminal] / stop  = "terminated"_s // Update status and LED
+            ,"estop"_s        + event<reset_event>                 / rst   = "operational"_s
          );
       }
    };
 
    // State machine instance
    sm<EStopStateMachine> sm;
+
+   auto react_on_end_of_pulse = asx::reactor::bind(
+      [] { sm.process_event(end_of_pulse{}); }
+   );
 
    void init() {
       // Invert the pin - ES closes on power-up
@@ -93,11 +117,9 @@ namespace estop {
 
    void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {
       sm.process_event(trigger_event{cause, diagnostic, type});
-      led::refresh();
    }
 
    void reset() {
       sm.process_event(reset_event{});
-      led::refresh();
    }
 } // namespace estop
