@@ -1,4 +1,5 @@
-# Modbus N-Relay Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"> #
+# Modbus N-Relay Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"><br/>**User manual**
+
 
 This project features a MODBUS-RTU relays device with emergency stop, infeed measurements, monitoring and failsafe modes.
 It is aimed at industrial systems such as a CNC or equivalent.
@@ -56,6 +57,25 @@ The following modbus commands are supported:
 > [!NOTE]
 > All relays always operates with a positive polarity, so writing ON will close the relay.
 > The failsafe position is always OFF (relay opened).
+
+### Relay filtering
+
+Filtering can be added to the relays to control the minimum ON and OFF cycle durations.
+A ON filter of 2s means that the relay ON cycle will never be shorter that 2 seconds.
+The same goes for the OFF filter, which guarantees a minimum duration of the OFF cycle.
+Any command received during a filtered cycle will be accepted and will become the next relay state once the cycle is complete and unless overwritten by another command.
+
+**Example**: a relay has an ON minimum cycle time of 5 seconds and no filter for the OFF.
+* It received a ON command. It turns ON. The cycle starts.
+* Within 1 second, an OFF command is sent. This command become the next relay state.
+* After 4 seconds, the relay turns off.
+* A new ON is sent, the relay turn ON right away since the OFF cycle has not filter.
+* Within 1 second, an OFF is sent. The relay stays on.
+* Another 1 second later, an ON is sent. The relay is already ON. This cancels the previous OFF.
+* Another 4 seconds later, an OFF is sent. The relay turns OFF immediatly, because the ON cycle is now 6 seconds.
+
+> [!WARNING]
+> When reading the status of a relay, the actual physical position is returned, not the projected position.
 
 ## System Health Monitoring
 
@@ -439,7 +459,7 @@ This group allow configuring the individual relays.
 
 | Modbus Address | Hex Value | Access | Description         | Factory default      | Values |
 |----------------|-----------|--------|---------------------|----------------------|-------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | <ul><li><b>0</b><br/>Enabled with no filtering</li><li><b>100-60000</b><br/>Enabled with filtering.<br/>The filter period is the value in ms<li><b>0xFFFF</b><br/>The relay is disabled</li></ul><br/>Any other values will generated an 'illegal value' error |
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | Bits [15-8] represent the ON filter selection (0 to 5)<br/>Bits [7-0] represent the OFF filter selection (0 to 5)<br/>The value 0xFFFF disables the relay.<br/><br/>The filter duration selection values are:<ul><li><b>0</b>: No filtering</li><li><b>1</b>: 100ms</li><li><b>2</b>: 200ms</li><li><b>3</b>: 500ms</li><li><b>4</b>: 1s</li><li><b>5</b>: 2s</li><li><b>6</b>: 5s</li></ul>Any other values will generate an 'illegal value' error<br/><u>Example</u>: 0x0105=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 5s after a ON. See relay operations. |
 | 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
 | 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
 | 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
