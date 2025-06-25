@@ -245,7 +245,10 @@ The LED status is as follow:
 > [!IMPORTANT]
 > The ON state accounts for the configured polarity of the relay.
 
-## Modbus Register Map
+## Modbus communications and registers
+
+The product uses [ModbusRTU over a half-duplex RS485](https://www.modbus.org/docs/Modbus_over_serial_line_V1.pdf).
+It allow communication up-to 115200 baud to the relay device.
 
 The Modbus registers are grouped into:
 - [Coil Registers](#coil-registers)
@@ -254,6 +257,10 @@ The Modbus registers are grouped into:
 - [Device Control Registers](#device-control-registers)
 
 For communication settings, see [Communication Settings](#communication-settings).
+
+> [!NOTE]
+> By convention, all relays are indexed from 0.
+> Therefore, the device relay label 'Relay 1' is indexed at 0. The relay '2' is indexed at 1 etc.
 
 ### Coil registers
 
@@ -325,7 +332,7 @@ This registers provides details about the device in use.
 | 30014          | 0x000D    | R      | Infeed highest voltage      | Returns the lowest measured infeed voltage until now in 1/10th of volts.<br/>This value can be reset with the command: - [40102 - Reset measurements](#device-control-registers) |
 | 30015          | 0x000E    | R      | Infeed lowest voltage       | Same as 30014, but returns the lowest |
 | 30016          | 0x000F    | R      | Last or on-going EStop root cause | <ul><li><b>0</b>: Normal<br>No EStop occured since power-up</li><li><b>1</b>: Relay<br/>A relay fault as detected<br/></li><li><b>2</b>: Modbus<br/>The communication watchdog reported a lack of communication</li><li><b>3</b>: Infeed voltage type<br/>An ncorrect voltage or voltage type was detected<br/></li><li><b>4</b>: Infeed voltage under<br/>The voltage has gone below the configured threshold</li><li><b>5</b>: Infeed voltage over<br/>The voltage has gone over the configured threshold</li><li><b>6</b>: Command<br/>A modbus command was issued to lace the device in EStop</li><li><b>7</b>: Application crash<br/>The device is recovering from an application crash</li></ul><br/>This register and the diagnostic code operate as a pair. They are not cleared when the EStop is reset, allowing for post crisis diagnostic, or checking the cause of pulsed resets. |
-| 30017          | 0x0010    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>Relay</b><br/>Holds the faulty relay number. The first relay number is 1.</li> <li><b>Modbus</b><br/>The timeout in seconds</li> <li><b>Infeed (all of them)</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>Command</b><br/>Contains the EStop control value</li> <li><b>Application crash</b><br/>0xDEAD</li></ul>|
+| 30017          | 0x0010    | R      | Diagnostic code | Diagnostic code of the EStop condition<br>The content value depends on the EStop root cause:<ul><li><b>normal</b><br/>0</li> <li><b>Relay</b><br/>Holds the faulty relay zero based index number.</li> <li><b>Modbus</b><br/>The timeout in seconds</li> <li><b>Infeed (all of them)</b><br/>0xFFFF if the voltage type is incorrect, else the triggering voltage in 1/10V</li> <li><b>Command</b><br/>Contains the EStop control value</li> <li><b>Application crash</b><br/>0xDEAD</li></ul>|
 | 30018–30024    | 0x0011–0x0017 | —  | *Reserved*                  |                               |
 
 #### Relay Diagnostics & Statistics
