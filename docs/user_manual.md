@@ -418,27 +418,29 @@ This group of registers allow configuring the communication settings of the rela
 > You must use the command **16 - Write Multiple Registers**, writting registers 40001 to 40004 at once.
 > Once a write is done, the device comes out of recovery mode and applies the changes right away.
 
-| Modbus Address | Hex Value | Access | Description        | Factory<br/>Recovery | Values |
-|----------------|-----------|--------|--------------------|---------------|--------|
-| 40001          | 0x0000    | RW<sup>1</sup> | device address  | 44            | [1-247] |
-| 40002          | 0x0001    | RW<sup>1</sup>     | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
-| 40003          | 0x0002    | RW<sup>1</sup>     | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
-| 40004          | 0x0003    | RW<sup>1</sup>     | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
-| 40005–40008    | 0x0004–0x0007 | R  | *Reserved*          |               |        |
+| Modbus Address | Hex Value | Access              | Description         | Factory value | Values |
+|----------------|-----------|---------------------|---------------------|---------------|--------|
+| 40001          | 0x0000    | RW<sup>1</sup>      | device address      | 44            | [1-247] |
+| 40002          | 0x0001    | RW<sup>1</sup>      | Baud rate selection | 5             | 0=300<br/>1=600<br/>2=1200<br/>3=2400<br/>4=4800<br/>5=9600<br/>6=19200<br/>7=38400<br/>8=57600<br/>9=115200 |
+| 40003          | 0x0002    | RW<sup>1</sup>      | Parity              | 0             | 0=None<br/>1=Odd<br/>2=Even |
+| 40004          | 0x0003    | RW<sup>1</sup>      | Stopbits            | 1             | 1=1 Stop bit<br/>2=2 stop bits |
+| 40005–40008    | 0x0004–0x0007 | R  | *Reserved* |                     |               |
 
 <sup>1</sup>Writable only in recovery mode
 
 #### Power Infeed Configuration
 
-| Modbus Address | Hex Value | Access | Description         | Factory Value | Values |
-|----------------|-----------|--------|---------------------|---------------|--------|
-| 40009          | 0x0008    | RW     | Infeed voltage type        | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
-| 40010          | 0x0009    | RW     | Infeed lower voltage threshold | 3000     | 1/10 volts [100-3000] |
-| 40011          | 0x000A    | RW     | Infeed upper voltage threshold | 100      | 1/10 volts [100-3000] |
-| 40012–40016    | 0x000B–0x000F | R  | *Reserved*          |               |        |
+| Modbus Address | Hex Value | Access | Description                    | Factory Value | Values |
+|----------------|-----------|--------|--------------------------------|---------------|--------|
+| 40009          | 0x0008    | RW     | Infeed voltage type            | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
+| 40010          | 0x0009    | RW     | Infeed lower voltage threshold | 100           | 1/10 volts [100-3000] |
+| 40011          | 0x000A    | RW     | Infeed upper voltage threshold | 3000          | 1/10 volts [100-3000] |
+| 40012–40016    | 0x000B–0x000F | R  | *Reserved*                     | 0             |        |
 
 > [!WARNING]
-> The registers must be written individually. The command **16** is not supported.
+> Registers 40009 to 40011 must be written together using command **16**.
+> Function ~~**06: Write single register**~~ is not availble for this group.
+> An illegal_data_value error (code 3) will be returned if (40011 - 40010) < 10
 
 #### Safety Logic Configuration
 
