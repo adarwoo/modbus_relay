@@ -459,7 +459,7 @@ This group allow configuring the individual relays.
 
 | Modbus Address | Hex Value | Access | Description         | Factory default      | Values |
 |----------------|-----------|--------|---------------------|----------------------|-------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | Bits [15-8] represent the ON filter selection (0 to 254)<br/>Bits [7-0] represent the OFF filter selection (0 to 254)<br/>The value 0xFFFF disables the relay.<br/><br/>The filter duration selection values are given in 1/10 of seconds<br/><u>Example</u>: 0x0132=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 50 x 1/10s = 5s after a ON. See relay operations. |
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | msb bits [15-8] are for the ON filter<br/>lsb bits [7-0] are the OFF filter<br/>The value 0xFFFF disables the relay.<br/><br/>The ON and OFF filters values are given in 1/10 of seconds from 0 to 254 (0, 100ms, 200ms to 25.4s)<br/><u>Example</u>: 0x0132=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 50 x 1/10s = 5s after a ON. See relay operations. |
 | 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
 | 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
 | 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
