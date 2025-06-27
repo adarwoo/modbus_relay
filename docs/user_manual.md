@@ -66,12 +66,12 @@ The same goes for the OFF filter, which guarantees a minimum duration of the OFF
 Any command received during a filtered cycle will be accepted and will become the next relay state once the cycle is complete and unless overwritten by another command.
 
 **Example**: a relay has an ON minimum cycle time of 5 seconds and no filter for the OFF.
-* It received a ON command. It turns ON. The cycle starts.
-* Within 1 second, an OFF command is sent. This command become the next relay state.
+* It receives a ON command. It turns ON. The cycle starts.
+* Within 1 second, an OFF command is sent. This command become the next relay state, but the state of the relay remains unchanged.
 * After 4 seconds, the relay turns off.
-* A new ON is sent, the relay turn ON right away since the OFF cycle has not filter.
+* A new ON is sent, the relay turn ON right away since the OFF cycle is not filtered.
 * Within 1 second, an OFF is sent. The relay stays on.
-* Another 1 second later, an ON is sent. The relay is already ON. This cancels the previous OFF.
+* Another 1 second later, an ON is sent. The relay is already ON. The next state is the current state, so nothing happens.
 * Another 4 seconds later, an OFF is sent. The relay turns OFF immediatly, because the ON cycle is now 6 seconds.
 
 > [!WARNING]
@@ -94,12 +94,11 @@ All memories are verified:
 * The flash memory integrity is verified at every boot
 * The RAM is tested once on boot-up
 * The EEprom storage contains a checksum and is reformatted if a corruption is detected
-The health of the power supply is monitored
-* The CPU power supply is monitoring by the brown-out-detector
+* The CPU power supply is monitoring by the brown-out-detector to safeguard the EEprom
 * A failsafe exist which activates the EStop if the power supply was to fail
 * The execution is monitored; an application crash will EStop the device
 
-Any failure to the device's intergrity leads to the EStop being activated.
+Any managed failure leads to the EStop being activated.
 
 ### Modbus communication monitoring
 
@@ -143,7 +142,7 @@ The modbus master can issue an EStop command. This external EStop condition can 
 
 ## Recovery mode
 
-The recovery mode is entered by pressing the 'EStop reset' push button for more than 3 seconds.<br/>
+The recovery mode is entered by pressing the 'EStop reset' push button until the Modbus LEDs flash fast (around 3 seconds).<br/>
 It is used in the following situations:
 * when a relay cannot be reached or is un-responsive
 * to overwrite the communication settings of the relay
@@ -182,26 +181,60 @@ In these situations, the following procedure can be used:
 > [!TIP]
 > The recovery mode can also be ended by pressing the 'EStop reset' push button for another 3s.
 
+### Locate mode
+The mode allows locating a relay device in setups with more than one.
+
+When activated, the LEDs will alternate every second between flashing all fast for 1 seconds, and displaying their normal state.
+
+The locate mode is activated by a dedicated Modbus command.
+
+It is ended by either a Modbus command, or by pressing the 'EStop reset' push button.
+
 ## EStop mode
 
-The EStop relay circuit is opened on a EStop condiiton.
-When the relay device is in EStop, all relays are opened.
-It is no longer possible to command the relays over the modbus network. The command will create an 'slave_device_failure' error.
-When the EStop condition is reset (automatic, push on the reset button, or power cycle), operations resumes to normal.
+The device EStop relay opens the circuit when the device is in EStop condition.
 
-In all cases, the EStop condition can be read over the modbus network.
+The EStop condiiton is the result of:
+* Detecting a internal failure (relay, crash, infeed, supply etc..)
+* Through external command over Modbus
+
+The EStop condition can be:
+* Temporary with automatic reset
+* Temporary with manual reset
+* Terminal
+
+When the relay device is in EStop, **all relays are opened**.
+It is no longer possible to command the relays over the modbus network.
+The command will still be accepted, and will become the next relay state when the EStop condition is cleared.
+
+The terminal EStop requires a power-cycle of the relay device to clear.
+
+Other EStop conditions can be reset by:
+* a Modbus command
+* a push on the reset button
+* a power cycle
+
+> [!IMPORTANT]
+> When the device is in both locate and EStop mode, the first push on the EStop reset clears the locate mode and the second clears the EStop.
+
+In all cases, the EStop condition can be read over the Modbus network.
 
 ## LEDs
 
 The module features many LED to see the device operation and faults easilty.
+All LEDs serve multiple pursposes.
 
-> [!TIP]
-> During boot, for the first 2 seconds, all LEDs are lit. This allow checking for a faulty LED.
+### Boot
 
-All LEDs serve multiple purspose with the exception of the modbus Tx LED which only indicates outgoing RS485 traffic.
-The expression 'All LEDs' de-fact excludes the modbus Tx LED.
+During boot, for the first 2 seconds, all LEDs are lit. This allow checking for a faulty LED.
 
-To help find a relay device, a locate command can be send. This will flash all LEDs at 10Hz for 1s, and the actual LED value for the next.
+### Locate function
+To help locate a relay device, a Modbus locate command can be sent.<br/>
+This will alternate between:
+* flashing all LEDs at 10Hz for 1s
+* Show the normal LED state for the next 1s.
+
+The EStop reset push button can be pressed to end the locate cycle, or a new Modbus command can be sent.
 
 For detailed LED states, see:
 - [EStop LED](#estop-led)
@@ -461,7 +494,7 @@ This group allow configuring the individual relays.
 
 | Modbus Address | Hex Value | Access | Description         | Factory default      | Values |
 |----------------|-----------|--------|---------------------|----------------------|-------|
-| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | msb bits [15-8] are for the ON filter<br/>lsb bits [7-0] are the OFF filter<br/>The value 0xFFFF disables the relay.<br/><br/>The ON and OFF filters values are given in 1/10 of seconds from 0 to 254 (0, 100ms, 200ms to 25.4s)<br/><u>Example</u>: 0x0132=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 50 x 1/10s = 5s after a ON. See relay operations. |
+| 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | msb bits [15-8] are for the ON filter<br/>lsb bits [7-0] are the OFF filter<br/>The value 0xFFFF disables the relay.<br/><br/>The ON and OFF filters values are given in 1/10 of seconds from 0 to 254 (0 to 25.4s)<br/><u>Example</u>: 0x0132=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 50 x 1/10s = 5s after a ON. See relay operations. |
 | 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
 | 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
 | 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
