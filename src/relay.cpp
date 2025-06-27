@@ -52,7 +52,6 @@ namespace relay {
          Pin relay_pin; // Pin the relay is connected to
          Pin check_pin; // Verification pin
          bool faulty; // True if the relay is faulty
-         bool disabled; // True if the relay has been disabled
          uint8_t error_count; // Number of errors counted so far
          timer::Instance timer; // Action to be delayed to to filtering
          reactor::Handle react_on_cycle_end; // Reactor for this relay
@@ -89,7 +88,9 @@ namespace relay {
           *         false if it was already in the requested state or if it is faulty
           */
          bool set(bool onoff) {
-            if ( faulty or projected_state == onoff ) {
+            auto filt_on  = config::get_config().relays_config[index].on_filter;
+
+            if ( filt_on == 255 or faulty or projected_state == onoff ) {
                return false;
             }
 
@@ -99,8 +100,6 @@ namespace relay {
                relay_pin.set(onoff);
 
                if ( onoff == true ) {
-                  auto filt_on  = config::get_config().relays_config[index].on_filter;
-
                   if ( filt_on > 0 ) {
                      // Start a timer to hold this state
                      timer.cancel();
@@ -125,6 +124,10 @@ namespace relay {
 
             // Store the projected state which will be applied at the end of the cycle
             projected_state = onoff;
+
+            // Update the LED status
+            led::refresh();
+
             return true;
          }
 
@@ -138,13 +141,17 @@ namespace relay {
          }
 
          Status get_status() {
-            return disabled ? Status::disabled :
+            auto filt_on  = config::get_config().relays_config[index].on_filter;
+
+            return (filt_on==255) ? Status::disabled :
                faulty ? Status::faulty :
                   Status::ok;
          }
 
          void check() {
-            if ( disabled or faulty ) {
+            auto filt_on  = config::get_config().relays_config[index].on_filter;
+
+            if ( (filt_on==255) or faulty ) {
                return;
             }
 

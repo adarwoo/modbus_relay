@@ -24,8 +24,16 @@ namespace net {
    // Create an alias for the static method
    using dg = Datagram;
 
+   //
    // Constants
+   //
+
+   // ID to use in recovery
    auto constexpr RECOVERY_DEVICE_ID = uint8_t{248};
+
+   // The register position gives us the relay index
+   // WARNING: Keep in sync with the python definition
+   auto constexpr RELAY_0_CONFIG_REGISTER_ADDRESS = 0x18;
 
    // Timer instance for the watchdog
    auto watchdog_timer = asx::timer::Instance{};
@@ -86,18 +94,15 @@ namespace net {
       TRACE_INFO(RELAY, "%d - %d", index, operation);
       bool success = false;
 
-      // If the relay is disabled - or faulty - return on error
-      if ( relay::get_status(index) == relay::Status::ok ) {
-         switch ( operation ) {
-            case 0x0000: success = relay::set(index, false);
-               break;
-            case 0xFF00: success = relay::set(index);
-               break;
-            case 0x5500: success = relay::set(index, !relay::get(index));
-               break;
-            default:
-               break;
-         }
+      switch ( operation ) {
+         case 0x0000: success = relay::set(index, false);
+            break;
+         case 0xFF00: success = relay::set(index);
+            break;
+         case 0x5500: success = relay::set(index, !relay::get(index));
+            break;
+         default:
+            break;
       }
 
       if ( !success ) {
@@ -188,9 +193,12 @@ namespace net {
          case 0x13: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
 
          // Relay Configuration
-         case 0x18: dg::pack<uint16_t>( cfg.relays_config[0].filter ); break;
-         case 0x19: dg::pack<uint16_t>( cfg.relays_config[1].filter ); break;
-         case 0x1A: dg::pack<uint16_t>( cfg.relays_config[2].filter ); break;
+         case 0x18:
+         case 0x19:
+         case 0x1A:
+            dg::pack( cfg.relays_config[index-RELAY_0_CONFIG_REGISTER_ADDRESS-1].on_filter );
+            dg::pack( cfg.relays_config[index-RELAY_0_CONFIG_REGISTER_ADDRESS-1].off_filter );
+            break;
 
          default:
             dg::pack(uint16_t{0});
@@ -213,6 +221,24 @@ namespace net {
 
          // Drop out of recovery mode. This will reset the UART
          state::set_recovery_mode(false);
+
+         // For the response, we need to shorten the frame
+         // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
+         dg::set_size(6);
+      } else {
+         dg::reply_error(error_t::negative_acknowledge);
+      }
+   }
+
+   void on_write_infeed_config(uint8_t vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
+      auto res = config::set_infeed_config(
+         static_cast<infeed::CfgType>(vtype), lower_threshold, upper_threshold
+      );
+
+      if ( res ) {
+         // For the response, we need to shorten the frame
+         // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
+         dg::set_size(6);
       } else {
          dg::reply_error(error_t::negative_acknowledge);
       }
@@ -241,7 +267,14 @@ namespace net {
    }
 
    void on_write_single_relay_cfg(uint8_t address, uint8_t filter_on, uint8_t filter_off) {
-      if ( not config::set_relay_config(address, filter_on, filter_off) ) {
+      // We need to offset the address
+      uint8_t index = address - RELAY_0_CONFIG_REGISTER_ADDRESS;
+
+      // Make sure not to go over!
+      alert_and_stop_if( index > 2 );
+
+      // This configuration must follow rules. Check that the change was accepted
+      if ( not config::set_relay_config(index, filter_on, filter_off) ) {
          dg::reply_error(error_t::illegal_data_value);
       }
    }

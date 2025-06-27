@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 from modbus_rtu_rc import *  # Import everything from modbus_generator
 
+RELAY0_ADDRESS = 0x18
+
 Modbus({
     "namespace": "net",
     "on_received": "on_payload_received",
     "slave": True,
     "buffer_size": 80, # Max reg read = 0x20 (32 x 2) + Frame (ID+CODE+NUM+CRC)
+    "defines": {
+        "relay0_config_address": RELAY0_ADDRESS
+    },
 
     "callbacks": {
         # -----------------------------------------------------------------------------------------
@@ -31,6 +36,11 @@ Modbus({
         ],
 
         # Power infeed configuration
+        "on_write_infeed_config"    : [
+            (u8, "vtype"), (u16, "lower_threshold"), (u16, "upper_threshold")
+        ],
+
+        # Safety logic configuation
         "on_write_estop_on_under"   : [(u8, "onoff")],
         "on_write_estop_on_over"    : [(u8, "onoff")],
         "on_write_estop_on_bad_voltage_type" : [(u8, "onoff")],
@@ -38,6 +48,7 @@ Modbus({
 
         # Single relay configuration
         "on_write_single_relay_cfg" : [(u8, "address"), (u8, "filter_on"), (u8, "filter_off")],
+
 
         # Device control
         "on_estop"                  : [(u8, "estop_type"), (u8, "diag")],
@@ -88,6 +99,10 @@ Modbus({
             "on_write_comms_settings"
         ),
 
+        # Write the infeed config
+        (WRITE_SINGLE_REGISTER,  u16(0x08), u16(0,2), u16(100,3000), u16(100,3000), "on_write_infeed_config"),
+
+
         # Power infeed configuration
         (WRITE_SINGLE_REGISTER,  u16(0x10), u16(0,1),   "on_write_estop_on_under"),
         (WRITE_SINGLE_REGISTER,  u16(0x11), u16(0,1),   "on_write_estop_on_over"),
@@ -95,6 +110,7 @@ Modbus({
         (WRITE_SINGLE_REGISTER,  u16(0x13), u16(),      "on_write_estop_on_timeout"),
 
         # Relay configuration
+        # WARNING: Keep in sync with net.cpp
         (WRITE_SINGLE_REGISTER,  u16(0x18,0x1A), u8(), u8(), "on_write_single_relay_cfg"),
 
         # Device control

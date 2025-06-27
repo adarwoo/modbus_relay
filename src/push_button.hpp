@@ -40,29 +40,31 @@ namespace sw {
          constexpr auto time_zero =
             asx::timer::steady_clock::time_point(asx::timer::steady_clock::duration::zero());
          static auto last_time = time_zero;
+         static bool recovery_triggered = false;
 
          // Sample the switch
          debouncer.append(*PUSH_BUTTON);
 
-         // If the switch is pressed, react
          if (debouncer.status().get()) {
-            if ( last_time == time_zero ) {
+            if (last_time == time_zero) {
                last_time = asx::timer::steady_clock::now();
-            }
-         } else {
-            if ( last_time != time_zero ) {
+               recovery_triggered = false;
+            } else if (!recovery_triggered) {
                auto now = asx::timer::steady_clock::now();
                auto duration = now - last_time;
-
-               if ( duration >= long_time ) {
-                  // Long press detected
+               if (duration >= long_time) {
                   state::set_recovery_mode(!state::is_in_recovery_mode());
-               } else {
-                  // Reset any on-going EStop
+                  recovery_triggered = true;
+               }
+            }
+         } else {
+            if (last_time != time_zero) {
+               if (!recovery_triggered) {
+                  // Short press: Reset any on-going EStop
                   estop::reset();
                }
-
                last_time = time_zero;
+               recovery_triggered = false;
             }
          }
       }).repeat(sampling_period);

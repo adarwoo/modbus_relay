@@ -12,14 +12,8 @@
 namespace relay {
    /** Specify the configuration of a single relay */
    struct Config {
-      bool disabled;
-      union {
-         uint16_t filter;
-         struct {
-            uint8_t on_filter;
-            uint8_t off_filter;
-         };
-      };
+      uint8_t on_filter;
+      uint8_t off_filter;
    };
 
    /** Report the status of a relay - maps the modbus values */

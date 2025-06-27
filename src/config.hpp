@@ -6,6 +6,11 @@
  *          including reading and writing configuration parameters to EEPROM.
  *          It includes settings for Modbus, UART, infeed type, EStop conditions,
  *           and relay configurations.
+ * @note This principle is the following, each entity in the system such as
+ *        relays, infeed, estop etc. is responsible for defining its own types
+ *        for the data to be persisted.
+ *       A function is then added here to store the data as type safe data.
+ *       The adaptation from raw data must be done in the caller (such as for modbus data).
  */
 
 #include <cstdint>
@@ -60,23 +65,6 @@ namespace config {
       relay::Config relays_config[3];
    };
 
-   void reset_config();
-
-   const EepromConfig& get_config();
-
-   void set_comm(uint8_t device_id, baud_t baud, asx::uart::parity parity, asx::uart::stop stops);
-
-   void set_watchdog(uint16_t period);
-   void set_estop_on_undervolt(bool yes);
-   void set_estop_on_overvolt(bool yes);
-   void set_estop_on_bad_voltage_type(bool yes);
-   void set_infeed_min_voltage_threshold(uint16_t threshold);
-   void set_infeed_max_voltage_threshold(uint16_t threshold);
-
-   bool set_relay_config(uint8_t address, uint8_t filter_on, uint8_t filter_off);
-
-   void reset_config();
-
    // Run-time configuration for the UART
    struct UartRunTimeConfig {
       static constexpr void init() {}
@@ -94,4 +82,22 @@ namespace config {
       }
    };
 
+
+   // -------------------------------------------------------------------------
+   // API
+   // -------------------------------------------------------------------------
+
+   // Global function
+   void reset_config();
+   const EepromConfig& get_config();
+
+   // Dedicated storage update functions
+   // These match the modbus capabilities and groups
+   void set_comm(uint8_t device_id, baud_t baud, asx::uart::parity parity, asx::uart::stop stops);
+   void set_watchdog(uint16_t period);
+   void set_estop_on_undervolt(bool yes);
+   void set_estop_on_overvolt(bool yes);
+   void set_estop_on_bad_voltage_type(bool yes);
+   bool set_infeed_config(infeed::CfgType, uint16_t lower_threshold, uint16_t upper_threshold);
+   bool set_relay_config(uint8_t index, uint8_t filter_on, uint8_t filter_off);
 } // End of config namespace
