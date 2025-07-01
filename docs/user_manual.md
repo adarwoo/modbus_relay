@@ -1,21 +1,21 @@
 # Modbus N-Relay Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"><br/>**User manual**
 
-
+## Introduction
 This project features a MODBUS-RTU relays device with emergency stop, infeed measurements, monitoring and failsafe modes.
 It is aimed at industrial systems such as a CNC or equivalent.
-
 ---
-
 This document provides a description for the operations of the device.
 
-## Device identification
+### Device identification
+The device identification is ARex_R3.
+The hardware and the software are released together, the github TAG references this design uniquely.
 
-Since the hardware and the software are released together, the github TAG references this design uniquely.
-
-## Features summary
+### Features summary
+This relay goes beyond a single Modbus relay and is packed with features:
 
 1. Standard DIN Rail mountable PCB
 2. 3 relays - up to 9.4A @ 250V per output
+   * Individual filtering for ON and OFF cycles for each relay
 3. Operational integrity minded
    * Uses safety relays with forcibly guided contacts, 10.10<sup>6</sup> operations, re-inforced isolation and position read back
    * Galvanically isolated infeed voltage measurement with acceptable range
@@ -39,31 +39,35 @@ Since the hardware and the software are released together, the github TAG refere
    * Infeed type and level
    * EStop causes and diagnostic
   
-# Operations overview
+## Operations overview
 Operations are performed over an RTU communication bus.<br/>
 A push button is also featured with limited use:
 * to reset EStops (when possible)
-* to activate a recovery mode by placing the relay in a known state, all allowing writting communication registers
+* to activate a recovery mode by placing the relay in a known state, allowing writting communication registers
 <br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
-## Simple operation
-The relay works like any Modbus coil based devices, by writting the coil registers.
-The following modbus commands are supported:
-* **05**: [Write single coil](https://www.modbustools.com/modbus.html#function05)<br/>Individual relays can opened, closed or toggled with this command 
-* **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function01)<br/>Multiples relays can be individually controlled with a single command (opened and closed)
-* **01**: [Read coil](https://www.modbustools.com/modbus.html#function01)<br/>The status of the relays is accessible through this command
+### Relay polarity and failsafe position
+The relays failsafe position is 'OFF' - that is - the contact is opened.
+If the device loses power, the relays immediatly open the contacts - turning off the load.
+A security prevents turning them back-on in case of crash.
 
-> [!NOTE]
-> All relays always operates with a positive polarity, so writing ON will close the relay.
-> The failsafe position is always OFF (relay opened).
+The control of the relay always operates with a positive polarity, so writing '1' will close the relay - and energise the load.
+
+### Basic operations
+The relay works like any Modbus coil based devices, by writting the coil registers.
+Each relay can be controlled individually, turned ON, OFF or inverted.
+The relays can also be controlled in bulk.
+
+See [Coil registers](#Coil_registers) chapter for details operations.
 
 ### Relay filtering
-
-Filtering can be added to the relays to control the minimum ON and OFF cycle durations.
-A ON filter of 2s means that the relay ON cycle will never be shorter that 2 seconds.
+Filtering can be added to the relays to control the minimum ON and OFF cycles duration.
+An ON filter of 2 sseconds means that the relay ON cycle will never be shorter that 2 seconds.
 The same goes for the OFF filter, which guarantees a minimum duration of the OFF cycle.
 Any command received during a filtered cycle will be accepted and will become the next relay state once the cycle is complete and unless overwritten by another command.
+
+When flippting the relay position, it flips the relay position at the end of the cycle.
 
 **Example**: a relay has an ON minimum cycle time of 5 seconds and no filter for the OFF.
 * It receives a ON command. It turns ON. The cycle starts.
@@ -72,7 +76,7 @@ Any command received during a filtered cycle will be accepted and will become th
 * A new ON is sent, the relay turn ON right away since the OFF cycle is not filtered.
 * Within 1 second, an OFF is sent. The relay stays on.
 * Another 1 second later, an ON is sent. The relay is already ON. The next state is the current state, so nothing happens.
-* Another 4 seconds later, an OFF is sent. The relay turns OFF immediatly, because the ON cycle is now 6 seconds.
+* Another 4 seconds later, an OFF is sent. The relay turns OFF immediatly, because the ON cycle is now 6 seconds, less than the ON cycle filter duration.
 
 > [!WARNING]
 > When reading the status of a relay, the actual physical position is returned, not the projected position.
@@ -129,7 +133,7 @@ When an infeed defect is detected, the device will open the EStop relay.
 All the relays are equiped with a position verification which is backed mecanically using a forced conduit.
 If a relay fault is detected (open or close):
 * the relay coil is de-energized, and the relay should become opened.
-* the ESTop condition is trigggered in terminal mode - meaning, it cannot be reset, beside power cycling the device.
+* the ESTop condition is trigggered in terminal mode where only a power cycle can clear the condition.
 
 The faulty relay can be isolated by disabling it in the configuration, but it should be replaced.
 
@@ -140,24 +144,28 @@ The modbus master can issue an EStop command. This external EStop condition can 
 . Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
 . Terminal. Only a power cycle can clear the condition.
 
+## Locate mode
+The mode allows locating a relay device in setups with more than one.
+When activated, the LEDs will alternate every seconds between:
+ * all LEDs flash fast for 1 seconds
+ * all display their normal state for the next 1 second
+The locate mode is activated by a dedicated Modbus command.
+It is ended by either a Modbus command, or by pressing the 'EStop reset' push button.
+
 ## Recovery mode
-
+The recovery mode is used to recover a device with unknown setting, but also, to make changes to the communication paramters.
 The recovery mode is entered by pressing the 'EStop reset' push button until the Modbus LEDs flash fast (around 3 seconds).<br/>
-It is used in the following situations:
-* when a relay cannot be reached or is un-responsive
-* to overwrite the communication settings of the relay
-
 In these situations, the following procedure can be used:
 
 1. Start the RelayGuardian application
 2. Make sure the communication port is properly setup in the RelayGuardian
- * The connection should be marked as OK
-3. Issue a scan command in the RelayGuardian
- * The Modbus Rx LED should show some activity
+ * The connection icon should be OK
+ * Issue a scan command in the RelayGuardian to make sure the RS485 adapter sends the data (Red LED)
  * If this is not the case, check the modbus is plugged correctly in the PC and the comm port is the correct one
-4. If the device is not identified in this phase
+3. If devices are identified during the scan, click the 'locate' icon one device at time to see if it is the right one
+4. Else start the recovery
   1. Push the relay 'EStop reset' push button for > 3s
-   * The Modbus LEDs are flashing flat
+   * The Modbus LEDs are flashing
    * The communication values have been temporary reset to:
       | Configuration     | value             | Explanation                                    |
       |-------------------|-------------------|------------------------------------------------|
@@ -180,15 +188,6 @@ In these situations, the following procedure can be used:
 
 > [!TIP]
 > The recovery mode can also be ended by pressing the 'EStop reset' push button for another 3s.
-
-### Locate mode
-The mode allows locating a relay device in setups with more than one.
-
-When activated, the LEDs will alternate every second between flashing all fast for 1 seconds, and displaying their normal state.
-
-The locate mode is activated by a dedicated Modbus command.
-
-It is ended by either a Modbus command, or by pressing the 'EStop reset' push button.
 
 ## EStop mode
 
@@ -230,9 +229,7 @@ During boot, for the first 2 seconds, all LEDs are lit. This allow checking for 
 
 ### Locate function
 To help locate a relay device, a Modbus locate command can be sent.<br/>
-This will alternate between:
-* flashing all LEDs at 10Hz for 1s
-* Show the normal LED state for the next 1s.
+See [Locate mode](#Locate_mode)
 
 The EStop reset push button can be pressed to end the locate cycle, or a new Modbus command can be sent.
 
@@ -241,6 +238,9 @@ For detailed LED states, see:
 - [Infeed LED](#infeed-led)
 - [Modbus LEDs](#modbus-leds)
 - [Relay LEDs](#relay-leds)
+
+### Recovery mode
+This only affects the Modbus Tx and Rx LEDs which flash at 2Hz in sync.
 
 ### EStop LED
 
@@ -276,27 +276,24 @@ The infeed LED provides visual information about the infeed voltage.
 ### Modbus LEDs
 
 The modbus LEDs show activity on the Modbus RS485 network.
-* The Rx LED shows incomming traffic. It flashes fast when the device is in recovery or in identification mode.
-* The Tx LED is lit during power-up boot, and show the outgoing traffic activity. It serves not other purposes.
 
-> [!IMPORTANT]
-> The Rx LED show traffic activity which may include packets not addressed to the device
+Both LEDs are overriden during boot, recovery and identification modes.
+
+* The Rx LED shows received data on the RS485 bus. The data may or may not be addressed at the device
+* The Tx LED shows data being sent from the device (as the device replies to the master)
 
 ### Relay LEDS
 
-Each relay have a dedicated LED.
+Each relay have a dedicated LED. The LED reports the status of the relay is corresponds to.
 
 The LED status is as follow:
 
-| State | Description |
-|-------|-------------|
+| State | Description                   |
+|-------|-------------------------------|
 | Off   | The relay is in the OFF state |
-| On    | The relay is in the ON state |
-| Flash 2Hz | A fault was detected |
-| Flash . . | Relay is disabled |
-
-> [!IMPORTANT]
-> The ON state accounts for the configured polarity of the relay.
+| On    | The relay is in the ON state  |
+| Flash | The relay is faulty           |
+| Blink | Relay is disabled             |
 
 ## Modbus communications and registers
 
@@ -330,11 +327,12 @@ The device supports the following function code:
  * **15**: [Write multiple coils](https://www.modbustools.com/modbus.html#function15)
 <br/>Force each coil in a sequence of coils to either On or Off
 
-> [!WARNING]
-> The relays may respond differently based on the relay configuration such as filtering or if disabled.
+> [!IMPORTANT]
+> Relays operations are not impacted by the EStop
+> Unless a relay is faulty or disabled, a command of that relay will always be executed, but could be delayed by one of the relay cycle filters
 
 > [!WARNING]
-> Attempts to write individually a disabled or faulty relay with the function <b>05</b> will generate a <i>slave device failure (4)</i> error.
+> Attempts to write individually a disabled relay with the function <b>05</b> will generate a <i>slave device failure (4)</i> error.
 > Attempts to turn ON a disabled or faulty relay as part of the function **15** will also generate a <i>slave device failure</i> error.
 > You can still use function **15** providing that the faulty/disabled relay is commanded to OFF.
 
@@ -344,15 +342,15 @@ The following values can be used:
 
 | Value | Meaning |
 |-------|--------------------------------------------------------------------------------------------------------------|
-| 0x0000| This specific 16-bit value is the Modbus standard representation for "OFF". |
-| 0xFF00| This specific 16-bit value is the Modbus standard representation for "ON" when writing to a coil. |
-| 0xAA00| This value will toggle the coil |
+| 0x0000| This specific 16-bit value is the Modbus standard representation for "OFF".                                  |
+| 0xFF00| This specific 16-bit value is the Modbus standard representation for "ON" when writing to a coil.            |
+| 0xAA00| This value toggles the coil at then end of the cycle                                                         |
 
 ### Input registers
 
 Input registers are read-only registers used to report information about the device.
 The registers have been grouped so they can easily be accessed.
-Reserved values reads as 0.
+Reserved values reads as 0, therefore, it is possible to read them all at once.
 
 Only the function **04**: [Read input registers](https://www.modbustools.com/modbus.html#function04) is supported to read registers.
 
