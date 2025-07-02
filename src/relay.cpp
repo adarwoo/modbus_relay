@@ -47,12 +47,21 @@ namespace relay {
       class RelayControl;
       void on_cycle_end(uint8_t index);
 
+      // Events
+      struct RequestOn {};
+      struct RequestOff {};
+      struct TimerElapsed {};
+
+      /**
+       * Since relay class
+       */
       class RelayControl {
-         uint8_t index; // Index of this relay - required to query the config
-         Pin relay_pin; // Pin the relay is connected to
-         Pin check_pin; // Verification pin
-         bool faulty; // True if the relay is faulty
-         uint8_t error_count; // Number of errors counted so far
+         // Data
+         uint8_t index;         // Index of this relay - required to query the config
+         Pin relay_pin;         // Pin the relay is connected to
+         Pin check_pin;         // Verification pin
+         bool faulty;           // True if the relay is faulty
+         uint8_t error_count;   // Number of errors counted so far
          timer::Instance timer; // Action to be delayed to to filtering
          reactor::Handle react_on_cycle_end; // Reactor for this relay
          bool projected_state;  // Where to go after the filter period
@@ -90,7 +99,8 @@ namespace relay {
          bool set(bool onoff) {
             auto filt_on  = config::get_config().relays_config[index].on_filter;
 
-            if ( filt_on == 255 or faulty or projected_state == onoff ) {
+            // Check for no change
+            if ( filt_on == 255 or faulty ) {
                return false;
             }
 
@@ -98,11 +108,14 @@ namespace relay {
             if ( timer == timer::null ) {
                // No - apply now
                relay_pin.set(onoff);
+               
+               // Reset the error counter as we are transitioning
+               // We could in theory otherwise get a fault
+               error_count = 0;
 
                if ( onoff == true ) {
                   if ( filt_on > 0 ) {
                      // Start a timer to hold this state
-                     timer.cancel();
                      timer = react_on_cycle_end.delay(
                         std::chrono::milliseconds(filt_on * 100),
                         index
@@ -113,7 +126,6 @@ namespace relay {
 
                   if ( filt_off > 0 ) {
                      // Start a timer to hold this state
-                     timer.cancel();
                      timer = react_on_cycle_end.delay(
                         std::chrono::milliseconds(filt_off * 100),
                         index
@@ -155,6 +167,7 @@ namespace relay {
                return;
             }
 
+            // Check what it is supposed to be against what it is
             if ( *relay_pin == *check_pin ) {
                error_count = 0; // Reset the error counter
                return;
