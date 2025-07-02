@@ -215,10 +215,15 @@ Other EStop conditions can be reset by:
 * a push on the reset button
 * a power cycle
 
+In all cases, the EStop condition can be read over the Modbus network.
+
 > [!IMPORTANT]
 > When the device is in both locate and EStop mode, the first push on the EStop reset clears the locate mode and the second clears the EStop.
 
-In all cases, the EStop condition can be read over the Modbus network.
+### Relays in EStop
+
+For safety and operational reasons, the EStop condition does not impact the relays operations.
+The relay commands (Modbus coils commands) are still being accepted, so the central control unit of the system can control the relay behavious on EStop.
 
 ## LEDs
 
@@ -497,18 +502,15 @@ This group allow configuring the individual relays.
 | 40025          | 0x0018    | RW     | Relay 1 config      | 0=Enabled, no filter | msb bits [15-8] are for the ON filter<br/>lsb bits [7-0] are the OFF filter<br/>The value 0xFFFF disables the relay.<br/><br/>The ON and OFF filters values are given in 1/10 of seconds from 0 to 254 (0 to 25.4s)<br/><u>Example</u>: 0x0132=The On state is guaranteed to last at least 100ms, whilst the OFF state is guaranteed to last at least 50 x 1/10s = 5s after a ON. See relay operations. |
 | 40026          | 0x0019    | RW     | Relay 2 config      | 0=Enabled, no filter | Same as relay 1 config   |
 | 40027          | 0x001A    | RW     | Relay 3 config      | 0=Enabled, no filter | Same as relay 1 config  |
-| 40028-40056<sup>1</sup>    | 0x0018-0x38| RW     | Relay 4-32 config | 1=Enabled, no filter | Same as relay 1 config |
+| 40025+N<sup>1</sup>    | 0x0018+N| RW     | Relay N config | 1=Enabled, no filter | Same as relay 1 config |
 
-<sup>1</sup> Available on devices with more than 3 relays
+<sup>1</sup> N is the relay index [0..(Number of relay-1)]
 
 > [!WARNING]
 > The registers must be written individually. The command **16** is not supported.
 
 > [!WARNING]
 > Read or writing a non-supported relay will generate an error.
-
-> [!IMPORTANT]
-> A reset is required for the device to account for any changes made to the relay configuration.
 
 ### Device control registers
 
