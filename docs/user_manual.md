@@ -1,9 +1,10 @@
 # Modbus N-Relay Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"><br/>**User manual**
 
 ## Introduction
+
 This project features a MODBUS-RTU relays device with emergency stop, infeed measurements, monitoring and failsafe modes.
 It is aimed at industrial systems such as a CNC or equivalent.
----
+
 This document provides a description for the operations of the device.
 
 ### Device identification
@@ -140,9 +141,10 @@ The faulty relay can be isolated by disabling it in the configuration, but it sh
 ### External EStop command
 
 The modbus master can issue an EStop command. This external EStop condition can be:
-. Pulsed EStop. The system will halt, but can be resumed right after
-. Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
-. Terminal. Only a power cycle can clear the condition.
+
+* Pulsed EStop. The system will halt, but can be resumed right after
+* Resetable EStop. The EStop condition is reset by pushing the 'EStop reset' push button.
+* Terminal. Only a power cycle can clear the condition.
 
 ## Locate mode
 The mode allows locating a relay device in setups with more than one.
