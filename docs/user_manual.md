@@ -482,13 +482,19 @@ This group of registers allow configuring the communication settings of the rela
 
 #### Safety Logic Configuration
 
+Some of the monitored values can optionally control the EStop. It is also possible to set the behaviour of each relay on these optional EStop conditions.
+
 | Modbus Address | Hex Value | Access | Description                               | Factory Value | Values |
 |----------------|-----------|--------|-------------------------------------------|---------------|--------|
 | 40017          | 0x0010    | RW     | Activate EStop on undervoltage            | 0             | 0=no<br/>1=yes |
 | 40018          | 0x0011    | RW     | Activate EStop on overvoltage             | 0             | 0=no<br/>1=yes |
 | 40019          | 0x0012    | RW     | Activate EStop on incorrect type of supply voltage<br>Example: AC detected with DC configured | 0 | 0=no<br/>1=yes |
 | 40020          | 0x0013    | RW     | Activate EStop on number of seconds without modbus frame received | 0             | 0=off<br/>[1-65535] Number of seconds |
-| 40021–40024    | 0x0014–0x0017 | R  | *Reserved*                                |               |        |
+| 40021          | 0x0014    | RW     | Mask to open relays on electrical infeed fault.<br/>When a infeed fault is detected (undervoltage, overvoltage or incorrect voltage type), the projected relay state<sup>1</sup> is opened or left unchanged based on this value.<br/>A bit at 1 in the mask indicates the relay should open on a fault detection. The lsb (bit 0) masks the relay at index 0, the msb (bit 15) masks the relay at index 15 | 0 | 0-0xFFFF<br/><br/>Example:<br/>0: No relays are affected<br/>5 (binary 110): Relays at position 1 and 2 are set to open<br/>0xFFFF: All relays are set to open |
+| 40022          | 0x0015    | RW     | Mask to open relays on modbus communication loss fault<br/>When a loss in communication is detected, the relay projected state<sup>1</sup> is opened is left unchanged with this value. | 0 | See 40021 |
+| 40023–40024    | 0x0016–0x0017 | R  | *Reserved*                                |               |        |
+
+<sup>1</sup>The projected state is the state of a relay once the on-going filter cycle is complete
 
 > [!WARNING]
 > The registers must be written individually. The command **16** is not supported.
