@@ -34,17 +34,25 @@ namespace relay {
     * The reaction time is set by the filters in place
     * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
     * @param close True to close the relay, false to open it
-    * @return false if index is out of range
+    * @return false if the operation is not allowed (disabled or faulty)
     */
    bool set(uint8_t index, bool close=true);
 
    /**
-    * Get the state of a relay.
+    * Get the current and actual state of a relay (not the projected state)
     * A faulty or disabled relay will return false
     * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
     * @return True if the relay is closed, false if it is open
     */
    bool get(uint8_t index);
+
+   /**
+    * Toggle a relay
+    * A faulty or disabled relay will return false
+    * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
+    * @return false if the operation is not allowed (disabled or faulty)
+    */
+   bool toggle(uint8_t index);
 
    /**
     * Apply the current configuration to the relay hardware.

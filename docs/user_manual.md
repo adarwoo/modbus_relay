@@ -1,4 +1,4 @@
-# Modbus N-Relay Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"><br/>**User manual**
+# Modbus Relays Device with EStop <img src="https://github.com/user-attachments/assets/516eb8d2-8e22-4c80-9cc7-a677c1ba3664" height="30"><br/>**User manual**
 
 ## Introduction
 
@@ -39,7 +39,7 @@ This relay goes beyond a single Modbus relay and is packed with features:
    * Infeed highs and lows
    * Infeed type and level
    * EStop causes and diagnostic
-  
+
 ## Operations overview
 Operations are performed over an RTU communication bus.<br/>
 A push button is also featured with limited use:
@@ -68,7 +68,7 @@ An ON filter of 2 sseconds means that the relay ON cycle will never be shorter t
 The same goes for the OFF filter, which guarantees a minimum duration of the OFF cycle.
 Any command received during a filtered cycle will be accepted and will become the next relay state once the cycle is complete and unless overwritten by another command.
 
-When flippting the relay position, it flips the relay position at the end of the cycle.
+When toggling the relay, it is the projected state (the state at the end of the current cycle) that is toggled.
 
 **Example**: a relay has an ON minimum cycle time of 5 seconds and no filter for the OFF.
 * It receives a ON command. It turns ON. The cycle starts.
@@ -112,7 +112,10 @@ This monitoring activity can be configured to trigger an resetable EStop.
 
 > [!NOTE]
 > The bus is considered active if commands addressed to the device are received at least once in the configured watchdog duration.
+
+> [!IMPORTANT]
 > For good operation, it is recommended to read the register 30009 (Status) periodically, like every second.
+> This will keep the Modbus communication active, and all the Modbus master to detect an EStop by the relay device.
 
 ### Infeed monitoring
 
@@ -147,7 +150,7 @@ The modbus master can issue an EStop command. This external EStop condition can 
 * Terminal. Only a power cycle can clear the condition.
 
 ## Locate mode
-The mode allows locating a relay device in setups with more than one.
+The mode allows locating an relays device in setups with more than one.
 When activated, the LEDs will alternate every seconds between:
  * all LEDs flash fast for 1 seconds
  * all display their normal state for the next 1 second
@@ -204,11 +207,14 @@ The EStop condition can be:
 * Temporary with manual reset
 * Terminal
 
-When the relay device is in EStop, **all relays are opened**.
-It is no longer possible to command the relays over the modbus network.
-The command will still be accepted, and will become the next relay state when the EStop condition is cleared.
+When the EStop is triggered by an internal condition, all the relays are immediatly **opened**.
+<br/>
+When the EStop is triggered externally, the relays are not impacted.
+<br/>
+During the EStop, it is still possible to command the relays over the modbus network,
+but faulty relays can no longer be commanded.
 
-The terminal EStop requires a power-cycle of the relay device to clear.
+The terminal EStop requires a power-cycle of the relays device to clear.
 
 Other EStop conditions can be reset by:
 * a Modbus command
@@ -235,7 +241,7 @@ All LEDs serve multiple pursposes.
 During boot, for the first 2 seconds, all LEDs are lit. This allow checking for a faulty LED.
 
 ### Locate function
-To help locate a relay device, a Modbus locate command can be sent.<br/>
+To help locate a relays device, a Modbus locate command can be sent.<br/>
 See [Locate mode](#Locate_mode)
 
 The EStop reset push button can be pressed to end the locate cycle, or a new Modbus command can be sent.
@@ -305,7 +311,7 @@ The LED status is as follow:
 ## Modbus communications and registers
 
 The product uses [ModbusRTU over a half-duplex RS485](https://www.modbus.org/docs/Modbus_over_serial_line_V1.pdf).
-It allow communication up-to 115200 baud to the relay device.
+It allow communication up-to 115200 baud to the relays device.
 
 The Modbus registers are grouped into:
 - [Coil Registers](#coil-registers)
@@ -377,7 +383,7 @@ This registers provides details about the device in use.
 | 30005–30008    | 0x0004–0x0007 | R  | *Reserved*          |                              |
 
 * <sup>1</sup> EStop relay code=0x37. Simple modbus code=0x36.
-* <sup>2</sup> A 3 relay device would be 0x3703. A 32 relays device would be 0x3720.
+* <sup>2</sup> A 3 relays device would be 0x3703. A 32 relays device would be 0x3720.
 
 #### Status & Monitoring
 
@@ -527,7 +533,7 @@ This group of register allows controlling the EStop and the device device.
 > These registers are write only.
 > The function ~~**03: Read multiple registers**~~ is not availble for this group.
 > Function ~~**16 - Write Multiple Registers**~~ is not available.
-> The registers must be written individually. 
+> The registers must be written individually.
 
 | Modbus Address | Hex Value | Access | Description         | Values |
 |----------------|-----------|--------|---------------------|--------|
@@ -551,16 +557,26 @@ The following table documents the type **ESTOP_CTRL** used to control the EStop.
 
 ## Electrical and mecanical characteristics
 
-Refer to the datasheet of the [SiSF2 relay](https://www.ermec.com/catalogos/2021/ELESTA/sisf2_-_en.pdf) for detailed data.
-Both contacts of the relay are paired.
+For relay data, refer to the datasheet of the [SiSF2 relay](https://www.ermec.com/catalogos/2021/ELESTA/sisf2_-_en.pdf) for detailed data.
+Note that both contacts of the relay are paired as one.
+The key information is summ
 
-### Absolute maximum ratings
+### Electrical characteristics
 
 | Item | Min | Max |
 |------|-----|-----|
-| Supply voltage | 15 VDC | 30 VDC |
-| Infeed voltage | -      | 240V (AC/DC) |
-| Relay contact current | - | 9.4A (AC/DC) | 
+| Device supply voltage | 18 VDC | 30 VDC |
+| Infeed voltage | -      | 250V (AC/DC) |
+| Relay contact current | - | 9.4A (AC/DC) |
+
+### Contact life
+
+| Item | Value |
+|------|----------|
+| 230VAC, 1A | 800k |
+| 230VAC, 9.4A | 100k |
+| 24VDC, 0.5A | 2M |
+| 24VDC, 9.4A | 300k |
 
 ## Troubleshooting
 

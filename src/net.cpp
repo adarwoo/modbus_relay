@@ -4,11 +4,11 @@
  * Implement all modbus callback functions
  */
 #include <avr/io.h>
-#include <trace.h>
 
 #include <chrono>
 
 #include <asx/reactor.hpp>
+#include <asx/ulog.hpp>
 
 #include "estop.hpp"
 #include "infeed.hpp"
@@ -67,7 +67,7 @@ namespace net {
    // Implement all the callbacks
    //
    void on_read_coils(uint8_t addr, uint8_t qty) {
-      TRACE_INFO(RELAY, "%d - %d", addr, qty);
+      ULOG_INFO("Read Coils Address: {} - Quantity: {}", addr, qty);
 
       dg::pack( uint8_t{1} ); // Number of bytes returned
 
@@ -91,7 +91,7 @@ namespace net {
    }
 
    void on_set_single(uint8_t index, uint16_t operation) {
-      TRACE_INFO(RELAY, "%d - %d", index, operation);
+      ULOG_INFO("Setting single relay index:{} - operation:{}", index, operation);
       bool success = false;
 
       switch ( operation ) {
@@ -99,7 +99,7 @@ namespace net {
             break;
          case 0xFF00: success = relay::set(index);
             break;
-         case 0x5500: success = relay::set(index, !relay::get(index));
+         case 0x5500: success = relay::toggle(index);
             break;
          default:
             break;
@@ -111,7 +111,7 @@ namespace net {
    }
 
    void on_set_multiple(uint8_t values) {
-      TRACE_INFO(RELAY, "%.2x", values);
+      ULOG_INFO("Setting multiple relays: Values: 0b{:08b}", values);
 
       for ( uint8_t i=0; i<3; ++i ) {
          relay::set( i, values & 1 ); // Ignore the reply
@@ -311,6 +311,8 @@ namespace net {
    }
 
    void on_exit_recovery() {
+      ULOG_MILE("Exit recovery");
+
       state::set_recovery_mode(false);
    }
 

@@ -106,9 +106,14 @@ namespace relay {
 
             // Do we have a filter running?
             if ( timer == timer::null ) {
+               // Increment the counter on change
+               if ( *relay_pin != onoff ) {
+                  counter::increment(index);
+               }
+
                // No - apply now
                relay_pin.set(onoff);
-               
+
                // Reset the error counter as we are transitioning
                // We could in theory otherwise get a fault
                error_count = 0;
@@ -150,6 +155,10 @@ namespace relay {
 
          bool get() {
             return *relay_pin;
+         }
+
+         bool toggle() {
+            return set(not projected_state);
          }
 
          Status get_status() {
@@ -249,6 +258,10 @@ namespace relay {
     */
    bool get(uint8_t index) {
       return relays[index].get();
+   }
+
+   bool toggle(uint8_t index) {
+      return relays[index].toggle();
    }
 
    /**

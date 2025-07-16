@@ -3,6 +3,7 @@
  * The relays are initialised by the static constructor
  */
 #include <asx/reactor.hpp>
+#include <asx/ulog.hpp>
 
 #include "counters.hpp"
 #include "relay.hpp"
@@ -15,6 +16,8 @@
 
 int main()
 {
+   ULOG_MILE("Application main starting");
+   
    // Initialise the LEDs
    led::init();
 

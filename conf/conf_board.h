@@ -21,8 +21,8 @@
 /* Alert pin                                                            */
 /* This is connected to the LED_FAULT and shared for other purposes     */
 /************************************************************************/
-#define ALERT_OUTPUT_PIN            IOPORT(A, 5)
-#define ES_COMMAND                  IOPORT(A, 6)
+#define ES_COMMAND                  IOPORT(B, 0)
+#define ALERT_OUTPUT_PIN            IOPORT(B, 1)
 
 /************************************************************************/
 /* Modbus LEDs                                                          */

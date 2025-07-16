@@ -3,9 +3,10 @@
 
 #include <cmath>
 #include <chrono>
+#include <algorithm>
 
 #include <asx/hw_timer.hpp>
-#include <asx/single_bin_fft.hpp>
+#include <asx/ulog.hpp>
 
 #include "counters.hpp"
 #include "leds.hpp"
@@ -42,12 +43,49 @@ namespace {
    constexpr auto ADC_SAMPLE_DURATION = 2;
    ///< Minimum voltage to detect a signal
    constexpr auto MIN_DETECTION = 10_volts;
+
+   ///< Muliplier to convert ADC samples to volts
+   constexpr auto ADC_ONE_VOLT_IN_IS = 230.0 * std::sqrt(2.0); // At the ISO ampliers, input voltage yielding 1V out
+   constexpr auto ADC_TO_VOLTS_DIVIDER_TENTH = (65536.0 / 2.048) / (ADC_ONE_VOLT_IN_IS * 10.0);
+   constexpr auto ADC_DC_256_VOLTS_DIVIDER_TENTH = static_cast<uint16_t>(std::round(ADC_TO_VOLTS_DIVIDER_TENTH * 256.0));
 }
 
 namespace infeed {
 
-   // Create the FFT instance
-   using fft_t = asx::fft::SingleBinFFT<FFT_SIZE, ADC_SAMPLES_RATE>;
+   struct RMS {
+      static inline uint16_t result;  // RMS in 1/10 V
+      static inline uint16_t sample_count;
+      static inline uint32_t abs_sum;
+      static inline int16_t last_sample = 0;
+      static inline uint8_t zero_crossings = 0;
+
+      static bool compute_next(int16_t sample) {
+         abs_sum += std::abs(sample);
+         ++sample_count;
+
+         // Count zero crossings to determine if the signal is AC
+         // We're sampling at 320Hz, so we expect at least 5 zero crossings for a 50Hz/60Hz signal
+         if ((sample > 0 && last_sample < 0) || (sample < 0 && last_sample > 0)) {
+            zero_crossings++;
+         }
+
+         if (sample_count >= ADC_SAMPLES_RATE) {
+            if (zero_crossings < 5) {
+               result = 0;  // Not enough zero crossings, assume no AC signal
+            } else {
+               // Approximate RMS 0.9 average absolute value
+               uint32_t avgAbs = abs_sum / ADC_SAMPLES_RATE;
+               result = avgAbs * 138 / 1000;  // Scaled to 1/10 V
+            }
+
+            abs_sum = 0;
+            sample_count = 0;
+            return true;
+         }
+
+         return false;
+      }
+   };
 
    /**
     * @brief Reactor handler to process the ADC sample
@@ -56,44 +94,51 @@ namespace infeed {
     */
    void process_sample(int16_t adc_sample) {
       static int32_t dc_sum = 0;
-      static int16_t dc_count = 0;
+      static uint16_t dc_count = 0;
       bool processing_required = false;
       bool above = false;
       bool below = false;
       auto status = Status{Status::none};
 
+      ULOG_DEBUG2("ADC Sample: {}", adc_sample);
+
       // Compute the FFT for AC signals
-      if ( fft_t::next(adc_sample) ) {
+      if ( RMS::compute_next(adc_sample) ) {
          processing_required = true;
-         detail::last_ac_voltage = fft_t::get_result();
+         detail::last_ac_voltage = RMS::result;
+         ULOG_DEBUG0("AC Voltage: {}", detail::last_ac_voltage);
       }
 
       // Compute an average of the last 256 samples for the DC signal
       dc_sum += adc_sample;
 
-      if ( ++dc_count >= 256 ) {
+      if ( ++dc_count == ADC_SAMPLES_RATE ) {
          processing_required = true;
-         detail::last_dc_voltage = static_cast<int16_t>(dc_sum / 256);
-         dc_sum = dc_count = 0;
+         detail::last_dc_voltage = static_cast<int16_t>(dc_sum / ADC_DC_256_VOLTS_DIVIDER_TENTH);
+         dc_sum = 0;
+         dc_count = 0;
+         ULOG_DEBUG0("DC Voltage: {}", detail::last_dc_voltage);
       }
 
-      // Sum up the AC and DC voltages for an overall detection
+      uint16_t abs_dc_value = std::abs(detail::last_dc_voltage);
+
+       // Sum up the AC and DC voltages for an overall detection
       if ( processing_required ) {
-         bool detected = ( detail::last_ac_voltage + detail::last_dc_voltage > MIN_DETECTION );
+         bool detected = ( detail::last_ac_voltage + abs_dc_value > MIN_DETECTION );
 
          if ( config::get_config().infeed_type == infeed::CfgType::dc ) {
             // If the infeed type is DC, we only check the DC voltage
-            above = ( detail::last_dc_voltage > config::get_config().infeed_max_volt_threshold );
-            below = ( detail::last_dc_voltage < config::get_config().infeed_min_volt_threshold );
+            above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
+            below = ( abs_dc_value < config::get_config().infeed_min_volt_threshold );
          } else { // ACs
             // If the infeed type is AC, we check the AC voltage
-            above = ( detail::last_ac_voltage > config::get_config().infeed_max_volt_threshold );
+            above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
             below = ( detail::last_ac_voltage < config::get_config().infeed_min_volt_threshold );
          }
 
          // Update the min and max voltage
-         detail::max_voltage = std::max(detail::max_voltage, std::max(detail::last_ac_voltage, detail::last_dc_voltage));
-         detail::min_voltage = std::min(detail::min_voltage, std::min(detail::last_ac_voltage, detail::last_dc_voltage));
+         detail::max_voltage = std::max(detail::max_voltage, std::max(detail::last_ac_voltage, abs_dc_value));
+         detail::min_voltage = std::min(detail::min_voltage, std::min(detail::last_ac_voltage, abs_dc_value));
 
          status = detected ? (
             above ? Status::above : below ? Status::below : Status::in_range
@@ -132,20 +177,8 @@ namespace infeed {
     * @note This function initializes the ADC and the FFT instance.
     */
    void init() {
-      uint8_t freq = 55; // Half way will detect either mains type
-      auto infeed_type = config::get_config().infeed_type;
-
-      if ( infeed_type == infeed::CfgType::ac_50hz ) {
-         freq = 50;
-      } else if ( infeed_type == infeed::CfgType::ac_60hz ) {
-         freq = 60;
-      }
-
       // Reset the min max
       reset_min_max();
-
-      // Initialize the FFT instance for detecting the configured frequency or 55Hz to detect the 50Hz/60Hz
-      fft_t::init( freq );
 
       //
       // Initialise the ADC for the ingress system
@@ -157,8 +190,8 @@ namespace infeed {
       // Select the ADC clock
       ADC0.CTRLB = ADC_PRESC_DIV2_gc;
 
-      // Ref - Input is 1.0V for 230V RMS So MAX is 236V
-      ADC0.CTRLC = ADC_TIMEBASE << ADC_TIMEBASE_gp | ADC_REFSEL_1024MV_gc;
+      // Ref - Diff input is up to +-2.49V - so use the 2v5 reference
+      ADC0.CTRLC = ADC_TIMEBASE << ADC_TIMEBASE_gp | ADC_REFSEL_2500MV_gc;
 
       // Sample duration
       ADC0.CTRLE = ADC_SAMPLE_DURATION;
@@ -170,8 +203,11 @@ namespace infeed {
       ADC0.PGACTRL = 0;
 
       // Select the ADC channel
-      ADC0.MUXPOS = ADC_MUXPOS_2_bm;
-      ADC0.MUXNEG = ADC_MUXNEG_2_bm;
+#     pragma GCC diagnostic push
+#     pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+      ADC0.MUXPOS = ADC_VIA_ADC_gc | ADC_MUXPOS_AIN5_gc;
+      ADC0.MUXNEG = ADC_VIA_ADC_gc | ADC_MUXNEG_AIN6_gc;
+#     pragma GCC diagnostic pop
 
       // Ready the command using a event to start the ADC
       ADC0.COMMAND = ADC_DIFF_bm | ADC_MODE_BURST_SCALING_gc | ADC_START_EVENT_TRIGGER_gc;
@@ -179,10 +215,12 @@ namespace infeed {
       // Use timer B0 to trigger the ADC through the event system
       using timer = asx::hw_timer::TimerB<0>;
       timer::set_compare( SAMPLE_PERIOD );
+      timer::TCB().EVCTRL = TCB_CAPT_bm | TCB_FILTER_bm; // Turn on event detection
+      timer::TCB().CTRLA |= TCB_ENABLE_bm; // Turn on timer
 
       // Hook the event system to trigger the ADC
-      EVSYS.CHANNEL0 = EVSYS_CHANNEL0_TCB0_CAPT_gc;    // Rx/Tx activity
-      EVSYS.USERADC0START = EVSYS_USER_CHANNEL0_gc;
+      EVSYS.CHANNEL4 = EVSYS_CHANNEL4_TCB0_CAPT_gc;
+      EVSYS.USERADC0START = EVSYS_USER_CHANNEL4_gc;
 
       // Enable the interrupt
       ADC0.INTCTRL |= ADC_RESRDY_bm;

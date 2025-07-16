@@ -11,6 +11,7 @@
 #include <asx/timer.hpp>
 #include <asx/debouncer.hpp>
 #include <asx/ioport.hpp>
+#include <asx/ulog.hpp>
 
 #include "net.hpp"
 #include "state.hpp"
@@ -52,17 +53,22 @@ namespace sw {
             } else if (!recovery_triggered) {
                auto now = asx::timer::steady_clock::now();
                auto duration = now - last_time;
+
                if (duration >= long_time) {
-                  state::set_recovery_mode(!state::is_in_recovery_mode());
+                  auto is_in_recovery = state::is_in_recovery_mode();
+                  state::set_recovery_mode(!is_in_recovery);
                   recovery_triggered = true;
+                  ULOG_INFO("Recovery mode long push detected. State is {}", !is_in_recovery);
                }
             }
          } else {
             if (last_time != time_zero) {
                if (!recovery_triggered) {
+                  ULOG_INFO("Resetting the EStop");
                   // Short press: Reset any on-going EStop
                   estop::reset();
                }
+
                last_time = time_zero;
                recovery_triggered = false;
             }

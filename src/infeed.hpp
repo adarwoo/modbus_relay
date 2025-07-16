@@ -50,7 +50,7 @@ namespace infeed {
       /// @brief Stores the last measured AC voltage
       inline uint16_t last_ac_voltage = 0;
       /// @brief Stores the last measured DC voltage
-      inline uint16_t last_dc_voltage = 0;
+      inline int16_t last_dc_voltage = 0;
       /// @brief Stores the maximum voltage measured
       inline uint16_t max_voltage = std::numeric_limits<uint16_t>::max();
       /// @brief Stores the minimum voltage measured
@@ -68,17 +68,21 @@ namespace infeed {
 
    /// @brief Get the current input voltage
    inline uint16_t get_input_voltage() {
-      return std::max(detail::last_ac_voltage, detail::last_dc_voltage);
+      return std::max(
+         detail::last_ac_voltage,
+         static_cast<uint16_t>(std::abs(detail::last_dc_voltage))
+      );
    }
 
    /// @brief Get the type of the current input voltage
    inline InputType get_input_voltage_type() {
       using namespace literal;
+      
       if ( detail::last_dc_voltage + detail::last_ac_voltage < 10_volts ) {
          return InputType::none;
       }
 
-      if ( detail::last_dc_voltage > detail::last_ac_voltage ) {
+      if ( static_cast<uint16_t>(std::abs(detail::last_dc_voltage)) < detail::last_ac_voltage) {
          return InputType::dc;
       }
 

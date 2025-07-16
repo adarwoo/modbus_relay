@@ -9,7 +9,7 @@ BIN := modbus_relay
 # -I throughout (C and C++)
 INCLUDE_DIRS = conf src
 
-ASX_USE = modbus_rtu eeprom
+ASX_USE = ulog modbus_rtu eeprom
 
 # Project own files
 SRCS = \
