@@ -48,6 +48,13 @@ A push button is also featured with limited use:
 <br/>
 This section describes how to configure and operate the device, including its default settings, configuration mode, and reset process.
 
+### System startup
+
+The device starts with the EStop active (failsafe on power loss).
+The device does a self-check, and starts measuring the infeed.
+If all conditions are correct, the EStop is cleared. (the led turns off).
+If a persistent fault is detect, the device goes in EStop.
+
 ### Relay polarity and failsafe position
 The relays failsafe position is 'OFF' - that is - the contact is opened.
 If the device loses power, the relays immediatly open the contacts - turning off the load.
@@ -127,10 +134,12 @@ Additional Modbus registers allow resetting those values during investigations.
 
 The measurement can be used to trigger an EStop on:
 1. Incorrect type (AC vs DC) of the infeed
-2. Undervoltage : The infeed voltage is lower than a configured threshold
-3. Overvoltage : The infeed voltage is higher than a configured threshold
+2. Reverse polarity of the DC (The negative must be connected to 'N' and the positive to 'P').
+3. Undervoltage : The infeed voltage is lower than a configured threshold
+4. Overvoltage : The infeed voltage is higher than a configured threshold
 
-When an infeed defect is detected, the device will open the EStop relay.
+When an infeed defect is detected, the device will open the EStop relay.<br/>
+A reverse polarity is terminal.
 
 ### Relay health monitoring
 
@@ -203,23 +212,9 @@ The EStop condiiton is the result of:
 * Through external command over Modbus
 
 The EStop condition can be:
-* Temporary with automatic reset
-* Temporary with manual reset
-* Terminal
-
-When the EStop is triggered by an internal condition, all the relays are immediatly **opened**.
-<br/>
-When the EStop is triggered externally, the relays are not impacted.
-<br/>
-During the EStop, it is still possible to command the relays over the modbus network,
-but faulty relays can no longer be commanded.
-
-The terminal EStop requires a power-cycle of the relays device to clear.
-
-Other EStop conditions can be reset by:
-* a Modbus command
-* a push on the reset button
-* a power cycle
+* Reset automatically (pulsed EStop)
+* Manually reset
+* Remotely reset
 
 In all cases, the EStop condition can be read over the Modbus network.
 
@@ -228,8 +223,12 @@ In all cases, the EStop condition can be read over the Modbus network.
 
 ### Relays in EStop
 
-For safety and operational reasons, the EStop condition does not impact the relays operations.
-The relay commands (Modbus coils commands) are still being accepted, so the central control unit of the system can control the relay behavious on EStop.
+When the EStop is triggered by an internal condition, all the relays are **opened** (pending filtering) and no longer respond to Modbus commands (without errors).
+A reset the EStop is only possible if the root cause has been cleared.
+<br/>
+When the EStop is triggered externally, the relays are not impacted, and it is still possible to command the relays over the modbus network.
+<br/>
+Example: As the infeed drops to 0 (below the threshold), all relays are opened and the EStop is activated. It is only possible to reset the EStop once the infeed voltage is back to normal.
 
 ## LEDs
 
@@ -239,6 +238,7 @@ All LEDs serve multiple pursposes.
 ### Boot
 
 During boot, for the first 2 seconds, all LEDs are lit. This allow checking for a faulty LED.
+The fault LED remains on if a persistent fault condition is detected during the auto-test.
 
 ### Locate function
 To help locate a relays device, a Modbus locate command can be sent.<br/>
