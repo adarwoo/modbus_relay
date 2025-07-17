@@ -120,7 +120,7 @@ This monitoring activity can be configured to trigger an resetable EStop.
 ### Infeed monitoring
 
 The module measures the infeed voltage of the relay and the type of infeed (AC vs DC).
-The AC measurement measure the true RMS value for 50Hz and 60Hz supplies.
+The AC measurement is the approximate RMS value. The input signal is expected to be a 50Hz or 60Hz supply.
 
 The last measured value, but also the lowest and highest measured values are accessible over the Modbus network.
 Additional Modbus registers allow resetting those values during investigations.
@@ -391,7 +391,7 @@ This registers provides details about the device in use.
 |----------------|-----------|--------|-----------------------------|-------------------------------|
 | 30009          | 0x0008    | R      | Current status              | <ul><li><b>0</b>: Device is operational</li><li><b>1</b>: Device is in EStop.<br/>A reset is possible</li><li><b>2</b>: Device in terminal EStop</li></ul> |
 | 30010 (+1)     | 0x0009 (+1)| R     | Running minutes             | UINT32<br/>0-2<sup>32</sup>-1 |
-| 30012          | 0x000B    | R      | Actual infeed voltage type  | Reports the type of infeed voltage detected<br/><ul><li><b>0</b>: Measured AC/DC combined voltages are below 10V</li><li><b>1</b>: DC</li><li><b>2</b>: AC</li></ul> |
+| 30012          | 0x000B    | R      | Actual infeed voltage type  | Reports the type of infeed voltage detected<br/><ul><li><b>0</b>: Measured AC/DC voltages are below 10V</li><li><b>1</b>: DC</li><li><b>2</b>: AC</li></ul> |
 | 30013          | 0x000C    | R      | Current infeed voltage      | 1/10 volts<br/>0-3000         |
 | 30014          | 0x000D    | R      | Infeed highest voltage      | Returns the lowest measured infeed voltage until now in 1/10th of volts.<br/>This value can be reset with the command: - [40102 - Reset measurements](#device-control-registers) |
 | 30015          | 0x000E    | R      | Infeed lowest voltage       | Same as 30014, but returns the lowest |
@@ -476,7 +476,7 @@ This group of registers allow configuring the communication settings of the rela
 
 | Modbus Address | Hex Value | Access | Description                    | Factory Value | Values |
 |----------------|-----------|--------|--------------------------------|---------------|--------|
-| 40009          | 0x0008    | RW     | Infeed voltage type            | 1             | 0=DC<br/>1=AC 50Hz<br/>2=AC 60Hz |
+| 40009          | 0x0008    | RW     | Infeed voltage type            | 1             | 0=DC<br/>1=AC |
 | 40010          | 0x0009    | RW     | Infeed lower voltage threshold | 100           | 1/10 volts [100-3000] |
 | 40011          | 0x000A    | RW     | Infeed upper voltage threshold | 3000          | 1/10 volts [100-3000] |
 | 40012–40016    | 0x000B–0x000F | R  | *Reserved*                     | 0             |        |
