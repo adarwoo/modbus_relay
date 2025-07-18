@@ -45,9 +45,11 @@ namespace {
    constexpr auto MIN_DETECTION = 10_volts;
 
    ///< Muliplier to convert ADC samples to volts
-   constexpr auto ADC_ONE_VOLT_IN_IS = 230.0 * std::sqrt(2.0); // At the ISO ampliers, input voltage yielding 1V out
-   constexpr auto ADC_TO_VOLTS_DIVIDER_TENTH = (65536.0 / 2.048) / (ADC_ONE_VOLT_IN_IS * 10.0);
-   constexpr auto ADC_DC_256_VOLTS_DIVIDER_TENTH = static_cast<uint16_t>(std::round(ADC_TO_VOLTS_DIVIDER_TENTH * 256.0));
+   constexpr auto ADC_ONE_VOLT_IN_IS = 233.0 * std::sqrt(2.0); // At the ISO ampliers, input voltage yielding 1V out
+   constexpr auto ADC_TO_VOLTS_DIVIDER_TENTH = (65536.0 / 2.5) / (ADC_ONE_VOLT_IN_IS * 10.0);
+   constexpr auto ADC_DC_256_VOLTS_DIVIDER_TENTH = static_cast<uint16_t>(
+      std::round(ADC_TO_VOLTS_DIVIDER_TENTH * ADC_SAMPLES_RATE)
+   );
 }
 
 namespace infeed {

@@ -41,3 +41,6 @@ asx/
 .vscode/
 conf/broadcast_datagram.hpp
 conf/datagram.hpp
+
+# AVR studio intermediate files
+**/*componentinfo.xml
