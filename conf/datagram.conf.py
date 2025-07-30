@@ -8,8 +8,18 @@ Modbus({
     "on_received": "on_payload_received",
     "slave": True,
     "buffer_size": 80, # Max reg read = 0x20 (32 x 2) + Frame (ID+CODE+NUM+CRC)
+
     "defines": {
         "relay0_config_address": RELAY0_ADDRESS
+    },
+
+    "identification": {
+        VENDOR_NAME:            "ARex",
+        PRODUCT_CODE:           "modbus_relay",
+        MAJOR_MINOR_REVISION:   "2.0",
+        VENDOR_URL:             "github.com/adarwoo",
+        MODEL_NAME:             "1.0c",
+        PRIVATE_OBJECTS_0:      "3", # Number of relays
     },
 
     "callbacks": {
