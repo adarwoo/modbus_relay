@@ -361,9 +361,6 @@
     <Compile Include="conf\conf_clock.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="conf\conf_uart.hpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="conf\conf_ulog.h">
       <SubType>compile</SubType>
     </Compile>
