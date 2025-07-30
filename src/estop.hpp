@@ -19,13 +19,15 @@ namespace estop {
 
    enum class Cause {
       none = 0,
-      faulty_relay = 1,
-      modbus_watchdog = 2,
-      infeed_voltage_type = 3,
-      infeed_voltage_over = 4,
-      infeed_voltage_under = 5,
-      command = 6,
-      crash = 7
+      faulty_relay = 1 << 1,
+      modbus_watchdog = 1 << 2,
+      infeed_polarity = 1 << 3,
+      infeed_voltage_type = 1 << 4,
+      infeed_voltage_over = 1 << 5,
+      infeed_voltage_under = 1 << 6,
+      command = 1 << 7,
+      crash = 1 << 8,
+      bod = 1 << 9
    };
 
    enum class ExternalTriggerType {
