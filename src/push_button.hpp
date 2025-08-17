@@ -33,6 +33,8 @@ namespace sw {
    static inline void init() {
       using namespace asx::ioport;
 
+      ULOG_MILE("Initializing Push Button");
+
       // Set the pin to input
       PUSH_BUTTON.init( dir_t::in, invert::inverted, pullup::enabled );
 
@@ -58,6 +60,7 @@ namespace sw {
                   auto is_in_recovery = state::is_in_recovery_mode();
                   state::set_recovery_mode(!is_in_recovery);
                   recovery_triggered = true;
+
                   ULOG_INFO("Recovery mode long push detected. State is {}", !is_in_recovery);
                }
             }

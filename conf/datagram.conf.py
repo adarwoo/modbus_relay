@@ -15,7 +15,7 @@ Modbus({
 
     "identification": {
         VENDOR_NAME:            "ARex",
-        PRODUCT_CODE:           "modbus_relay",
+        PRODUCT_CODE:           "MBR3-ES",
         MAJOR_MINOR_REVISION:   "2.0",
         VENDOR_URL:             "github.com/adarwoo",
         MODEL_NAME:             "1.0c",
@@ -55,6 +55,8 @@ Modbus({
         "on_write_estop_on_over"    : [(u8, "onoff")],
         "on_write_estop_on_bad_voltage_type" : [(u8, "onoff")],
         "on_write_estop_on_timeout" : [(u16, "timeout")],
+        "on_write_estop_infeed_mask": [(u16, "mask")],
+        "on_write_estop_commloss_mask" : [(u16, "mask")],
 
         # Single relay configuration
         "on_write_single_relay_cfg" : [(u8, "address"), (u8, "filter_on"), (u8, "filter_off")],
@@ -110,7 +112,12 @@ Modbus({
         ),
 
         # Write the infeed config
-        (WRITE_SINGLE_REGISTER,  u16(0x08), u16(0,2), u16(100,3000), u16(100,3000), "on_write_infeed_config"),
+        (WRITE_MULTIPLE_REGISTERS,
+            u16(0x08), u16(2), u8(6),
+                u16(0,1),      # 0=DC, 1=AC
+                u16(100,3000), # Lower threshold
+                u16(100,3000), # Upper threshold
+            "on_write_infeed_config"),
 
 
         # Power infeed configuration
@@ -118,6 +125,8 @@ Modbus({
         (WRITE_SINGLE_REGISTER,  u16(0x11), u16(0,1),   "on_write_estop_on_over"),
         (WRITE_SINGLE_REGISTER,  u16(0x12), u16(0,1),   "on_write_estop_on_bad_voltage_type"),
         (WRITE_SINGLE_REGISTER,  u16(0x13), u16(),      "on_write_estop_on_timeout"),
+        (WRITE_SINGLE_REGISTER,  u16(0x14), u16(),      "on_write_estop_infeed_mask"),
+        (WRITE_SINGLE_REGISTER,  u16(0x15), u16(),      "on_write_estop_commloss_mask"),
 
         # Relay configuration
         # WARNING: Keep in sync with net.cpp

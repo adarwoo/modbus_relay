@@ -13,6 +13,7 @@
 #include <chrono>
 #include <array>
 
+#include <asx/ulog.hpp>
 #include <asx/reactor.hpp>
 #include <asx/ioport.hpp>
 #include <asx/bitstore.hpp>
@@ -153,6 +154,11 @@ namespace relay {
             set(projected_state);
          }
 
+         void force_open() {
+            timer = timer::null;
+            relay_pin.set(false);
+         }
+
          bool get() {
             return *relay_pin;
          }
@@ -237,6 +243,8 @@ namespace relay {
    void init() {
       using namespace std::chrono;
 
+      ULOG_INFO("Initialising Relays");
+
       // Start the background check timer
       on_check_health = asx::reactor::bind(
          backgroud_check, asx::reactor::prio::low).repeat(100ms);
@@ -273,5 +281,45 @@ namespace relay {
     */
    Status get_status(uint8_t index) {
       return relays[index].get_status();
+   }
+
+   /**
+    * Apply the EStop conditions to the relay hardware.
+    * To be called after setting the EStop conditions.
+    * React to watchdog condition -> projected state
+    * React to infeed condition -> actual state
+    */
+   void apply_estop() {
+      if ( estop::get_cause() == estop::Cause::infeed_polarity) {
+         // All relay open right away!
+         for (auto &relay: relays) {
+            relay.force_open();
+         }
+      } else if (estop::get_cause() == estop::Cause::modbus_watchdog) {
+         uint16_t mask = config::get_config().estop_commloss_mask;
+
+         for (auto &relay: relays) {
+            if ( mask & 1 ) {
+               // Projected state only
+               relay.set(false);
+            }
+
+            mask >>= 1;
+         }
+      } else if ( false
+         or estop::get_cause() == estop::Cause::infeed_polarity
+         or estop::get_cause() == estop::Cause::infeed_voltage_type
+         or estop::get_cause() == estop::Cause::infeed_voltage_over
+         or estop::get_cause() == estop::Cause::infeed_voltage_under ) {
+         uint16_t mask = config::get_config().estop_infeed_mask;
+
+         for (auto &relay: relays) {
+            if ( mask & 1 ) {
+               relay.force_open();
+            }
+
+            mask >>= 1;
+         }
+      }
    }
 }

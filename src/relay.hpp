@@ -61,6 +61,12 @@ namespace relay {
    void apply_config();
 
    /**
+    * Apply the EStop conditions to the relay hardware.
+    * To be called after setting the EStop conditions.
+    */
+   void apply_estop();
+
+   /**
     * Check the status of a relay.
     * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
     * @return True if the relay is operational, false if it is not

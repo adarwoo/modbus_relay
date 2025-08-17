@@ -3,6 +3,7 @@
 
 #include <boost/sml.hpp>
 
+#include <asx/ulog.hpp>
 #include <asx/ioport.hpp>
 #include <asx/reactor.hpp>
 
@@ -10,6 +11,8 @@
 
 #include "estop.hpp"
 #include "leds.hpp"
+#include "relay.hpp"
+
 
 namespace estop {
    using namespace asx::ioport;
@@ -111,15 +114,24 @@ namespace estop {
    );
 
    void init() {
+      ULOG_INFO("Initialising E-Stop");
+
       // Invert the pin - ES closes on power-up
       ES_COMMAND.init(dir_t::out, invert::inverted, value_t::low);
    }
 
    void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {
+      ULOG_INFO("Triggering E-Stop: Cause:{} Diagnostic:{} Type:{}",
+         static_cast<uint8_t>(cause), diagnostic, static_cast<uint8_t>(type)
+      );
+
       sm.process_event(trigger_event{cause, diagnostic, type});
+      relay::apply_estop();
    }
 
    void reset() {
+      ULOG_INFO("Resetting E-Stop");
+
       sm.process_event(reset_event{});
    }
 } // namespace estop

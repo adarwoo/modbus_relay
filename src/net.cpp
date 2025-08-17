@@ -18,6 +18,7 @@
 #include "net.hpp"
 #include "state.hpp"
 
+
 namespace net {
    using namespace asx::modbus;
 
@@ -48,7 +49,7 @@ namespace net {
       }
    );
 
-   // Callback when a valid packet is recieved
+   // Callback when a valid packet is received
    void on_ready_reply(std::string_view view) {
       uint16_t t = config::get_config().estop_modbus_watchdog;
 
@@ -125,6 +126,8 @@ namespace net {
 
    /** Read any of the input register */
    void on_read_inputs(uint8_t addr, uint8_t qty) {
+      ULOG_INFO("Read Inputs Address: {} - Quantity: {}", addr, qty);
+
       // Reply with a byte count
       dg::pack<uint8_t>(qty*2);
 
@@ -169,6 +172,8 @@ namespace net {
    }
 
    void on_read_holdings(uint8_t index, uint8_t qty) {
+      ULOG_INFO("Read Holdings Index: {} - Quantity: {}", index, qty);
+
       // Number of bytes returned
       dg::pack<uint8_t>(qty*2);
       auto &cfg = config::get_config();
@@ -210,6 +215,8 @@ namespace net {
    // Write holding
    // -------------------------------------------------------------------------
    void on_write_comms_settings(uint8_t addr, uint8_t baud, uint8_t parity, uint8_t stopbits) {
+      ULOG_INFO("Writing Communication Settings");
+
       // Note : All ranges have already been enforced
       if ( state::is_in_recovery_mode() ) {
          config::set_comm(
@@ -226,11 +233,14 @@ namespace net {
          // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
          dg::set_size(6);
       } else {
+         ULOG_ERROR("Cannot change communication settings outside of recovery mode");
          dg::reply_error(error_t::negative_acknowledge);
       }
    }
 
    void on_write_infeed_config(uint8_t vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
+      ULOG_INFO("Writing Infeed Configuration");
+
       auto res = config::set_infeed_config(
          static_cast<infeed::CfgType>(vtype), lower_threshold, upper_threshold
       );
@@ -240,6 +250,7 @@ namespace net {
          // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
          dg::set_size(6);
       } else {
+         ULOG_ERROR("Failed to write Infeed Configuration");
          dg::reply_error(error_t::negative_acknowledge);
       }
    }
@@ -260,6 +271,14 @@ namespace net {
       config::set_watchdog(seconds);
    }
 
+   void on_write_estop_commloss_mask(uint16_t mask) {
+      config::set_estop_commloss_mask(mask);
+   }
+
+   void on_write_estop_infeed_mask(uint16_t mask) {
+      config::set_estop_infeed_mask(mask);
+   }
+
    void on_write_estop_settings(uint8_t over, uint8_t under, uint8_t timeout) {
       config::set_estop_on_undervolt(static_cast<bool>(over));
       config::set_estop_on_overvolt(static_cast<bool>(under));
@@ -267,6 +286,9 @@ namespace net {
    }
 
    void on_write_single_relay_cfg(uint8_t address, uint8_t filter_on, uint8_t filter_off) {
+      ULOG_INFO("Writing Single Relay Config: Address: {}, Filter On: {}, Filter Off: {}",
+         address, filter_on, filter_off);
+
       // We need to offset the address
       uint8_t index = address - RELAY_0_CONFIG_REGISTER_ADDRESS;
 
@@ -281,8 +303,11 @@ namespace net {
 
    // Trigger an estop
    void on_estop(uint8_t type, uint8_t diag) {
+      ULOG_INFO("Triggering EStop: Type: {}, Diag: {}", type, diag);
+
       // If the device is already on terminal EStop - return an error
       if ( estop::get_status() == estop::Status::terminated ) {
+         ULOG_ERROR("Cannot trigger EStop: Already terminated");
          dg::reply_error(error_t::negative_acknowledge);
       } else {
          estop::trigger(
@@ -294,14 +319,17 @@ namespace net {
    }
 
    void on_measurement_reset() {
+      ULOG_INFO("Resetting Measurements");
       infeed::reset_min_max();
    }
 
    void on_locate(uint8_t onoff) {
+      ULOG_INFO("Setting Locate Mode: {}", onoff);
       state::set_locate_mode(onoff);
    }
 
    void on_factory_reset() {
+      ULOG_INFO("Triggering Factory Reset");
       config::reset_config();
    }
 
@@ -331,6 +359,8 @@ namespace net {
     * by the state manager.
     */
    void init() {
+      ULOG_INFO("Initialising Modbus Network");
+
       // Set the modbus install ID
       dg::set_device_id(
          state::is_in_recovery_mode()

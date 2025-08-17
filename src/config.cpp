@@ -1,4 +1,6 @@
 #include <asx/eeprom.hpp>
+#include <asx/ulog.hpp>
+
 #include <config.hpp>
 
 #include "datagram.hpp"
@@ -64,6 +66,8 @@ namespace config {
    }
 
    void reset_config() {
+      ULOG_INFO("Resetting configuration to default");
+
       eeprom_config = default_config;
       eeprom_config.update();
    }
@@ -76,6 +80,13 @@ namespace config {
     * Modbus callbacks
     */
    void set_comm(uint8_t device_id, baud_t baud, uart::parity parity, uart::stop stopbits) {
+      ULOG_INFO("Setting communication parameters ID:{} Baud:{} Parity:{} StopBits:{}",
+         device_id,
+         static_cast<uint8_t>(baud),
+         static_cast<uint8_t>(parity),
+         static_cast<uint8_t>(stopbits)
+      );
+
       eeprom_config.address = device_id;
       eeprom_config.baud = baud;
       eeprom_config.parity = parity;
@@ -84,6 +95,9 @@ namespace config {
    }
 
    bool set_infeed_config(infeed::CfgType vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
+      ULOG_INFO("Setting infeed config type:{}", static_cast<uint8_t>(vtype));
+      ULOG_INFO("Setting infeed config thresholds:{} lower:{} upper:{}", lower_threshold, upper_threshold);
+
       if ( upper_threshold < lower_threshold and ((upper_threshold - lower_threshold) < 10) ) {
          return false;
       }
@@ -97,22 +111,44 @@ namespace config {
    }
 
    void set_watchdog(uint16_t period) {
+      ULOG_INFO("Setting watchdog period: {} seconds", period);
+
       eeprom_config.estop_modbus_watchdog = period;
       eeprom_config.update();
    }
 
    void set_estop_on_undervolt(bool yes) {
+      ULOG_INFO("Setting E-Stop on undervolt: {}", yes);
+
       eeprom_config.estop_on_undervolt = yes;
       eeprom_config.update();
    }
 
    void set_estop_on_overvolt(bool yes) {
+      ULOG_INFO("Setting E-Stop on overvolt: {}", yes);
+
       eeprom_config.estop_on_overvolt = yes;
       eeprom_config.update();
    }
 
    void set_estop_on_bad_voltage_type(bool yes) {
+      ULOG_INFO("Setting E-Stop on bad voltage type: {}", yes);
+
       eeprom_config.estop_on_bad_voltage_type = yes;
+      eeprom_config.update();
+   }
+
+   void set_estop_commloss_mask(uint16_t mask) {
+      ULOG_INFO("Setting E-Stop communication loss mask: 0x{:04X}", mask);
+
+      eeprom_config.estop_commloss_mask = mask;
+      eeprom_config.update();
+   }
+
+   void set_estop_infeed_mask(uint16_t mask) {
+      ULOG_INFO("Setting E-Stop infeed mask: 0x{:04X}", mask);
+
+      eeprom_config.estop_infeed_mask = mask;
       eeprom_config.update();
    }
 
@@ -128,6 +164,8 @@ namespace config {
     * @return false if the configuration is invalid
     */
    bool set_relay_config(uint8_t index, uint8_t filter_on, uint8_t filter_off) {
+      ULOG_INFO("Setting relay config index:{} on_filter:{} off_filter:{}", index, filter_on, filter_off);
+
       // Accept all values - but if on is 255 then off must be too
       if ( (filter_on == 255) xor (filter_off == 255) ) {
          return false;

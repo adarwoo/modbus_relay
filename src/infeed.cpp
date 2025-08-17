@@ -174,11 +174,13 @@ namespace infeed {
    }
 
    /**
-    * @brief Initialize the ingress system
+    * @brief Initialize the infeed system
     * @param react_on_update The reactor handle to call with new results
     * @note This function initializes the ADC and the FFT instance.
     */
    void init() {
+      ULOG_INFO("Initialising Infeed System");
+
       // Reset the min max
       reset_min_max();
 

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <array>
 
+#include <asx/ulog.hpp>
 #include <asx/eeprom.hpp>
 
 #include <avr/io.h>
@@ -49,6 +50,8 @@ namespace counter {
     * The RTC interrupt is enabled to handle the overflow event.
     */
    inline void init() {
+      ULOG_INFO("Initialising Counters");
+
       // Initialise the PIT - turn the interrupt on
       RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;
       RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_PRESCALER_DIV8192_gc | RTC_RTCEN_bm; // 1/4 seconds

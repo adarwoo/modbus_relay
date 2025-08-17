@@ -60,6 +60,8 @@ namespace config {
       bool estop_on_overvolt;  // EStop on infeed overvoltage
       bool estop_on_bad_voltage_type; // EStop on bad voltage type (AC/DC mismatch)
       uint16_t estop_modbus_watchdog; // EStop on watchdog timeout. Period in seconds
+      uint16_t estop_infeed_mask; // EStop on infeed mask
+      uint16_t estop_commloss_mask; // EStop on comm loss mask
 
       /// @brief Relay config
       relay::Config relays_config[3];
@@ -98,6 +100,8 @@ namespace config {
    void set_estop_on_undervolt(bool yes);
    void set_estop_on_overvolt(bool yes);
    void set_estop_on_bad_voltage_type(bool yes);
+   void set_estop_commloss_mask(uint16_t mask);
+   void set_estop_infeed_mask(uint16_t mask);
    bool set_infeed_config(infeed::CfgType, uint16_t lower_threshold, uint16_t upper_threshold);
    bool set_relay_config(uint8_t index, uint8_t filter_on, uint8_t filter_off);
 } // End of config namespace

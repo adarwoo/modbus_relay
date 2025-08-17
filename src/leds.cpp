@@ -16,6 +16,7 @@
 #include <utility>
 #include <chrono>
 
+#include <asx/ulog.hpp>
 #include <asx/ioport.hpp>
 #include <asx/reactor.hpp>
 
@@ -255,6 +256,8 @@ namespace led {
     */
    void init() {
       using namespace asx::ioport;
+
+      ULOG_INFO("Initialising LEDs");
 
       // Set the reactor
       detail::react_on_refresh = asx::reactor::bind(on_refresh_leds_status);

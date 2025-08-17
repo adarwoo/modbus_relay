@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 
 #include <asx/reactor.hpp>
+#include <asx/ulog.hpp>
 
 #include "counters.hpp"
 
@@ -14,7 +15,10 @@ namespace counter {
    namespace {
       /** React to minute elapsed events, signaled from the RTC interrupt */
       auto react_on_minute_elapsed = asx::reactor::bind(
-         []() { detail::running_minutes.increment(); }
+         []() {
+            ULOG_INFO("Minute elapsed");
+            detail::running_minutes.increment();
+         }
       );
    }
 }
