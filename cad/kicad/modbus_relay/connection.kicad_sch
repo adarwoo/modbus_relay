@@ -438,197 +438,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:Varistor"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "RV"
-				(at 3.175 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Varistor"
-				(at -3.175 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at -1.778 0 90)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "Voltage dependent resistor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Name" "kicad_builtin_varistor"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Device" "SUBCKT"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Pins" "1=A 2=B"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Params" "threshold=1k"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Sim.Library" "${KICAD7_SYMBOL_DIR}/Simulation_SPICE.sp"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "VDR resistance"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "RV_* Varistor*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "Varistor_0_0"
-				(text "U"
-					(at -1.778 -2.032 0)
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(symbol "Varistor_0_1"
-				(polyline
-					(pts
-						(xy -1.905 2.54) (xy -1.905 1.27) (xy 1.905 -1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Varistor_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:+24V"
 			(power)
 			(pin_numbers
@@ -994,72 +803,6 @@
 		)
 	)
 	(junction
-		(at 166.37 90.17)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "0f9c675a-7262-4df0-91d6-f3796be06757")
-	)
-	(junction
-		(at 153.67 92.71)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "11057dd0-ee85-420d-befd-0518987059e6")
-	)
-	(junction
-		(at 160.02 76.2)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "1fcb1db3-0d67-471e-b4ab-52d09061124e")
-	)
-	(junction
-		(at 166.37 76.2)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "340e9d20-63bc-461e-88c9-df14f360a015")
-	)
-	(junction
-		(at 205.74 87.63)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "47fe91f6-8abf-4359-847e-40b777ebfc37")
-	)
-	(junction
-		(at 205.74 101.6)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "4a487979-f3e6-4a87-a423-ed13dc3b243a")
-	)
-	(junction
-		(at 205.74 73.66)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "5c1ecdc1-1907-4f59-8f18-70fc63b37089")
-	)
-	(junction
-		(at 203.2 110.49)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "7eaadf30-e199-41f2-8070-e99eedf9e634")
-	)
-	(junction
-		(at 205.74 71.12)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "93a66b65-474a-407f-98c0-c1853a734e08")
-	)
-	(junction
-		(at 160.02 87.63)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "97ded710-b9ed-4a8e-8615-b3e71151d3fa")
-	)
-	(junction
-		(at 203.2 96.52)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9fa0ae5a-d72b-47ff-9b46-aa06e3496343")
-	)
-	(junction
 		(at 80.01 86.36)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1073,17 +816,7 @@
 	)
 	(wire
 		(pts
-			(xy 203.2 110.49) (xy 203.2 124.46)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "002b82ad-a65c-466e-bec1-a34a1e768a04")
-	)
-	(wire
-		(pts
-			(xy 201.93 71.12) (xy 205.74 71.12)
+			(xy 201.93 71.12) (xy 208.28 71.12)
 		)
 		(stroke
 			(width 0)
@@ -1121,16 +854,6 @@
 		)
 		(uuid "1152ac21-57fd-4c91-987b-32c403f270f3")
 	)
-	(wire
-		(pts
-			(xy 196.85 85.09) (xy 208.28 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1437df6d-be11-4d23-836c-b1945736587b")
-	)
 	(polyline
 		(pts
 			(xy 118.11 43.18) (xy 118.11 144.78)
@@ -1140,76 +863,6 @@
 			(type dash_dot)
 		)
 		(uuid "1551a09f-d88f-482a-8169-9d30202351b5")
-	)
-	(wire
-		(pts
-			(xy 196.85 113.03) (xy 208.28 113.03)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "158c3bb0-3d5f-4d30-823b-7d8bec2b751e")
-	)
-	(wire
-		(pts
-			(xy 205.74 73.66) (xy 205.74 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "208bef9f-ca7d-4e3e-8f6f-1c7d64c22f31")
-	)
-	(wire
-		(pts
-			(xy 205.74 115.57) (xy 208.28 115.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2252c9c0-0cca-4383-ace1-6cdf4d67d692")
-	)
-	(wire
-		(pts
-			(xy 153.67 92.71) (xy 153.67 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "26cd527e-b1bc-4c86-a3b9-f23367338ac8")
-	)
-	(wire
-		(pts
-			(xy 200.66 90.17) (xy 200.66 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "348db909-c9c5-46d0-aa54-b3bad7019eda")
-	)
-	(wire
-		(pts
-			(xy 205.74 101.6) (xy 208.28 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "37d0c723-cfae-4661-9d7b-c798a704f069")
-	)
-	(wire
-		(pts
-			(xy 205.74 62.23) (xy 166.37 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3af6e1af-a13d-4f94-aa51-520026a7787b")
 	)
 	(wire
 		(pts
@@ -1233,26 +886,6 @@
 	)
 	(wire
 		(pts
-			(xy 148.59 90.17) (xy 166.37 90.17)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "420ba64b-fd7c-4825-9a4c-d2712537d11d")
-	)
-	(wire
-		(pts
-			(xy 160.02 83.82) (xy 160.02 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "472054ef-56d7-427c-b1fe-8988aad17cf3")
-	)
-	(wire
-		(pts
 			(xy 78.74 88.9) (xy 80.01 88.9)
 		)
 		(stroke
@@ -1260,26 +893,6 @@
 			(type default)
 		)
 		(uuid "4773c430-9bc1-4526-b5a8-23917efdadb2")
-	)
-	(wire
-		(pts
-			(xy 200.66 99.06) (xy 208.28 99.06)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "47c2a798-3f15-4cf9-8f06-bece2fcd2974")
-	)
-	(wire
-		(pts
-			(xy 203.2 82.55) (xy 203.2 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4806dccb-ad91-4621-9dcd-218c85b548a9")
 	)
 	(wire
 		(pts
@@ -1323,106 +936,6 @@
 	)
 	(wire
 		(pts
-			(xy 203.2 96.52) (xy 203.2 110.49)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "56ea8ff2-dfff-4b6b-b5f6-8d4e4b45ae5b")
-	)
-	(wire
-		(pts
-			(xy 208.28 82.55) (xy 203.2 82.55)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5711e5c1-b0fe-44e5-a814-74258a942414")
-	)
-	(wire
-		(pts
-			(xy 166.37 90.17) (xy 166.37 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6c69a1fd-9c2e-4c62-8b60-07050413ecbc")
-	)
-	(wire
-		(pts
-			(xy 205.74 71.12) (xy 208.28 71.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "76944e7f-5230-465d-b71d-ac506f6f7a82")
-	)
-	(wire
-		(pts
-			(xy 203.2 110.49) (xy 208.28 110.49)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "76c76a97-4aaf-4254-b83b-54f305bdc5b4")
-	)
-	(wire
-		(pts
-			(xy 205.74 71.12) (xy 205.74 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "773da73f-eba8-491a-be3a-3ec5f4466a69")
-	)
-	(wire
-		(pts
-			(xy 166.37 62.23) (xy 166.37 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7c6ef24c-1f38-450c-86a4-a34c999e54f2")
-	)
-	(wire
-		(pts
-			(xy 160.02 87.63) (xy 196.85 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7ca2d481-4444-4c6a-91e0-3db10d2616c9")
-	)
-	(wire
-		(pts
-			(xy 196.85 87.63) (xy 196.85 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7ddf0a8f-98a1-4d7d-8e6e-50f0710239fe")
-	)
-	(wire
-		(pts
-			(xy 148.59 87.63) (xy 160.02 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7e6e1175-09ea-48f6-a4cf-04503efa3b0a")
-	)
-	(wire
-		(pts
 			(xy 80.01 96.52) (xy 80.01 101.6)
 		)
 		(stroke
@@ -1443,43 +956,13 @@
 	)
 	(wire
 		(pts
-			(xy 153.67 92.71) (xy 196.85 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "89269ad2-3d2e-4f2d-be07-294c87144c25")
-	)
-	(wire
-		(pts
-			(xy 196.85 92.71) (xy 196.85 113.03)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "921600ee-7f38-4df9-bf28-654cf2045050")
-	)
-	(wire
-		(pts
-			(xy 201.93 73.66) (xy 205.74 73.66)
+			(xy 201.93 73.66) (xy 208.28 73.66)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "923e679e-46f9-443e-84c0-460d3bab5dc2")
-	)
-	(wire
-		(pts
-			(xy 205.74 73.66) (xy 208.28 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9de06fd9-7b14-4301-86d3-3992ff46871e")
 	)
 	(wire
 		(pts
@@ -1493,16 +976,6 @@
 	)
 	(wire
 		(pts
-			(xy 203.2 96.52) (xy 208.28 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aee6a4f3-baa5-4461-abaa-7e2f31495de4")
-	)
-	(wire
-		(pts
 			(xy 78.74 132.08) (xy 78.74 124.46)
 		)
 		(stroke
@@ -1510,36 +983,6 @@
 			(type default)
 		)
 		(uuid "bf68e317-de11-4de2-a539-38a706e0c984")
-	)
-	(wire
-		(pts
-			(xy 205.74 101.6) (xy 205.74 115.57)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d061eb2a-ee4f-4f00-80c2-714dab5a0444")
-	)
-	(wire
-		(pts
-			(xy 166.37 90.17) (xy 200.66 90.17)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d2668715-c2ac-4790-990e-14919ad59278")
-	)
-	(wire
-		(pts
-			(xy 160.02 76.2) (xy 166.37 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d3acdd7d-8fc4-4364-893c-80464c61e70a")
 	)
 	(wire
 		(pts
@@ -1573,16 +1016,6 @@
 	)
 	(wire
 		(pts
-			(xy 205.74 87.63) (xy 208.28 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e4af89e1-b716-404c-9e03-abbbc50c0369")
-	)
-	(wire
-		(pts
 			(xy 182.88 68.58) (xy 208.28 68.58)
 		)
 		(stroke
@@ -1593,16 +1026,6 @@
 	)
 	(wire
 		(pts
-			(xy 153.67 76.2) (xy 160.02 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e5b7aa28-33e4-4b03-8568-92ebf7df5752")
-	)
-	(wire
-		(pts
 			(xy 87.63 60.96) (xy 92.71 60.96)
 		)
 		(stroke
@@ -1610,16 +1033,6 @@
 			(type default)
 		)
 		(uuid "e8155606-32a1-436a-b31c-708a3e0c62b9")
-	)
-	(wire
-		(pts
-			(xy 205.74 87.63) (xy 205.74 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ee21fdbd-4f94-4f5b-b909-bb957f6eb47b")
 	)
 	(wire
 		(pts
@@ -1641,16 +1054,6 @@
 		)
 		(uuid "f66831ae-4c1b-4d7c-b53b-f28c96a8a33b")
 	)
-	(wire
-		(pts
-			(xy 148.59 92.71) (xy 153.67 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fa68c393-4c25-4572-93fb-52a4dad29bec")
-	)
 	(global_label "ES_2"
 		(shape input)
 		(at 92.71 132.08 0)
@@ -1669,50 +1072,6 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "RELAY_OUT_1"
-		(shape input)
-		(at 148.59 87.63 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "2dc44442-c1ec-4e6b-b3dc-a1307b41f866")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 133.2072 87.63 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "RELAY_OUT_3"
-		(shape input)
-		(at 148.59 92.71 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "374c3c64-b048-4863-a3f2-3f673c63ff2a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 133.2072 92.71 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
 				(hide yes)
 			)
 		)
@@ -1805,28 +1164,6 @@
 			)
 		)
 	)
-	(global_label "RELAY_OUT_2"
-		(shape input)
-		(at 148.59 90.17 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "ea171f99-fb80-4bf8-912f-85821ce09dcc")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 133.2072 90.17 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "-RS485_A"
 		(shape bidirectional)
 		(at 92.71 55.88 0)
@@ -1846,120 +1183,6 @@
 				)
 				(justify left)
 				(hide yes)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:Varistor")
-		(at 153.67 80.01 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "026535e2-5828-4f55-98f6-bd99b652a1d3")
-		(property "Reference" "RV2"
-			(at 148.59 76.2 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "471K"
-			(at 148.59 73.66 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "adarwoo:MOV471"
-			(at 155.448 80.01 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Voltage dependent resistor"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Name" "kicad_builtin_varistor"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Device" "SUBCKT"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Pins" "1=A 2=B"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Params" "threshold=1k"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Library" "${KICAD7_SYMBOL_DIR}/Simulation_SPICE.sp"
-			(at 153.67 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "c6e37a51-9bc9-4dbc-a3a3-8a7862f04cab")
-		)
-		(pin "1"
-			(uuid "dc243b26-c68e-4670-aca4-750e5a52c1e1")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "RV2")
-					(unit 1)
-				)
 			)
 		)
 	)
@@ -2025,79 +1248,6 @@
 			(project "modbus_relay"
 				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
 					(reference "#PWR042")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Screw_Terminal_01x03")
-		(at 213.36 99.06 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "0b8934ae-13fe-4a96-891f-fefbf3aed7ba")
-		(property "Reference" "J7"
-			(at 215.9 100.3301 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Screw_Terminal_01x03"
-			(at 215.9 97.7901 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_Phoenix_MSTB:PhoenixContact_MSTBVA_2,5_3-G-5,08_1x03_P5.08mm_Vertical"
-			(at 213.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 213.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 213.36 99.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "3ba5fe09-1c81-4330-8544-6499360fd14a")
-		)
-		(pin "2"
-			(uuid "a1550b68-8044-463a-af82-2f259effb0f2")
-		)
-		(pin "3"
-			(uuid "2ad8ce3f-695d-478f-bf3b-0a3fcf9ca0d7")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "J7")
 					(unit 1)
 				)
 			)
@@ -2240,79 +1390,6 @@
 			(project ""
 				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
 					(reference "J5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Screw_Terminal_01x03")
-		(at 213.36 113.03 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6069155e-5dfe-42ef-aa2d-d4f643845f43")
-		(property "Reference" "J8"
-			(at 215.9 114.3001 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Screw_Terminal_01x03"
-			(at 215.9 111.7601 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_Phoenix_MSTB:PhoenixContact_MSTBVA_2,5_3-G-5,08_1x03_P5.08mm_Vertical"
-			(at 213.36 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 213.36 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 213.36 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f91449cf-5d39-429b-9d37-219b014b4fb4")
-		)
-		(pin "2"
-			(uuid "73902bcb-396d-4e54-bcf2-5b84bce87360")
-		)
-		(pin "3"
-			(uuid "5a1e3d49-decd-4e5e-b58d-833e9329b0eb")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "J8")
 					(unit 1)
 				)
 			)
@@ -2648,375 +1725,6 @@
 			(project "modbus_relay"
 				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
 					(reference "#PWR041")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:Earth")
-		(at 203.2 124.46 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ab234b47-3ae6-41b9-8847-35d079669cd9")
-		(property "Reference" "#PWR044"
-			(at 203.2 130.81 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "Earth"
-			(at 203.2 129.54 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 203.2 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 203.2 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"Earth\""
-			(at 203.2 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "0c8d7448-501f-4153-9e2c-adbc3e469efd")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "#PWR044")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Screw_Terminal_01x03")
-		(at 213.36 85.09 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "bfd2d7cc-1d12-4e18-9f6d-47bc6fbca920")
-		(property "Reference" "J6"
-			(at 215.9 86.3601 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Screw_Terminal_01x03"
-			(at 215.9 83.8201 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Connector_Phoenix_MSTB:PhoenixContact_MSTBVA_2,5_3-G-5,08_1x03_P5.08mm_Vertical"
-			(at 213.36 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 213.36 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Generic screw terminal, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 213.36 85.09 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f0525fa9-f598-4132-aca9-c51cfdddf1a2")
-		)
-		(pin "2"
-			(uuid "a7d0503a-947f-49d5-abff-6b7d906fd496")
-		)
-		(pin "3"
-			(uuid "a4a63730-8a6c-4d76-abbb-c84f2a326c16")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "J6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:Varistor")
-		(at 166.37 80.01 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "cc299672-f9d0-494a-983a-82591d4af151")
-		(property "Reference" "RV4"
-			(at 165.1 73.66 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "471K"
-			(at 170.18 81.0865 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "adarwoo:MOV471"
-			(at 168.148 80.01 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Voltage dependent resistor"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Name" "kicad_builtin_varistor"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Device" "SUBCKT"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Pins" "1=A 2=B"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Params" "threshold=1k"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Library" "${KICAD7_SYMBOL_DIR}/Simulation_SPICE.sp"
-			(at 166.37 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "6279e7d2-3af9-4ce8-9524-1e0bc40bdbbb")
-		)
-		(pin "1"
-			(uuid "675c5a30-3c87-4acc-9501-4c8f1ca09238")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "RV4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:Varistor")
-		(at 160.02 80.01 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "e0d40742-4c73-4754-8a63-6d692a3279cc")
-		(property "Reference" "RV3"
-			(at 158.75 73.66 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "471K"
-			(at 163.83 81.0865 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-		(property "Footprint" "adarwoo:MOV471"
-			(at 161.798 80.01 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Voltage dependent resistor"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Name" "kicad_builtin_varistor"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Device" "SUBCKT"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Pins" "1=A 2=B"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Params" "threshold=1k"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Sim.Library" "${KICAD7_SYMBOL_DIR}/Simulation_SPICE.sp"
-			(at 160.02 80.01 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "eb682f65-377f-447a-8e71-f2c2e111e971")
-		)
-		(pin "1"
-			(uuid "f638dbd3-3661-4d51-81ca-6cf510989aa4")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/ad200816-9b1d-4fe9-9e59-b60670f767d0"
-					(reference "RV3")
 					(unit 1)
 				)
 			)

@@ -2191,7 +2191,7 @@
 	)
 	(wire
 		(pts
-			(xy 69.85 130.81) (xy 69.85 128.27)
+			(xy 69.85 116.84) (xy 69.85 130.81)
 		)
 		(stroke
 			(width 0)
@@ -2671,7 +2671,7 @@
 	)
 	(wire
 		(pts
-			(xy 69.85 99.06) (xy 69.85 109.22)
+			(xy 69.85 87.63) (xy 69.85 109.22)
 		)
 		(stroke
 			(width 0)
@@ -2701,16 +2701,6 @@
 	)
 	(wire
 		(pts
-			(xy 69.85 87.63) (xy 69.85 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b8664b13-dfe9-4dd8-881e-08d7bd203711")
-	)
-	(wire
-		(pts
 			(xy 119.38 85.09) (xy 125.73 85.09)
 		)
 		(stroke
@@ -2718,16 +2708,6 @@
 			(type default)
 		)
 		(uuid "bac96ba7-c0bf-450e-80a2-16e7df9c7801")
-	)
-	(wire
-		(pts
-			(xy 69.85 116.84) (xy 69.85 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c1d8d801-bea9-4c88-87f6-b0c38a42e975")
 	)
 	(wire
 		(pts
@@ -3418,7 +3398,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 186.182 86.36 90)
 			(effects
 				(font
@@ -3555,7 +3535,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 196.85 117.348 90)
 			(effects
 				(font
@@ -3623,7 +3603,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
+		(property "Footprint" "Inductor_SMD:L_0805_2012Metric"
 			(at 81.28 126.238 90)
 			(effects
 				(font
@@ -3691,7 +3671,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
+		(property "Footprint" "Inductor_SMD:L_0805_2012Metric"
 			(at 81.28 110.998 90)
 			(effects
 				(font
@@ -4099,7 +4079,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
+		(property "Footprint" "Inductor_SMD:L_0805_2012Metric"
 			(at 81.28 118.618 90)
 			(effects
 				(font
@@ -4270,76 +4250,6 @@
 			(project ""
 				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/c6174730-876b-4682-a5bd-275343e26377"
 					(reference "C14")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 69.85 124.46 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a646eff2-118b-4a9e-936a-b0e95c3f6363")
-		(property "Reference" "R17"
-			(at 72.39 123.1899 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "20K"
-			(at 72.39 125.7299 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
-			(at 68.072 124.46 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 69.85 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 69.85 124.46 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "6750421d-8975-4a65-9e8b-d4607d2a6515")
-		)
-		(pin "2"
-			(uuid "3c49164a-d5e2-4168-b157-097837d6a75e")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/c6174730-876b-4682-a5bd-275343e26377"
-					(reference "R17")
 					(unit 1)
 				)
 			)
@@ -4616,76 +4526,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 69.85 95.25 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c75ce9b4-2471-4842-a1aa-09dd7ac270a7")
-		(property "Reference" "R36"
-			(at 72.39 93.9799 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "20K"
-			(at 72.39 96.5199 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
-			(at 68.072 95.25 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 69.85 95.25 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 69.85 95.25 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "dd8412e9-a640-467d-814e-38991bc82dd0")
-		)
-		(pin "2"
-			(uuid "3b51f563-4c2a-466e-b157-4a3358010488")
-		)
-		(instances
-			(project "modbus_relay"
-				(path "/aeb2e146-8395-44c2-9b78-4c462bf5527a/c6174730-876b-4682-a5bd-275343e26377"
-					(reference "R36")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 190.5 124.46 0)
 		(unit 1)
@@ -4844,7 +4684,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 189.5348 116.84 0)
 			(effects
 				(font
@@ -4911,7 +4751,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 196.85 112.268 90)
 			(effects
 				(font
@@ -5047,7 +4887,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 68.072 113.03 90)
 			(effects
 				(font

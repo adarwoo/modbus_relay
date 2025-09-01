@@ -1886,12 +1886,6 @@
 		(uuid "1008c7dc-7d4b-47c8-b284-8af723896c2d")
 	)
 	(junction
-		(at 107.95 92.71)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "12b69c4d-95f8-4892-9d60-db249bf4fde5")
-	)
-	(junction
 		(at 95.25 111.76)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1902,6 +1896,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1a88ebd3-bffb-413b-a821-91623235d298")
+	)
+	(junction
+		(at 107.95 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "28380bdc-b02d-4fb0-bc02-4a47c2dcf067")
 	)
 	(junction
 		(at 201.93 81.28)
@@ -2063,6 +2063,16 @@
 	)
 	(wire
 		(pts
+			(xy 107.95 88.9) (xy 107.95 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0e3babf7-f052-43be-bd30-898981f46f3f")
+	)
+	(wire
+		(pts
 			(xy 125.73 91.44) (xy 121.92 91.44)
 		)
 		(stroke
@@ -2080,16 +2090,6 @@
 			(type default)
 		)
 		(uuid "131a84c5-3810-4898-94e1-c2d0eb4ad12d")
-	)
-	(wire
-		(pts
-			(xy 107.95 88.9) (xy 107.95 92.71)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "139a0c10-33ba-4918-8ed9-0555ff5e5b3d")
 	)
 	(wire
 		(pts
@@ -2313,7 +2313,7 @@
 	)
 	(wire
 		(pts
-			(xy 107.95 102.87) (xy 107.95 111.76)
+			(xy 107.95 105.41) (xy 107.95 111.76)
 		)
 		(stroke
 			(width 0)
@@ -2390,6 +2390,16 @@
 			(type default)
 		)
 		(uuid "9661de8a-69ad-4a3b-8254-785135a10ecd")
+	)
+	(wire
+		(pts
+			(xy 107.95 93.98) (xy 107.95 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "98638b6f-2909-4e4e-94fa-637fc5991821")
 	)
 	(wire
 		(pts
@@ -2483,7 +2493,7 @@
 	)
 	(wire
 		(pts
-			(xy 115.57 81.28) (xy 115.57 85.09)
+			(xy 115.57 81.28) (xy 115.57 83.82)
 		)
 		(stroke
 			(width 0)
@@ -2523,23 +2533,13 @@
 	)
 	(wire
 		(pts
-			(xy 107.95 92.71) (xy 115.57 92.71)
+			(xy 107.95 93.98) (xy 115.57 93.98)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "cfb5632f-3a63-4db3-881f-5ea44161743f")
-	)
-	(wire
-		(pts
-			(xy 107.95 92.71) (xy 107.95 95.25)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d4b96fe1-6898-4fad-aa4f-f2491b805cfa")
 	)
 	(wire
 		(pts
@@ -2610,6 +2610,16 @@
 			(type default)
 		)
 		(uuid "e672fa49-a578-45d0-a066-b00441beb1cb")
+	)
+	(wire
+		(pts
+			(xy 115.57 93.98) (xy 115.57 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9973cc3-cdf0-4f49-9b48-2d03cd7b31fd")
 	)
 	(wire
 		(pts
@@ -2884,7 +2894,7 @@
 				)
 			)
 		)
-		(property "Value" "15uH"
+		(property "Value" "10uH"
 			(at 163.83 78.74 90)
 			(effects
 				(font
@@ -2892,7 +2902,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Inductor_SMD:L_Wuerth_HCM-7070"
+		(property "Footprint" "Inductor_SMD:L_Bourns_SRP6060FA"
 			(at 163.83 81.28 0)
 			(effects
 				(font
@@ -2960,7 +2970,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 174.752 101.6 90)
 			(effects
 				(font
@@ -3095,7 +3105,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
 			(at 208.5848 95.25 0)
 			(effects
 				(font
@@ -3163,7 +3173,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
 			(at 174.752 86.36 90)
 			(effects
 				(font
@@ -3278,16 +3288,15 @@
 	)
 	(symbol
 		(lib_id "Diode:BZT52Bxx")
-		(at 115.57 88.9 270)
+		(at 115.57 87.63 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "5d7d2e95-d5d7-4a8b-b45e-02dcf05829f1")
 		(property "Reference" "D20"
-			(at 118.11 87.6299 90)
+			(at 118.11 86.3599 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3295,8 +3304,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "BZT52B51"
-			(at 118.11 90.1699 90)
+		(property "Value" "BZT52B12"
+			(at 118.11 88.9 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3305,7 +3314,7 @@
 			)
 		)
 		(property "Footprint" "Diode_SMD:D_SOD-123F"
-			(at 111.125 88.9 0)
+			(at 111.125 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3314,7 +3323,7 @@
 			)
 		)
 		(property "Datasheet" "https://diotec.com/tl_files/diotec/files/pdf/datasheets/bzt52b2v4.pdf"
-			(at 115.57 88.9 0)
+			(at 115.57 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3323,7 +3332,7 @@
 			)
 		)
 		(property "Description" "500mW Zener Diode, SOD-123F"
-			(at 115.57 88.9 0)
+			(at 115.57 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3922,7 +3931,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 107.95 99.06 0)
+		(at 107.95 101.6 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3931,23 +3940,23 @@
 		(dnp no)
 		(uuid "d36a895e-fd4e-4432-b636-38ae254f8ce6")
 		(property "Reference" "R45"
-			(at 107.95 98.806 90)
+			(at 107.95 101.6 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "22"
-			(at 110.236 98.806 90)
+		(property "Value" "10K"
+			(at 110.236 101.346 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
-			(at 106.172 99.06 90)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+			(at 106.172 101.6 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3956,7 +3965,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 107.95 99.06 0)
+			(at 107.95 101.6 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3965,7 +3974,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 107.95 99.06 0)
+			(at 107.95 101.6 0)
 			(effects
 				(font
 					(size 1.27 1.27)
