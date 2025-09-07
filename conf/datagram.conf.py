@@ -8,10 +8,7 @@ Modbus({
     "on_received": "on_payload_received",
     "slave": True,
     "buffer_size": 80, # Max reg read = 0x20 (32 x 2) + Frame (ID+CODE+NUM+CRC)
-
-    "defines": {
-        "relay0_config_address": RELAY0_ADDRESS
-    },
+    "slave_id": 44, # For code 17
 
     "identification": {
         VENDOR_NAME:            "ARex",

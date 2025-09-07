@@ -362,7 +362,7 @@ namespace net {
       ULOG_INFO("Initialising Modbus Network");
 
       // Set the modbus install ID
-      dg::set_device_id(
+      dg::set_device_address(
          state::is_in_recovery_mode()
             ? RECOVERY_DEVICE_ID
             : config::get_config().address
