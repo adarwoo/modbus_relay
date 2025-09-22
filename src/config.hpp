@@ -51,7 +51,7 @@ namespace config {
       asx::uart::parity parity;
 
       /// @brief Infeed config
-      infeed::CfgType infeed_type; // 0=DC, 1=50 or 2=60Hz
+      infeed::CfgType infeed_type; // 1=DC, 2=AC
       uint16_t infeed_min_volt_threshold; // Infeed Min voltage in 1/10 volts
       uint16_t infeed_max_volt_threshold; // Infeed Max voltage in 1/10 volts
 

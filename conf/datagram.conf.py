@@ -96,7 +96,7 @@ Modbus({
         # -----------------------------------------------------------------------------------------
 
         # Generic read of holding registers
-        (READ_HOLDING_REGISTERS, u16(0, 0x1A), u16(1,0x1B),       "on_read_holdings"),
+        (READ_HOLDING_REGISTERS, u16(0, 0x1A), u16(1, 0x1B),      "on_read_holdings"),
 
         # Communication settings
         (WRITE_MULTIPLE_REGISTERS,
