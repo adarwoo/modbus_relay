@@ -151,7 +151,10 @@ namespace relay {
 
          void apply_projected_state() {
             timer = timer::null;
-            set(projected_state);
+
+            if (*relay_pin != projected_state) { // only change if needed
+               set(projected_state);             // may start ON or OFF filter
+            }
          }
 
          void force_open() {
@@ -323,3 +326,4 @@ namespace relay {
       }
    }
 }
+
