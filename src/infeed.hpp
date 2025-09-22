@@ -13,15 +13,16 @@
 namespace infeed {
    /// @brief < Type of infeed to monitor
    enum class CfgType : uint8_t {
-      dc = 1,
-      ac = 2,
+      dc = 0,
+      ac_50hz = 1,
+      ac_60hz = 2
    };
 
    /// @brief < Type of infeed to report
    enum class InputType : uint8_t {
       none = 0, ///< No voltage detected
-      dc = 1,
-      ac = 2
+      dc = 0,
+      ac = 1
    };
 
    ///< Status of the infeed monitoring system

@@ -8,8 +8,6 @@
 #include "net.hpp"
 #include "relay.hpp"
 
-#include "conf_version.hpp"
-
 
 using namespace asx;
 
@@ -21,7 +19,7 @@ namespace config {
       .baud                      = baud_t::_9600,
       .stopbits                  = uart::stop::_1,
       .parity                    = uart::parity::none,
-      .infeed_type               = infeed::CfgType::ac,
+      .infeed_type               = infeed::CfgType::ac_50hz,
       .infeed_min_volt_threshold = 10_volts,
       .infeed_max_volt_threshold = 250_volts,
       .estop_on_undervolt        = false,
@@ -43,7 +41,7 @@ namespace config {
       return check < baudrates .size();
    }
 
-   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, EEPROM_CONFIG_VERSION>(
+   static auto eeprom_config = asx::eeprom::Storage<EepromConfig, 2>(
       default_config);
 
    /*
