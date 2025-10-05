@@ -13,11 +13,12 @@
 #include "net.hpp"
 #include "estop.hpp"
 
+#include <chrono>
 
 int main()
 {
-   ULOG_MILE("Application main starting");
-   
+   ULOG_MILE("Modbus relay application starting!");
+
    // Initialise the LEDs
    led::init();
 

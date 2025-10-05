@@ -44,3 +44,5 @@ conf/datagram.hpp
 
 # AVR studio intermediate files
 **/*componentinfo.xml
+cad/kicad/modbus_relay/_autosave-modbus_relay.kicad_sch
+cad/kicad/modbus_relay/_autosave-modbus_relay.kicad_pcb

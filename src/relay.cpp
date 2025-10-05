@@ -39,7 +39,7 @@ namespace relay {
       // -------------------------------------------------------------------------
 
       // The handle to the timer used for the background check
-      auto on_check_health = reactor::Handle{};
+      auto on_check_health = reactor::null;
 
       // Lookup for the duration
       using namespace std::chrono;
@@ -246,7 +246,7 @@ namespace relay {
    void init() {
       using namespace std::chrono;
 
-      ULOG_INFO("Initialising Relays");
+      ULOG_MILE("Initialising Relays");
 
       // Start the background check timer
       on_check_health = asx::reactor::bind(

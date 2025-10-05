@@ -21,16 +21,15 @@
 /* Alert pin                                                            */
 /* This is connected to the LED_FAULT and shared for other purposes     */
 /************************************************************************/
-#define ES_COMMAND                  IOPORT(B, 0)
-#define ALERT_OUTPUT_PIN            IOPORT(B, 1)
+#define ES_COMMAND                  IOPORT(B, 1)
+#define ALERT_OUTPUT_PIN            IOPORT(B, 0)
 
 /************************************************************************/
 /* Modbus LEDs                                                          */
 /************************************************************************/
+
 // The Rx LED is driven by the TimerB1
-#define LED_MODBUS_RX               IOPORT(A, 3)
-// Tx LED is driven by the UART XDIR Pin through the CCL LUT1
-#define LED_MODBUS_TX               IOPORT(A, 7)
+#define LED_MODBUS                  IOPORT(A, 3)
 
 /************************************************************************/
 /* Relay I/Os                                                           */

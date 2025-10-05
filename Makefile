@@ -1,7 +1,7 @@
 TOP=.
 
 # Select the architecture
-ARCH=attiny3224
+ARCH=attiny3227
 
 # Name of the binary to produce
 BIN := modbus_relay
@@ -9,10 +9,11 @@ BIN := modbus_relay
 # -I throughout (C and C++)
 INCLUDE_DIRS = conf src
 
-ASX_USE = ulog modbus_rtu eeprom
+ASX_USE = ulog timer modbus_rtu eeprom
 
 # Project own files
 SRCS = \
+   src/main.cpp \
    src/counters.cpp \
    src/config.cpp \
    src/leds.cpp \
@@ -20,7 +21,7 @@ SRCS = \
    src/relay.cpp \
    src/main.cpp \
    src/estop.cpp \
-	src/infeed.cpp \
+ 	src/infeed.cpp \
 
 ifdef SIM
 SRCS += \

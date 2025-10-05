@@ -46,11 +46,10 @@ namespace {
    namespace id {
       constexpr auto estop  = 0;
       constexpr auto infeed = 1;
-      constexpr auto tx     = 2;
-      constexpr auto rx     = 3;
-      constexpr auto led_a  = 4;
-      constexpr auto led_b  = 5;
-      constexpr auto led_c  = 6;
+      constexpr auto modbus = 2;
+      constexpr auto led_a  = 3;
+      constexpr auto led_b  = 4;
+      constexpr auto led_c  = 5;
    };
 
    // ----------------------------------------------------------------------------
@@ -58,11 +57,10 @@ namespace {
    // ----------------------------------------------------------------------------
 
    /// Store the normal state of an LED
-   std::array<std::pair<Pin, LedState>, 7> leds = {{
+   std::array<std::pair<Pin, LedState>, 6> leds = {{
       {ALERT_OUTPUT_PIN, LedState::off},
       {INFEED_LED,       LedState::off},
-      {LED_MODBUS_TX,    LedState::managed},
-      {LED_MODBUS_RX,    LedState::managed},
+      {LED_MODBUS,       LedState::managed},
       {LED_A,            LedState::off},
       {LED_B,            LedState::off},
       {LED_C,            LedState::off},
@@ -80,8 +78,7 @@ namespace {
     * The Tx LED is driven directly by the XDIR signal.
     * The clock input of the timers is wired from the PIT timers through an event channel.
     */
-   void setup_modbus_rx_led() {
-      #pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+   void setup_modbus_led() {
       using namespace std::chrono;
 
       // Pulse duration
@@ -94,29 +91,10 @@ namespace {
 
       // Event channels configuration
       EVSYS.CHANNEL0 = EVSYS_CHANNEL0_PORTA_PIN1_gc;    // Rx/Tx activity
-      EVSYS.CHANNEL1 = EVSYS_CHANNEL1_PORTA_PIN4_gc;    // XDIR direction selection
-      EVSYS.CHANNEL2 = EVSYS_CHANNEL2_CCL_LUT0_gc;      // Output of the LUT0 (RTX & ~XDIR)
       EVSYS.CHANNEL3 = EVSYS_CHANNEL3_RTC_PIT_DIV64_gc; // Output of the periodic timer
 
-      EVSYS.USERCCLLUT0A  = EVSYS_USER_CHANNEL0_gc;     // LUT0-EVENTA  = Ch0 [Rx/Tx activity]
-      EVSYS.USERCCLLUT0B  = EVSYS_USER_CHANNEL1_gc;     // LUT0-EVENTB  = Ch1 [XDIR]
-
-      EVSYS.USERCCLLUT1A  = EVSYS_USER_CHANNEL1_gc;     // LUT1-EVENTA  = Ch1 [XDIR]
-
-      EVSYS.USERTCB1CAPT  = EVSYS_USER_CHANNEL2_gc;     // TCB1 Capture = Ch2 [LUT2-OUT=RxTx & ~XDIR]
+      EVSYS.USERTCB1CAPT  = EVSYS_USER_CHANNEL0_gc;     // TCB1 Capture = Ch0 [RxTx]
       EVSYS.USERTCB1COUNT = EVSYS_USER_CHANNEL3_gc;     // TCB1 count uses channel 3
-
-      // LUT0 configurations : IN0[A]=Ch0/RTX | IN1[B]=Ch1/XDIR | IN2[-] => Channel 2
-      CCL.LUT0CTRLB = CCL_INSEL0_EVENTA_gc | CCL_INSEL1_EVENTB_gc;
-      CCL.LUT0CTRLC = 0;
-      CCL.TRUTH0    = 1; // LUT0_OUT = (~A & ~B) => CH0 & ~CH1 => ~RTX & ~DIR
-      CCL.LUT0CTRLA = CCL_ENABLE_bm;
-
-      // LUT1 configurations : IN0[A]=Ch2/LUT0-OUT | IN1[B]=Ch3/PIT | IN2[-] => Channel 2
-      CCL.LUT1CTRLB = CCL_INSEL0_EVENTA_gc;
-      CCL.LUT1CTRLC = 0;
-      CCL.TRUTH1    = 0b10; // LUT1_OUT = XDIR
-      CCL.LUT1CTRLA = CCL_ENABLE_bm | CCL_OUTEN_bm; // Enable the output
 
       // TCB1 -> Drives the Tx pin directly
       TCB1.CCMP = pulse_duration.count();
@@ -124,9 +102,6 @@ namespace {
       TCB1.EVCTRL = TCB_CAPTEI_bm | TCB_FILTER_bm; // Turn on event detection
       TCB1.CTRLB = TCB_ASYNC_bm | TCB_CCMPEN_bm | TCB_CNTMODE_SINGLE_gc; // Enable the output
       TCB1.CTRLA = TCB_CLKSEL_EVENT_gc | TCB_ENABLE_bm;  // Use the event channel as a clock source
-
-      // Activate the CCL for both
-      CCL.CTRLA = CCL_ENABLE_bm;
    }
 
 
@@ -154,15 +129,13 @@ namespace {
          TCB1.CTRLB &= ~TCB_CCMPEN_bm; // Disable the timer output
 
          // Fast flash Rx and Tx LEDs
-         leds[id::tx].second = LedState::fast;
-         leds[id::rx].second = LedState::fast;
+         leds[id::modbus].second = LedState::fast;
       } else {
          // Go full automatic mode
          CCL.CTRLA = CCL_ENABLE_bm;
          TCB1.CTRLB |= TCB_CCMPEN_bm;
 
-         leds[id::tx].second = LedState::managed;
-         leds[id::rx].second = LedState::managed;
+         leds[id::modbus].second = LedState::managed;
       }
 
       // EStop led
@@ -257,10 +230,7 @@ namespace led {
    void init() {
       using namespace asx::ioport;
 
-      ULOG_INFO("Initialising LEDs");
-
-      // Set the reactor
-      detail::react_on_refresh = asx::reactor::bind(on_refresh_leds_status);
+      ULOG_MILE("Initialising LEDs");
 
       // Initialise the relay module LEDs
       LED_A.init(dir_t::out, value_t::high);
@@ -271,21 +241,24 @@ namespace led {
       INFEED_LED.init(dir_t::out, value_t::high);
 
       // Force the Rx LED to high (driven by the event system)
-      LED_MODBUS_RX.init(dir_t::out, value_t::high);
-      // Force the XDIR pin to high to turn on the Tx LED
-      LED_MODBUS_TX.init(dir_t::out, value_t::high);
+      LED_MODBUS.init(dir_t::out, value_t::high);
 
-      // Set the alert pin to high
+      // Set the alert pin to high (already high given the external pull-up on the driver)
       ALERT_OUTPUT_PIN.init(dir_t::out, value_t::high);
 
       // Arm a timer to transition after 2 seconds
       asx::reactor::bind([] {
-         LED_MODBUS_RX.clear();
-         LED_MODBUS_TX.clear();
+         LED_MODBUS.clear();
          ALERT_OUTPUT_PIN.clear();
 
+         // Set the reactor for refreshing (only now to maintain the 2s check)
+         detail::react_on_refresh = asx::reactor::bind(on_refresh_leds_status);
+
+         // Update right away any pending changes
+         detail::react_on_refresh();
+
          // Turn on the CCL and TCB1 for the Rx/Tx LEDs
-         setup_modbus_rx_led();
+         setup_modbus_led();
 
          // Start the blink tasklet called every 100ms
          asx::reactor::bind(blinker).repeat(100ms);

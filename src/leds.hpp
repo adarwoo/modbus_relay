@@ -10,7 +10,7 @@
 namespace led {
    namespace detail {
       ///< Reactor to refresh the LED status
-      inline auto react_on_refresh = asx::reactor::Handle{};
+      inline auto react_on_refresh = asx::reactor::null;
    } // namespace detail
 
    /// @brief Initialise the LEDs

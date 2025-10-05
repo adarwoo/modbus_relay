@@ -1,3 +1,4 @@
+// Optimize for size for all types of builds to avoid serious bloating
 #pragma GCC optimize("Os")
 
 /**
@@ -68,7 +69,7 @@ namespace net {
    // Implement all the callbacks
    //
    void on_read_coils(uint8_t addr, uint8_t qty) {
-      ULOG_INFO("Read Coils Address: {} - Quantity: {}", addr, qty);
+      ULOG_TRACE("Read Coils Address: {} - Quantity: {}", addr, qty);
 
       dg::pack( uint8_t{1} ); // Number of bytes returned
 
@@ -92,7 +93,8 @@ namespace net {
    }
 
    void on_set_single(uint8_t index, uint16_t operation) {
-      ULOG_INFO("Setting single relay index:{} - operation:{}", index, operation);
+      ULOG_INFO("Setting single relay index:{} - operation: {:04x}", index, operation);
+
       bool success = false;
 
       switch ( operation ) {
@@ -126,7 +128,7 @@ namespace net {
 
    /** Read any of the input register */
    void on_read_inputs(uint8_t addr, uint8_t qty) {
-      ULOG_INFO("Read Inputs Address: {} - Quantity: {}", addr, qty);
+      ULOG_TRACE("Read Inputs Address: {} - Quantity: {}", addr, qty);
 
       // Reply with a byte count
       dg::pack<uint8_t>(qty*2);
@@ -172,7 +174,7 @@ namespace net {
    }
 
    void on_read_holdings(uint8_t index, uint8_t qty) {
-      ULOG_INFO("Read Holdings Index: {} - Quantity: {}", index, qty);
+      ULOG_TRACE("Read Holdings Index: {} - Quantity: {}", index, qty);
 
       // Number of bytes returned
       dg::pack<uint8_t>(qty*2);
@@ -233,7 +235,7 @@ namespace net {
          // SlaveAddr[1]+FunctionCode[1]+Start[2]+Qty[2]
          dg::set_size(6);
       } else {
-         ULOG_ERROR("Cannot change communication settings outside of recovery mode");
+         ULOG_WARN("Cannot change communication settings outside of recovery mode");
          dg::reply_error(error_t::negative_acknowledge);
       }
    }
@@ -256,30 +258,38 @@ namespace net {
    }
 
    void on_write_estop_on_under(uint8_t onoff) {
+      ULOG_INFO("Writing EStop On Under Voltage Configuration as: {}", onoff);
       config::set_estop_on_undervolt(static_cast<bool>(onoff));
    }
 
    void on_write_estop_on_over(uint8_t onoff) {
+      ULOG_INFO("Writing EStop On Over Voltage Configuration as: {}", onoff);
       config::set_estop_on_overvolt(static_cast<bool>(onoff));
    }
 
    void on_write_estop_on_bad_voltage_type(uint8_t onoff) {
+      ULOG_INFO("Writing EStop On Bad Voltage Type Configuration as: {}", onoff);
       config::set_estop_on_bad_voltage_type(static_cast<bool>(onoff));
    }
 
    void on_write_estop_on_timeout(uint16_t seconds) {
+      ULOG_INFO("Writing EStop On Timeout Configuration as: {} seconds", seconds);
       config::set_watchdog(seconds);
    }
 
    void on_write_estop_commloss_mask(uint16_t mask) {
+      ULOG_INFO("Writing EStop On Comms Loss Mask Configuration as: 0x{:04x}", mask);
       config::set_estop_commloss_mask(mask);
    }
 
    void on_write_estop_infeed_mask(uint16_t mask) {
+      ULOG_INFO("Writing EStop On Infeed Mask Configuration as: 0x{:04x}", mask);
       config::set_estop_infeed_mask(mask);
    }
 
    void on_write_estop_settings(uint8_t over, uint8_t under, uint8_t timeout) {
+      ULOG_INFO("Writing EStop Settings: On Under: {}, On Over: {}, Timeout: {}",
+         under, over, timeout);
       config::set_estop_on_undervolt(static_cast<bool>(over));
       config::set_estop_on_overvolt(static_cast<bool>(under));
       config::set_watchdog(timeout);
@@ -303,18 +313,21 @@ namespace net {
 
    // Trigger an estop
    void on_estop(uint8_t type, uint8_t diag) {
-      ULOG_INFO("Triggering EStop: Type: {}, Diag: {}", type, diag);
+      ULOG_INFO("Triggering EStop: Type: 0x{:02x}, Diag: {}", type, diag);
 
       // If the device is already on terminal EStop - return an error
       if ( estop::get_status() == estop::Status::terminated ) {
          ULOG_ERROR("Cannot trigger EStop: Already terminated");
          dg::reply_error(error_t::negative_acknowledge);
       } else {
-         estop::trigger(
-            estop::Cause::command,
-            diag,
-            static_cast<estop::ExternalTriggerType>(type)
-         );
+         auto tt = static_cast<estop::ExternalTriggerType>(type);
+         auto diagnostic = static_cast<uint16_t>(diag);
+
+         if ( tt == estop::ExternalTriggerType::none ) {
+            estop::reset();
+         } else {
+            estop::trigger(estop::Cause::command, diagnostic, tt);
+         }
       }
    }
 
@@ -334,12 +347,16 @@ namespace net {
    }
 
    void on_reset() {
-      // Manually trigger a reset
-      ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
+      ULOG_MILE("Triggering System Reset");
+
+      // Manually trigger a reset with a small delay to allow the reply to be sent
+      asx::reactor::bind(
+         []{ ccp_write_io((uint8_t *)&RSTCTRL.SWRR, RSTCTRL_SWRE_bm); }
+      ).delay(std::chrono::milliseconds(20));
    }
 
    void on_exit_recovery() {
-      ULOG_MILE("Exit recovery");
+      ULOG_INFO("Exit recovery");
 
       state::set_recovery_mode(false);
    }
@@ -359,7 +376,7 @@ namespace net {
     * by the state manager.
     */
    void init() {
-      ULOG_INFO("Initialising Modbus Network");
+      ULOG_MILE("Initialising Modbus Network");
 
       // Set the modbus install ID
       dg::set_device_address(

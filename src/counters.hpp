@@ -50,7 +50,7 @@ namespace counter {
     * The RTC interrupt is enabled to handle the overflow event.
     */
    inline void init() {
-      ULOG_INFO("Initialising Counters");
+      ULOG_MILE("Initialising Counters");
 
       // Initialise the PIT - turn the interrupt on
       RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;

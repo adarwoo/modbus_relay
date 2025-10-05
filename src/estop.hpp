@@ -30,7 +30,7 @@ namespace estop {
       bod = 1 << 9
    };
 
-   enum class ExternalTriggerType {
+   enum class ExternalTriggerType : uint8_t {
       none = 0,
       pulse = 0x11,
       resetable = 0x22,

@@ -39,7 +39,9 @@ namespace estop {
    };
 
    constexpr auto is_pulsed = [](const trigger_event &event) {
-      return event.type == ExternalTriggerType::pulse;
+      bool retval = event.type == ExternalTriggerType::pulse;
+      ULOG_ERROR("Is pulsed: {}", retval);
+      return retval;
    };
 
    // Actions
@@ -114,15 +116,15 @@ namespace estop {
    );
 
    void init() {
-      ULOG_INFO("Initialising E-Stop");
+      ULOG_MILE("Initialising E-Stop");
 
       // Invert the pin - ES closes on power-up
       ES_COMMAND.init(dir_t::out, invert::inverted, value_t::low);
    }
 
    void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {
-      ULOG_INFO("Triggering E-Stop: Cause:{} Diagnostic:{} Type:{}",
-         static_cast<uint8_t>(cause), diagnostic, static_cast<uint8_t>(type)
+      ULOG_WARN("Triggering E-Stop: Type:0x{:02x} Cause:0x{:02x} Diagnostic:0x{:04x}",
+         static_cast<uint8_t>(type), static_cast<uint8_t>(cause), diagnostic
       );
 
       sm.process_event(trigger_event{cause, diagnostic, type});
@@ -130,7 +132,7 @@ namespace estop {
    }
 
    void reset() {
-      ULOG_INFO("Resetting E-Stop");
+      ULOG_WARN("Resetting E-Stop");
 
       sm.process_event(reset_event{});
    }

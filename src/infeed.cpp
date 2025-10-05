@@ -179,7 +179,7 @@ namespace infeed {
     * @note This function initializes the ADC and the FFT instance.
     */
    void init() {
-      ULOG_INFO("Initialising Infeed System");
+      ULOG_MILE("Initialising Infeed System");
 
       // Reset the min max
       reset_min_max();
