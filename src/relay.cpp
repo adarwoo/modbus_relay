@@ -24,6 +24,7 @@
 #include "estop.hpp"
 #include "config.hpp"
 #include "leds.hpp"
+#include "state.hpp"
 
 #include "conf_board.h"
 #include "conf_version.hpp"
@@ -191,11 +192,14 @@ namespace relay {
                return;
             }
 
-            if ( ++error_count > 3 ) {
+            if ( ++error_count == 3 ) {
                // Store the fault to make it available in the modbus register
                faulty = true;
 
                // Notify the system about the fault
+               ULOG_ERROR("Relay {} is faulty", index);
+
+               // There is not going back!
                estop::trigger(estop::Cause::faulty_relay, index);
             }
          }
@@ -226,6 +230,15 @@ namespace relay {
       void backgroud_check() {
          for (auto &relay: relays) {
             relay.check();
+         }
+
+         // Report relay faults
+         if ( relays[0].get_status() == Status::faulty
+           or relays[1].get_status() == Status::faulty
+           or relays[2].get_status() == Status::faulty ) {
+            state::append_faults( state::fault::relay_fault );
+         } else {
+            state::clear_faults( state::fault::relay_fault );
          }
       }
    }
