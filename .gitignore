@@ -46,3 +46,5 @@ conf/datagram.hpp
 **/*componentinfo.xml
 cad/kicad/modbus_relay/_autosave-modbus_relay.kicad_sch
 cad/kicad/modbus_relay/_autosave-modbus_relay.kicad_pcb
+.bash_history
+.lesshst

@@ -18,4 +18,5 @@
 "on_read_coils
 "on_set_si
 "on_set_sin
-.search
+"sysclk_ini
+".log

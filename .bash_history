@@ -162,3 +162,73 @@ make -j16 NDEBUG=1
 make -j16 NDEBUG=1
 avr-objdump -C  -d Release/src/net.o  | less
 avr-objdump -C  -d Release/modbus_relay.elf  | less
+make
+make
+make
+make
+make
+make -j16
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make
+make -j16
+make -j16
+make -j16
+make -j16
+make -j16
+make -j16
+make -j16
+avr-objdump -C  -d Release/modbus_relay.elf  | less
+make -j16
+make -j16
+make -j16
+history | uniq
+history | cut -c4 | uniq
+history | cut -c-4 | uniq
+history | cut -c-4- | uniq
+history | cut -c4- | uniq
+history | cut -c8- | uniq
+history | cut -c8- | sort | uniq
+avr-objdump -a Release/modbus_relay.elf  | less
+avr-objdump -C -a Debug/modbus_relay.elf  | less
+avr-objdump -C -a Debug/modbus_relay.elf  | less
+avr-objdump -C -X Debug/modbus_relay.elf  | less
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+make -j16
+make -j16
+make -j16
+make -j16
+make -j16
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+make
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+make
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+make
+make -j16
+avr-objdump -C -s Debug/modbus_relay.elf  | less
+make -j16
+make -j16
+make -j16
