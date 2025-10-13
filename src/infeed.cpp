@@ -13,6 +13,7 @@
 #include "config.hpp"
 #include "estop.hpp"
 #include "infeed.hpp"
+#include "state.hpp"
 
 using namespace std::chrono;
 using namespace infeed::literal;
@@ -100,11 +101,11 @@ namespace infeed {
       bool processing_required = false;
       bool above = false;
       bool below = false;
-      auto status = Status{Status::none};
+      bool inverted = false;
 
       ULOG_DEBUG2("ADC Sample: {}", adc_sample);
 
-      // Compute the FFT for AC signals
+      // Compute the pseudo RMS for AC signals
       if ( RMS::compute_next(adc_sample) ) {
          processing_required = true;
          detail::last_ac_voltage = RMS::result;
@@ -122,47 +123,87 @@ namespace infeed {
          ULOG_DEBUG0("DC Voltage: {}", detail::last_dc_voltage);
       }
 
-      uint16_t abs_dc_value = std::abs(detail::last_dc_voltage);
-
-       // Sum up the AC and DC voltages for an overall detection
+      // Exit if no processing is required
       if ( processing_required ) {
-         bool detected = ( detail::last_ac_voltage + abs_dc_value > MIN_DETECTION );
+         uint16_t abs_dc_value = std::abs(detail::last_dc_voltage);
 
-         if ( config::get_config().infeed_type == infeed::CfgType::dc ) {
-            // If the infeed type is DC, we only check the DC voltage
-            above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
-            below = ( abs_dc_value < config::get_config().infeed_min_volt_threshold );
-         } else { // ACs
-            // If the infeed type is AC, we check the AC voltage
-            above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
-            below = ( detail::last_ac_voltage < config::get_config().infeed_min_volt_threshold );
+         // If DC is present, it takes precedence over AC
+         detail::current_input_type = abs_dc_value > MIN_DETECTION ? InputType::dc :
+            abs_dc_value > MIN_DETECTION ? InputType::ac : InputType::none;
+
+         // Check for DC polarity inversion
+         if ( detail::last_dc_voltage < -static_cast<int16_t>(MIN_DETECTION) ) {
+            inverted = true;
          }
 
-         // Update the min and max voltage
-         detail::max_voltage = std::max(detail::max_voltage, std::max(detail::last_ac_voltage, abs_dc_value));
-         detail::min_voltage = std::min(detail::min_voltage, std::min(detail::last_ac_voltage, abs_dc_value));
+         // Update the state fault indicators by clearing all to start with
+         state::clear_faults( 0
+            | state::fault::infeed_under_voltage
+            | state::fault::infeed_over_voltage
+            | state::fault::infeed_bad_type
+            | state::fault::infeed_polarity_inverted
+         );
 
-         status = detected ? (
-            above ? Status::above : below ? Status::below : Status::in_range
-         ) : Status::none;
+         if ( config::get_config().infeed_type == InputType::none ) {
+            // No monitoring
+            detail::current_status = (detail::current_input_type == InputType::none)
+               ? Status::none
+               : Status::voltage_present;
+         } else if ( config::get_config().infeed_type != detail::current_input_type ) {
+            // Mismatch between configured type and detected type
+            detail::current_status = Status::faulty;
+            state::append_faults( state::fault::infeed_bad_type );
 
-         if ( detail::current_status != status ) {
-            detail::current_status = status;
-
-            // Check applicability of the situation
-            if ( status == Status::wrong_type && config::get_config().estop_on_bad_voltage_type ) {
+            if ( config::get_config().estop_on_bad_voltage_type ) {
+               detail::current_status = Status::estop;
                estop::trigger(
                   estop::Cause::infeed_voltage_type,
                   static_cast<uint16_t>(0xFFFF), // Diagnostic code for wrong type
                   estop::ExternalTriggerType::resetable
                );
-            } else if ( status == Status::above && config::get_config().estop_on_overvolt ) {
+            }
+         } else { // Matching types
+            if ( detail::current_input_type == InputType::ac ) {
+               // Update the min and max voltage
+               detail::max_voltage = std::max(detail::max_voltage, detail::last_ac_voltage);
+               detail::min_voltage = std::min(detail::min_voltage, detail::last_ac_voltage);
+
+               above = ( detail::last_ac_voltage > config::get_config().infeed_max_volt_threshold );
+               below = ( detail::last_ac_voltage < config::get_config().infeed_min_volt_threshold );
+            } else {
+               // Check polarity
+               if ( inverted ) {
+                  state::append_faults( state::fault::infeed_polarity_inverted );
+                  detail::current_status = Status::faulty;
+
+                  estop::trigger(
+                     estop::Cause::infeed_polarity,
+                     static_cast<uint16_t>(0xFFFE), // Diagnostic code for polarity inversion
+                     estop::ExternalTriggerType::resetable
+                  );
+               } else {
+                  // Update the min and max voltage
+                  detail::max_voltage = std::max(detail::max_voltage, abs_dc_value);
+                  detail::min_voltage = std::min(detail::min_voltage, abs_dc_value);
+
+                  above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
+                  below = ( abs_dc_value < config::get_config().infeed_min_volt_threshold );
+               }
+            }
+
+            if ( above && config::get_config().estop_on_overvolt ) {
+               detail::current_status = Status::estop;
+               state::append_faults( state::fault::infeed_over_voltage );
+
                estop::trigger(
                   estop::Cause::infeed_voltage_over,
                   static_cast<uint16_t>(detail::max_voltage),
                   estop::ExternalTriggerType::resetable
                );
-            } else if ( status == Status::below && config::get_config().estop_on_undervolt ) {
+            } else if ( below && config::get_config().estop_on_undervolt ) {
+               detail::current_status = Status::estop;
+               state::append_faults( state::fault::infeed_under_voltage );
+
                estop::trigger(
                   estop::Cause::infeed_voltage_under,
                   static_cast<uint16_t>(detail::min_voltage),
@@ -170,7 +211,7 @@ namespace infeed {
                );
             }
          }
-      }
+      } // processing required
    }
 
    /**
