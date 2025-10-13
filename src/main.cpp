@@ -12,12 +12,21 @@
 #include "infeed.hpp"
 #include "net.hpp"
 #include "estop.hpp"
+#include "state.hpp"
 
 #include <chrono>
+
+
 
 int main()
 {
    ULOG_MILE("Modbus relay application starting!");
+
+   // Initialize the state manager
+   state::init();
+
+   // Initialise the configuration system
+   config::init();
 
    // Initialise the LEDs
    led::init();
@@ -34,11 +43,11 @@ int main()
    // Ready the ingress measurement system
    infeed::init();
 
-   // Ready network handling, the modbus and the UART
-   net::init();
-
    // Ready the push button
    sw::init();
+
+   // Ready network handling, the modbus and the UART
+   net::init();
 
    // Run the reactor/scheduler
    asx::reactor::run();
