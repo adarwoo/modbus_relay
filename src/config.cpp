@@ -19,7 +19,7 @@ namespace config {
       .baud                      = baud_t::_9600,
       .stopbits                  = uart::stop::_1,
       .parity                    = uart::parity::none,
-      .infeed_type               = infeed::CfgType::ac_50hz,
+      .infeed_type               = infeed::InputType::none,
       .infeed_min_volt_threshold = 10_volts,
       .infeed_max_volt_threshold = 250_volts,
       .estop_on_undervolt        = false,
@@ -65,6 +65,16 @@ namespace config {
          : baudrates[static_cast<uint8_t>(eeprom_config.baud)];
    }
 
+   void init() {
+      ULOG_MILE("Checking EEProm configuration");
+
+      // Check if the eeprom was recovered
+      if ( eeprom_config.is_formatted() ) {
+         ULOG_WARN("EEprom content was invalid - reset to defaults");
+         state::append_faults( state::fault::eeprom_recovered );
+      }
+   }
+
    void reset_config() {
       ULOG_INFO("Resetting configuration to default");
 
@@ -94,7 +104,7 @@ namespace config {
       eeprom_config.update();
    }
 
-   bool set_infeed_config(infeed::CfgType vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
+   bool set_infeed_config(infeed::InputType vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
       ULOG_INFO("Setting infeed config type:{}", static_cast<uint8_t>(vtype));
       ULOG_INFO("Setting infeed config thresholds:{} lower:{} upper:{}", lower_threshold, upper_threshold);
 

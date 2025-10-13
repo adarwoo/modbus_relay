@@ -51,7 +51,7 @@ namespace config {
       asx::uart::parity parity;
 
       /// @brief Infeed config
-      infeed::CfgType infeed_type; // 0=DC, 1=50 or 2=60Hz
+      infeed::InputType infeed_type; // 0=Invalid, 1=DC, 2=AC
       uint16_t infeed_min_volt_threshold; // Infeed Min voltage in 1/10 volts
       uint16_t infeed_max_volt_threshold; // Infeed Max voltage in 1/10 volts
 
@@ -90,6 +90,7 @@ namespace config {
    // -------------------------------------------------------------------------
 
    // Global function
+   void init();
    void reset_config();
    const EepromConfig& get_config();
 
@@ -102,6 +103,6 @@ namespace config {
    void set_estop_on_bad_voltage_type(bool yes);
    void set_estop_commloss_mask(uint16_t mask);
    void set_estop_infeed_mask(uint16_t mask);
-   bool set_infeed_config(infeed::CfgType, uint16_t lower_threshold, uint16_t upper_threshold);
+   bool set_infeed_config(infeed::InputType, uint16_t lower_threshold, uint16_t upper_threshold);
    bool set_relay_config(uint8_t index, uint8_t filter_on, uint8_t filter_off);
 } // End of config namespace
