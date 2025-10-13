@@ -20,8 +20,8 @@ namespace estop {
 
    // Local variables
    namespace {
-      asx::timer::Instance timer_end_of_pulse{};
-      asx::reactor::Handle react_on_end_of_pulse{};
+      auto timer_end_of_pulse = asx::timer::null;
+      auto react_on_end_of_pulse = asx::reactor::null;
    }
 
    // Events
@@ -49,8 +49,9 @@ namespace estop {
       timer_end_of_pulse.cancel(); // Cancel any previous pulse delay
 
       if ( event.type == ExternalTriggerType::pulse ) {
+         ULOG_TRACE("Pulsed E-Stop: Setting 4 second timer");
          // Delay for 4 seconds before resetting
-         timer_end_of_pulse = react_on_end_of_pulse.delay(std::chrono::seconds(4));
+         timer_end_of_pulse =react_on_end_of_pulse.delay(std::chrono::seconds(4));
       }
 
       detail::current_status = Status::estop;
@@ -111,15 +112,20 @@ namespace estop {
    // State machine instance
    sm<EStopStateMachine> sm;
 
-   auto react_on_end_of_pulse = asx::reactor::bind(
-      [] { sm.process_event(end_of_pulse{}); }
-   );
 
    void init() {
       ULOG_MILE("Initialising E-Stop");
 
       // Invert the pin - ES closes on power-up
       ES_COMMAND.init(dir_t::out, invert::inverted, value_t::low);
+
+      // Create the reactor for the end of pulse
+      react_on_end_of_pulse = asx::reactor::bind(
+         [] {
+            ULOG_TRACE("E-Stop pulse ended - resetting");
+            sm.process_event(end_of_pulse{});
+         }
+      );
    }
 
    void trigger(Cause cause, uint16_t diagnostic, ExternalTriggerType type ) {
