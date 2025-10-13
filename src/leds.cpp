@@ -144,15 +144,14 @@ namespace {
             (estop::get_status() == estop::Status::terminated) ? LedState::on : LedState::off;
 
       // Infeed LED
-      bool is_infeed = false
-         or (estop::get_cause() == estop::Cause::infeed_voltage_type)
-         or (estop::get_cause() == estop::Cause::infeed_voltage_over)
-         or (estop::get_cause() == estop::Cause::infeed_voltage_under);
-
-      leds[id::infeed].second = is_infeed ? LedState::blink :
-         (infeed::get_status() == infeed::Status::in_range) ? LedState::on :
-         (infeed::get_status() == infeed::Status::above) ? LedState::fast :
-         (infeed::get_status() == infeed::Status::below) ? LedState::pulse : LedState::off;
+      leds[id::infeed].second =
+         (infeed::get_status() == infeed::Status::none)
+         ? LedState::off
+         : (infeed::get_status() == infeed::Status::voltage_present)
+            ? LedState::on
+            : (infeed::get_status() == infeed::Status::faulty)
+               ? LedState::pulse
+               : LedState::blink;
 
       // Relay LEDs
       for ( uint8_t i=id::led_a; i<=id::led_c; ++i ) {
