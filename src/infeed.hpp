@@ -11,27 +11,19 @@
 #include <limits>
 
 namespace infeed {
-   /// @brief < Type of infeed to monitor
-   enum class CfgType : uint8_t {
-      dc = 0,
-      ac_50hz = 1,
-      ac_60hz = 2
-   };
-
    /// @brief < Type of infeed to report
    enum class InputType : uint8_t {
       none = 0, ///< No voltage detected
-      dc = 0,
-      ac = 1
+      dc = 1,
+      ac = 2
    };
 
    ///< Status of the infeed monitoring system
    enum class Status : uint8_t {
       none = 0,  ///< No voltage detected
-      in_range,  ///< Voltage detected in range
-      above,     ///< Infeed monitoring is in EStop state
-      below,     ///< Infeed monitoring has been terminated
-      wrong_type ///< Voltage detected with a type mismatch (AC/DC)
+      voltage_present, ///< Voltage detected
+      faulty,    ///< Infeed monitoring is faulty
+      estop,     ///< Infeed monitoring has triggered an EStop
    };
 
    namespace literal {
@@ -58,7 +50,7 @@ namespace infeed {
       /// @brief Stores the current infeed status
       inline Status current_status = Status::none;
       /// @brief Reports the current input type
-      inline InputType current_input_type = InputType::dc;
+      inline InputType current_input_type = InputType::none;
    }
 
    /// @brief Get the status of the infeed monitoring system
@@ -76,17 +68,7 @@ namespace infeed {
 
    /// @brief Get the type of the current input voltage
    inline InputType get_input_voltage_type() {
-      using namespace literal;
-      
-      if ( detail::last_dc_voltage + detail::last_ac_voltage < 10_volts ) {
-         return InputType::none;
-      }
-
-      if ( static_cast<uint16_t>(std::abs(detail::last_dc_voltage)) < detail::last_ac_voltage) {
-         return InputType::dc;
-      }
-
-      return InputType::ac;
+      return detail::current_input_type;
    }
 
    /// @brief Get the last measured AC voltage
