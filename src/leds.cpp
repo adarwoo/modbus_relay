@@ -38,9 +38,9 @@ namespace {
       managed = 0, // Managed by the system
       off,         // LED is off
       on,          // LED is on
-      blink,       // LED is blinking
-      pulse,       // LED is pulsing
-      fast         // LED is fast blinking
+      flashing,    // LED is flashing (50% duty cycle)
+      pulsing,     // LED is pulsing (10% duty cycle)
+      fast         // LED is fast flashing
    };
 
    namespace id {
@@ -109,6 +109,8 @@ namespace {
     * @brief Update the status of the LEDs based on the current system state
     */
    void on_refresh_leds_status() {
+      ULOG_TRACE("Refreshing LED status");
+
       // Locate takes precedence on everything else
       if ( state::is_in_locate_mode() ) {
          // Unplug from the LUT and Timer
@@ -139,19 +141,36 @@ namespace {
       }
 
       // EStop led
-      leds[id::estop].second =
-         (estop::get_status() == estop::Status::estop) ? LedState::blink :
-            (estop::get_status() == estop::Status::terminated) ? LedState::on : LedState::off;
+      switch (estop::get_status()) {
+      case estop::Status::estop:
+         leds[id::estop].second = LedState::flashing;
+         break;
+      case estop::Status::terminated:
+         leds[id::estop].second = LedState::on;
+         break;
+      default:
+         leds[id::estop].second = LedState::off;
+         break;
+      }
 
       // Infeed LED
-      leds[id::infeed].second =
-         (infeed::get_status() == infeed::Status::none)
-         ? LedState::off
-         : (infeed::get_status() == infeed::Status::voltage_present)
-            ? LedState::on
-            : (infeed::get_status() == infeed::Status::faulty)
-               ? LedState::pulse
-               : LedState::blink;
+      auto status = infeed::get_status();
+      ULOG_INFO("Infeed status: {}", (uint8_t)status);
+
+      switch (status) {
+      case infeed::Status::voltage_present:
+         leds[id::infeed].second = LedState::on;   // Voltage present
+         break;
+      case infeed::Status::faulty:
+         leds[id::infeed].second = LedState::pulsing; // Faulty condition
+         break;
+      case infeed::Status::estop:
+         leds[id::infeed].second = LedState::flashing; // EStop condition
+         break;
+      default:
+         leds[id::infeed].second = LedState::off;  // Fallback to off
+         break;
+      }
 
       // Relay LEDs
       for ( uint8_t i=id::led_a; i<=id::led_c; ++i ) {
@@ -164,9 +183,11 @@ namespace {
             state = relay::get(led_index) ? LedState::on : LedState::off;
             break;
          case relay::Status::faulty:
-            state = LedState::pulse;
+            state = LedState::flashing;
             break;
          case relay::Status::disabled:
+            state = LedState::pulsing;
+            break;
          default:
             state = LedState::off;
             break;
@@ -195,12 +216,12 @@ namespace {
          case LedState::fast:
             led.toggle();
             break;
-         case LedState::blink:
+         case LedState::flashing:
             if ( pulse == 0 or pulse == 5 ) {
                led.toggle();
             }
             break;
-         case LedState::pulse:
+         case LedState::pulsing:
             led.set(pulse == 0);
             break;
          case LedState::off:

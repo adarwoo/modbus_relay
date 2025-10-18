@@ -106,7 +106,8 @@ namespace config {
 
    bool set_infeed_config(infeed::InputType vtype, uint16_t lower_threshold, uint16_t upper_threshold) {
       ULOG_INFO("Setting infeed config type:{}", static_cast<uint8_t>(vtype));
-      ULOG_INFO("Setting infeed config thresholds:{} lower:{} upper:{}", lower_threshold, upper_threshold);
+      ULOG_INFO("                      thresholds: lower:{} upper:{}",
+         lower_threshold, upper_threshold);
 
       if ( upper_threshold < lower_threshold and ((upper_threshold - lower_threshold) < 10) ) {
          return false;

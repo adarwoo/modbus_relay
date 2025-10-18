@@ -13,7 +13,7 @@
 namespace infeed {
    /// @brief < Type of infeed to report
    enum class InputType : uint8_t {
-      none = 0, ///< No voltage detected
+      none = 0, ///< Ignore infeed
       dc = 1,
       ac = 2
    };
@@ -44,9 +44,9 @@ namespace infeed {
       /// @brief Stores the last measured DC voltage
       inline int16_t last_dc_voltage = 0;
       /// @brief Stores the maximum voltage measured
-      inline uint16_t max_voltage = std::numeric_limits<uint16_t>::max();
+      inline uint16_t max_voltage = std::numeric_limits<uint16_t>::min();
       /// @brief Stores the minimum voltage measured
-      inline uint16_t min_voltage = std::numeric_limits<uint16_t>::min();
+      inline uint16_t min_voltage = std::numeric_limits<uint16_t>::max();
       /// @brief Stores the current infeed status
       inline Status current_status = Status::none;
       /// @brief Reports the current input type

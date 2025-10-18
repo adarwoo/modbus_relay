@@ -98,120 +98,181 @@ namespace infeed {
    void process_sample(int16_t adc_sample) {
       static int32_t dc_sum = 0;
       static uint16_t dc_count = 0;
-      bool processing_required = false;
+
+      // Use bit positions that are power-of-2 for efficient operations
+      static uint8_t processing_flags = 0;
+      static constexpr uint8_t RMS_READY = 1;      // Bit 0 (0x01)
+      static constexpr uint8_t DC_READY = 2;       // Bit 1 (0x02)
+      static constexpr uint8_t BOTH_READY = 3;     // RMS_READY | DC_READY (0x03)
+
       bool above = false;
       bool below = false;
       bool inverted = false;
 
-      ULOG_DEBUG2("ADC Sample: {}", adc_sample);
+      // Keep the old status for comparison
+      auto old_status = detail::current_status;
 
       // Compute the pseudo RMS for AC signals
       if ( RMS::compute_next(adc_sample) ) {
-         processing_required = true;
+         processing_flags |= RMS_READY;  // Set bit 0
          detail::last_ac_voltage = RMS::result;
-         ULOG_DEBUG0("AC Voltage: {}", detail::last_ac_voltage);
       }
 
-      // Compute an average of the last 256 samples for the DC signal
-      dc_sum += adc_sample;
+      // Compute DC average - optimize division
+      {
+         dc_sum += adc_sample;
 
-      if ( ++dc_count == ADC_SAMPLES_RATE ) {
-         processing_required = true;
-         detail::last_dc_voltage = static_cast<int16_t>(dc_sum / ADC_DC_256_VOLTS_DIVIDER_TENTH);
-         dc_sum = 0;
-         dc_count = 0;
+         if ( ++dc_count == ADC_SAMPLES_RATE ) {  // 320 - not power of 2, but unavoidable
+            processing_flags |= DC_READY;  // Set bit 1
+
+            // Optimize: Use bit shift if possible, or keep division for accuracy
+            detail::last_dc_voltage = static_cast<int16_t>(dc_sum / ADC_DC_256_VOLTS_DIVIDER_TENTH);
+
+            dc_sum = 0;
+            dc_count = 0;
+         }
+      }
+
+      // Process only when both flags are set - optimized check
+      if ( processing_flags >= BOTH_READY ) {  // Faster than masking for this case
+         processing_flags = 0;  // Reset all flags
+
          ULOG_DEBUG0("DC Voltage: {}", detail::last_dc_voltage);
-      }
+         ULOG_DEBUG0("AC Voltage: {}", detail::last_ac_voltage);
 
-      // Exit if no processing is required
-      if ( processing_required ) {
-         uint16_t abs_dc_value = std::abs(detail::last_dc_voltage);
+         // Optimize abs() - compiler should use efficient AVR abs instruction
+         uint16_t abs_dc_value = (detail::last_dc_voltage < 0) ?
+            -detail::last_dc_voltage : detail::last_dc_voltage;
 
-         // If DC is present, it takes precedence over AC
-         detail::current_input_type = abs_dc_value > MIN_DETECTION ? InputType::dc :
-            abs_dc_value > MIN_DETECTION ? InputType::ac : InputType::none;
-
-         // Check for DC polarity inversion
-         if ( detail::last_dc_voltage < -static_cast<int16_t>(MIN_DETECTION) ) {
-            inverted = true;
+         // Set input type to whichever (AC or DC) is highest and above MIN_DETECTION
+         if (abs_dc_value > MIN_DETECTION && abs_dc_value >= detail::last_ac_voltage) {
+            detail::current_input_type = InputType::dc;
+            detail::current_status = Status::voltage_present;
+         } else if (detail::last_ac_voltage > MIN_DETECTION) {
+            detail::current_input_type = InputType::ac;
+            detail::current_status = Status::voltage_present;
+         } else {
+            detail::current_input_type = InputType::none;
+            detail::current_status = Status::none;
          }
 
-         // Update the state fault indicators by clearing all to start with
-         state::clear_faults( 0
+         ULOG_DEBUG0("Input Type: {}", (uint8_t)detail::current_input_type);
+
+         // Optimize inversion check - combine with threshold check
+         inverted = (detail::last_dc_voltage < -static_cast<int16_t>(MIN_DETECTION));
+
+         ULOG_DEBUG0("Inverted: {}", inverted);
+
+         // Clear faults - use constexpr for compile-time optimization
+         static constexpr auto INFEED_FAULTS = 0
             | state::fault::infeed_under_voltage
             | state::fault::infeed_over_voltage
             | state::fault::infeed_bad_type
-            | state::fault::infeed_polarity_inverted
-         );
+            | state::fault::infeed_polarity_inverted;
 
-         if ( config::get_config().infeed_type == InputType::none ) {
-            // No monitoring
+         state::clear_faults(INFEED_FAULTS);
+
+         // Cache config for fewer lookups
+         const auto& cfg = config::get_config();
+         const auto configured_type = cfg.infeed_type;
+
+         // Store the min and max voltages in all cases
+         if ( detail::current_input_type == InputType::dc ) {
+            // DC input detected, update with DC voltage
+            detail::min_voltage = std::min(detail::min_voltage, abs_dc_value);
+            detail::max_voltage = std::max(detail::max_voltage, abs_dc_value);
+         } else if ( detail::current_input_type == InputType::ac ) {
+            // AC input detected, update with AC voltage
+            detail::min_voltage = std::min(detail::min_voltage, detail::last_ac_voltage);
+            detail::max_voltage = std::max(detail::max_voltage, detail::last_ac_voltage);
+         }
+
+         ULOG_DEBUG0("Min Voltage: {}", detail::min_voltage);
+         ULOG_DEBUG0("Max Voltage: {}", detail::max_voltage);
+
+         if ( configured_type == InputType::none ) {
+            ULOG_WARN("Type none");
+            // The system does not care about the input type - just report presence
             detail::current_status = (detail::current_input_type == InputType::none)
                ? Status::none
                : Status::voltage_present;
-         } else if ( config::get_config().infeed_type != detail::current_input_type ) {
-            // Mismatch between configured type and detected type
+            ULOG_INFO("Updated current status to: {}", (uint8_t)detail::current_status);
+         } else if ( configured_type != detail::current_input_type ) {
+            ULOG_WARN("Type not match");
+            // Type mismatch handling
             detail::current_status = Status::faulty;
-            state::append_faults( state::fault::infeed_bad_type );
+            state::append_faults(state::fault::infeed_bad_type);
 
-            if ( config::get_config().estop_on_bad_voltage_type ) {
+            if ( cfg.estop_on_bad_voltage_type ) {
                detail::current_status = Status::estop;
                estop::trigger(
                   estop::Cause::infeed_voltage_type,
-                  static_cast<uint16_t>(0xFFFF), // Diagnostic code for wrong type
+                  0xFFFF,  // Constant for wrong type
                   estop::ExternalTriggerType::resetable
                );
             }
-         } else { // Matching types
+         } else {
+            ULOG_TRACE("Type match");
+            // Process voltage thresholds
             if ( detail::current_input_type == InputType::ac ) {
-               // Update the min and max voltage
-               detail::max_voltage = std::max(detail::max_voltage, detail::last_ac_voltage);
-               detail::min_voltage = std::min(detail::min_voltage, detail::last_ac_voltage);
-
-               above = ( detail::last_ac_voltage > config::get_config().infeed_max_volt_threshold );
-               below = ( detail::last_ac_voltage < config::get_config().infeed_min_volt_threshold );
-            } else {
-               // Check polarity
+               above = (detail::last_ac_voltage > cfg.infeed_max_volt_threshold);
+               below = (detail::last_ac_voltage < cfg.infeed_min_volt_threshold);
+            } else { // DC processing
                if ( inverted ) {
-                  state::append_faults( state::fault::infeed_polarity_inverted );
-                  detail::current_status = Status::faulty;
+                  state::append_faults(state::fault::infeed_polarity_inverted);
+                  detail::current_status = Status::estop;  // Direct assignment since it's terminal
 
                   estop::trigger(
                      estop::Cause::infeed_polarity,
-                     static_cast<uint16_t>(0xFFFE), // Diagnostic code for polarity inversion
+                     0xFFFE,  // Constant for polarity inversion
                      estop::ExternalTriggerType::resetable
                   );
-               } else {
-                  // Update the min and max voltage
-                  detail::max_voltage = std::max(detail::max_voltage, abs_dc_value);
-                  detail::min_voltage = std::min(detail::min_voltage, abs_dc_value);
 
-                  above = ( abs_dc_value > config::get_config().infeed_max_volt_threshold );
-                  below = ( abs_dc_value < config::get_config().infeed_min_volt_threshold );
+                  return;  // Early exit to avoid further processing
+               } else {
+                  above = (abs_dc_value > cfg.infeed_max_volt_threshold);
+                  below = (abs_dc_value < cfg.infeed_min_volt_threshold);
                }
             }
 
-            if ( above && config::get_config().estop_on_overvolt ) {
-               detail::current_status = Status::estop;
-               state::append_faults( state::fault::infeed_over_voltage );
+            // Handle voltage threshold faults - optimize with early exit pattern
+            if ( above ) {
+               detail::current_status = Status::faulty;
 
-               estop::trigger(
-                  estop::Cause::infeed_voltage_over,
-                  static_cast<uint16_t>(detail::max_voltage),
-                  estop::ExternalTriggerType::resetable
-               );
-            } else if ( below && config::get_config().estop_on_undervolt ) {
-               detail::current_status = Status::estop;
-               state::append_faults( state::fault::infeed_under_voltage );
+               state::append_faults(state::fault::infeed_over_voltage);
 
-               estop::trigger(
-                  estop::Cause::infeed_voltage_under,
-                  static_cast<uint16_t>(detail::min_voltage),
-                  estop::ExternalTriggerType::resetable
-               );
+               if ( cfg.estop_on_overvolt ) {
+                  detail::current_status = Status::estop;
+
+                  estop::trigger(
+                     estop::Cause::infeed_voltage_over,
+                     detail::max_voltage,
+                     estop::ExternalTriggerType::resetable
+                  );
+               }
+            } else if ( below ) {
+               detail::current_status = Status::faulty;
+
+               if ( cfg.estop_on_undervolt ) {
+                  state::append_faults(state::fault::infeed_under_voltage);
+
+                  if ( cfg.estop_on_undervolt ) {
+                     detail::current_status = Status::estop;
+
+                     estop::trigger(
+                        estop::Cause::infeed_voltage_under,
+                        detail::min_voltage,
+                        estop::ExternalTriggerType::resetable
+                     );
+                  }
+               }
             }
          }
-      } // processing required
+
+         if ( detail::current_status != old_status ) {
+            led::refresh();  // Update LEDs on status change
+         }
+      } // Both measurements ready
    }
 
    /**

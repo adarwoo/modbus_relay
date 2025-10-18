@@ -110,10 +110,10 @@ Modbus({
 
         # Write the infeed config
         (WRITE_MULTIPLE_REGISTERS,
-            u16(0x08), u16(2), u8(6),
-                u16(0,1),      # 0=DC, 1=AC
-                u16(100,3000), # Lower threshold
-                u16(100,3000), # Upper threshold
+            u16(0x08), u16(3), u8(6),
+                u16(0,2),    # 0=Don't care, 1=DC, 2=AC, 
+                u16(0,3000), # Lower threshold
+                u16(0,3000), # Upper threshold
             "on_write_infeed_config"),
 
 

@@ -148,9 +148,16 @@ namespace net {
 
          case 0x0B: dg::pack( static_cast<uint16_t>(infeed::get_input_voltage_type()) ); break;
          case 0x0C: dg::pack( infeed::get_input_voltage() ); break;
-         case 0x0D: dg::pack( infeed::get_lowest_voltage() ); break;
-         case 0x0E: dg::pack( infeed::get_highest_voltage() ); break;
-
+         case 0x0D: dg::pack(
+            infeed::get_input_voltage_type() == infeed::InputType::none
+               ? 0
+               : infeed::get_lowest_voltage() );
+            break;
+         case 0x0E: dg::pack(
+            infeed::get_input_voltage_type() == infeed::InputType::none
+               ? 0
+               : infeed::get_highest_voltage() );
+            break;
          case 0x0F: dg::pack( static_cast<uint16_t>(state::get_faults()) ); break;
          case 0x10: dg::pack( static_cast<uint16_t>(estop::get_cause()) ); break;
          case 0x11: dg::pack( static_cast<uint16_t>(estop::get_diagnostic_code()) ); break;
