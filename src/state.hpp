@@ -92,7 +92,7 @@ namespace state {
    /** Set the locate mode */
    inline void set_locate_mode(bool locate_mode) {
       detail::locate_mode = locate_mode;
-      led::refresh();
+      led::toggle_locate_mode( locate_mode );
    }
 
    /** Initialize the state manager */

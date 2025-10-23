@@ -18,6 +18,7 @@
 
 #include <asx/ulog.hpp>
 #include <asx/ioport.hpp>
+#include <asx/timer.hpp>
 #include <asx/reactor.hpp>
 
 #include "conf_board.h"
@@ -66,6 +67,18 @@ namespace {
       {LED_C,            LedState::off},
    }};
 
+   /// Indicate to show the locate mode
+   auto show_locate_mode = false;
+
+   /// Reactor to refresh the LED status
+   auto react_on_flip_mode = asx::reactor::bind([]{
+      show_locate_mode = not show_locate_mode;
+      led::detail::react_on_refresh();
+   });
+
+   /// Timer to toggle the locate mode LED
+   auto timer_toggle_locate_mode = asx::timer::null;
+
    // ----------------------------------------------------------------------------
    // Local functions
    // ----------------------------------------------------------------------------
@@ -104,7 +117,6 @@ namespace {
       TCB1.CTRLA = TCB_CLKSEL_EVENT_gc | TCB_ENABLE_bm;  // Use the event channel as a clock source
    }
 
-
    /**
     * @brief Update the status of the LEDs based on the current system state
     */
@@ -112,45 +124,40 @@ namespace {
       ULOG_TRACE("Refreshing LED status");
 
       // Locate takes precedence on everything else
-      if ( state::is_in_locate_mode() ) {
-         // Unplug from the LUT and Timer
-         CCL.CTRLA = 0;
+      if ( show_locate_mode ) {
+         // Turn off the TCB1 timer to free the modbus LED
+         TCB1.CTRLB &= ~TCB_CCMPEN_bm;
 
          // If in locate mode, set all LEDs to fast blink
          for ( auto& led_pair : leds ) {
+            led_pair.first.clear();
             led_pair.second = LedState::fast;
          }
 
          return;
       }
+      else {
+         // Re-enable the TCB1 timer to resume modbus LED operation
+         TCB1.CTRLB |= TCB_CCMPEN_bm;
+      }
 
       // Recovery mode overwrites the modbus LEDs
       if ( state::is_in_recovery_mode() ) {
-         // Unplug Rx and Tx from the LUT output and the timer
-         CCL.CTRLA = 0;
-         TCB1.CTRLB &= ~TCB_CCMPEN_bm; // Disable the timer output
-
-         // Fast flash Rx and Tx LEDs
-         leds[id::modbus].second = LedState::fast;
+         // Fast flash EStop LED (So we can still set the modbus LED)
+         leds[id::estop].second = LedState::fast;
       } else {
-         // Go full automatic mode
-         CCL.CTRLA = CCL_ENABLE_bm;
-         TCB1.CTRLB |= TCB_CCMPEN_bm;
-
-         leds[id::modbus].second = LedState::managed;
-      }
-
-      // EStop led
-      switch (estop::get_status()) {
-      case estop::Status::estop:
-         leds[id::estop].second = LedState::flashing;
-         break;
-      case estop::Status::terminated:
-         leds[id::estop].second = LedState::on;
-         break;
-      default:
-         leds[id::estop].second = LedState::off;
-         break;
+         // EStop led
+         switch (estop::get_status()) {
+         case estop::Status::estop:
+            leds[id::estop].second = LedState::flashing;
+            break;
+         case estop::Status::terminated:
+            leds[id::estop].second = LedState::on;
+            break;
+         default:
+            leds[id::estop].second = LedState::off;
+            break;
+         }
       }
 
       // Infeed LED
@@ -266,6 +273,9 @@ namespace led {
       // Set the alert pin to high (already high given the external pull-up on the driver)
       ALERT_OUTPUT_PIN.init(dir_t::out, value_t::high);
 
+      // Bind the locate mode toggle handler
+
+
       // Arm a timer to transition after 2 seconds
       asx::reactor::bind([] {
          LED_MODBUS.clear();
@@ -277,11 +287,26 @@ namespace led {
          // Update right away any pending changes
          detail::react_on_refresh();
 
-         // Turn on the CCL and TCB1 for the Rx/Tx LEDs
+         // Turn on TCB1 for the Rx/Tx LED
          setup_modbus_led();
 
          // Start the blink tasklet called every 100ms
          asx::reactor::bind(blinker).repeat(100ms);
       }).delay(2s);
    }
+
+   void toggle_locate_mode(bool locate_mode) {
+      // Cancel the timer in any case
+      timer_toggle_locate_mode.cancel();
+      show_locate_mode = false;
+
+      if ( locate_mode ) {
+         // Arm the timer to toggle the locate mode every 2s
+         timer_toggle_locate_mode = react_on_flip_mode.repeat(1ms, 2s);
+      } else {
+         // Restore normal operation
+         detail::react_on_refresh();
+      }
+   }
+
 } // namespace led

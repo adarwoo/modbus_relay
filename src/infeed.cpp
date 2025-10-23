@@ -156,12 +156,8 @@ namespace infeed {
             detail::current_status = Status::none;
          }
 
-         ULOG_DEBUG0("Input Type: {}", (uint8_t)detail::current_input_type);
-
          // Optimize inversion check - combine with threshold check
          inverted = (detail::last_dc_voltage < -static_cast<int16_t>(MIN_DETECTION));
-
-         ULOG_DEBUG0("Inverted: {}", inverted);
 
          // Clear faults - use constexpr for compile-time optimization
          static constexpr auto INFEED_FAULTS = 0
@@ -197,7 +193,9 @@ namespace infeed {
                ? Status::none
                : Status::voltage_present;
             ULOG_INFO("Updated current status to: {}", (uint8_t)detail::current_status);
-         } else if ( configured_type != detail::current_input_type ) {
+         } else if (
+            configured_type != detail::current_input_type
+            and detail::current_input_type != InputType::none ) {
             ULOG_WARN("Type not match");
             // Type mismatch handling
             detail::current_status = Status::faulty;
@@ -212,7 +210,6 @@ namespace infeed {
                );
             }
          } else {
-            ULOG_TRACE("Type match");
             // Process voltage thresholds
             if ( detail::current_input_type == InputType::ac ) {
                above = (detail::last_ac_voltage > cfg.infeed_max_volt_threshold);

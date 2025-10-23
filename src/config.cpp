@@ -7,6 +7,7 @@
 #include "state.hpp"
 #include "net.hpp"
 #include "relay.hpp"
+#include "estop.hpp"
 
 
 using namespace asx;
@@ -26,6 +27,8 @@ namespace config {
       .estop_on_overvolt         = false,
       .estop_on_bad_voltage_type = false,
       .estop_modbus_watchdog     = 0,
+      .estop_infeed_mask         = 0x0000,
+      .estop_commloss_mask       = 0x0000,
       .relays_config = {
          relay::Config{0},
          relay::Config{0},
@@ -72,6 +75,7 @@ namespace config {
       if ( eeprom_config.is_formatted() ) {
          ULOG_WARN("EEprom content was invalid - reset to defaults");
          state::append_faults( state::fault::eeprom_recovered );
+         estop::trigger(estop::Cause::eeprom, 0);
       }
    }
 

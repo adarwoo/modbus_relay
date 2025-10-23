@@ -20,4 +20,8 @@ namespace led {
    inline void refresh() {
       detail::react_on_refresh();
    };
+
+   /// @brief Toggle the locate mode LED
+   /// @param locate_mode
+   void toggle_locate_mode(bool locate_mode);
 } // namespace led

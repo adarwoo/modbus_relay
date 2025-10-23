@@ -206,6 +206,8 @@ namespace net {
          case 0x11: dg::pack<uint16_t>( cfg.estop_on_overvolt); break;
          case 0x12: dg::pack<uint16_t>( cfg.estop_on_bad_voltage_type); break;
          case 0x13: dg::pack<uint16_t>( cfg.estop_modbus_watchdog); break;
+         case 0x14: dg::pack<uint16_t>( cfg.estop_infeed_mask); break;
+         case 0x15: dg::pack<uint16_t>( cfg.estop_commloss_mask); break;
 
          // Relay Configuration
          case 0x18:
@@ -287,7 +289,7 @@ namespace net {
 
    void on_write_estop_commloss_mask(uint16_t mask) {
       ULOG_INFO("Writing EStop On Comms Loss Mask Configuration as: 0x{:04x}", mask);
-      config::set_estop_commloss_mask(mask);
+      config::set_estop_co mmloss_mask(mask);
    }
 
    void on_write_estop_infeed_mask(uint16_t mask) {

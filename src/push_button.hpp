@@ -5,7 +5,6 @@
  * It used timer1 to measure the pulse width in conjuction with the PIT timer.
  */
 #include <cstdint>
-#include <chrono>
 
 #include <asx/reactor.hpp>
 #include <asx/timer.hpp>
@@ -41,7 +40,7 @@ namespace sw {
       // Start the switch sampling
       asx::reactor::bind([]() {
          constexpr auto time_zero =
-            asx::timer::steady_clock::time_point(asx::timer::steady_clock::duration::zero());
+            asx::chrono::steady_clock::time_point(asx::chrono::steady_clock::duration::zero());
          static auto last_time = time_zero;
          static bool recovery_triggered = false;
 
@@ -50,10 +49,10 @@ namespace sw {
 
          if (debouncer.status().get()) {
             if (last_time == time_zero) {
-               last_time = asx::timer::steady_clock::now();
+               last_time = asx::chrono::steady_clock::now();
                recovery_triggered = false;
             } else if (!recovery_triggered) {
-               auto now = asx::timer::steady_clock::now();
+               auto now = asx::chrono::steady_clock::now();
                auto duration = now - last_time;
 
                if (duration >= long_time) {
