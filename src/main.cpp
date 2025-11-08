@@ -17,7 +17,6 @@
 #include <chrono>
 
 
-
 int main()
 {
    ULOG_MILE("Modbus relay application starting!");

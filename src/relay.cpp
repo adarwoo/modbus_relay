@@ -89,6 +89,35 @@ namespace relay {
          };
 
          /**
+          * @brief Check if an estop applies to a relay
+          * @param index The relay index within the available range (0 to NUMBER_OF_RELAYS-1).
+          * @return true if the estop condition applies to this relay
+          */
+         bool estop_applies() {
+            if (estop::get_status() == estop::Status::operational) {
+               return false;
+            }
+
+            if ( estop::get_cause() == estop::Cause::infeed_polarity) {
+               return true;
+            } else if (estop::get_cause() == estop::Cause::modbus_watchdog) {
+               uint16_t mask = config::get_config().estop_commloss_mask;
+
+               return (mask & (1 << index)) != 0;
+            } else if ( false
+               or estop::get_cause() == estop::Cause::infeed_polarity
+               or estop::get_cause() == estop::Cause::infeed_voltage_type
+               or estop::get_cause() == estop::Cause::infeed_voltage_over
+               or estop::get_cause() == estop::Cause::infeed_voltage_under ) {
+               uint16_t mask = config::get_config().estop_infeed_mask;
+
+               return (mask & (1 << index)) != 0;
+            }
+
+            return false;
+         }
+
+         /**
           * Set the relay to the requested state
           * This function will check if the relay is disabled or faulty.
           * Updates the counting statistics and the LED state (through the led API).
@@ -99,6 +128,10 @@ namespace relay {
           *         false if it was already in the requested state or if it is faulty
           */
          bool set(bool onoff) {
+            if (estop_applies()) {
+               return false;
+            }
+
             auto filt_on  = config::get_config().relays_config[index].on_filter;
 
             // Check for no change
@@ -266,6 +299,7 @@ namespace relay {
          backgroud_check, asx::reactor::prio::low).repeat(100ms);
    }
 
+
    bool set(uint8_t index, bool onoff) {
       if ( index < NUMBER_OF_RELAYS ) {
          relays[index].set(onoff);
@@ -306,37 +340,11 @@ namespace relay {
     * React to infeed condition -> actual state
     */
    void apply_estop() {
-      if ( estop::get_cause() == estop::Cause::infeed_polarity) {
-         // All relay open right away!
-         for (auto &relay: relays) {
+      for (auto &relay: relays) {
+         if ( relay.estop_applies() ) {
+            // Projected state only
             relay.force_open();
-         }
-      } else if (estop::get_cause() == estop::Cause::modbus_watchdog) {
-         uint16_t mask = config::get_config().estop_commloss_mask;
-
-         for (auto &relay: relays) {
-            if ( mask & 1 ) {
-               // Projected state only
-               relay.set(false);
-            }
-
-            mask >>= 1;
-         }
-      } else if ( false
-         or estop::get_cause() == estop::Cause::infeed_polarity
-         or estop::get_cause() == estop::Cause::infeed_voltage_type
-         or estop::get_cause() == estop::Cause::infeed_voltage_over
-         or estop::get_cause() == estop::Cause::infeed_voltage_under ) {
-         uint16_t mask = config::get_config().estop_infeed_mask;
-
-         for (auto &relay: relays) {
-            if ( mask & 1 ) {
-               relay.force_open();
-            }
-
-            mask >>= 1;
          }
       }
    }
 }
-

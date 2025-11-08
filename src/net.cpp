@@ -289,7 +289,7 @@ namespace net {
 
    void on_write_estop_commloss_mask(uint16_t mask) {
       ULOG_INFO("Writing EStop On Comms Loss Mask Configuration as: 0x{:04x}", mask);
-      config::set_estop_co mmloss_mask(mask);
+      config::set_estop_commloss_mask(mask);
    }
 
    void on_write_estop_infeed_mask(uint16_t mask) {
@@ -380,23 +380,28 @@ namespace net {
          watchdog_timer = react_on_watchdog.delay( std::chrono::seconds(per) );
       }
    }
-
+   
    /**
     * Called at start, and during recovery mode activation/deactivation
     * by the state manager.
     */
    void init() {
       ULOG_MILE("Initialising Modbus Network");
-
-      // Set the modbus install ID
-      dg::set_device_address(
-         state::is_in_recovery_mode()
-            ? RECOVERY_DEVICE_ID
-            : config::get_config().address
-      );
-
-      // Initialise the modbus slave template API. Overrides the UART settings
+      dg::set_device_address( config::get_config().address );
       modbus_slave::init();
+   }
+   
+   void reset_settings() {
+      ULOG_MILE("Resetting network");
+      
+      // Set the modbus install ID
+      auto device_address = 
+         state::is_in_recovery_mode() ? RECOVERY_DEVICE_ID : config::get_config().address;
+
+      ULOG_INFO("Device Address: {}", device_address);
+      dg::set_device_address( device_address );
+
+      modbus_slave::reconfigure_uart();
    }
 
 } // End of namespace net

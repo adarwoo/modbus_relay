@@ -28,4 +28,7 @@ namespace net {
 
    // Initialise the network
    void init();
+   
+   // Flip between recovery and normal mode
+   void reset_settings();
 } // End of namespace net

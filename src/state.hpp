@@ -45,7 +45,7 @@ namespace state {
       inline bool locate_mode = false;
 
       inline auto on_reset_network = asx::reactor::bind(
-         [] { net::init(); }
+         [] { net::reset_settings(); }
       );
 
       inline uint16_t current_faults{};
@@ -78,7 +78,7 @@ namespace state {
          detail::recovery_mode = _recovery_mode;
 
          // Delay through the reactor so the UART can complete any on-going messages
-         detail::on_reset_network.delay(std::chrono::milliseconds(100));
+         detail::on_reset_network.delay(std::chrono::milliseconds(20));
          led::refresh();
       }
    }
@@ -99,11 +99,13 @@ namespace state {
    inline void init() {
       // Watchdog reset check
       if ( RSTCTRL.RSTFR & RSTCTRL_WDRF_bm ) {
+         ULOG_ERROR("Application crash detected from watchdog reset");
          append_faults( fault::app_crash );
       }
 
       // Check the BOD reset flag
       if ( RSTCTRL.RSTFR & RSTCTRL_BORF_bm ) {
+         ULOG_ERROR("Application crash detected from brown-out reset");
          append_faults( fault::supply_voltage_failure );
       }
    }

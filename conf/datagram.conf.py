@@ -16,7 +16,8 @@ Modbus({
         MAJOR_MINOR_REVISION:   "2.0",
         VENDOR_URL:             "github.com/adarwoo",
         MODEL_NAME:             "1.0c",
-        PRIVATE_OBJECTS_0:      "3", # Number of relays
+        PRIVATE_OBJECTS_0:      "ReCoVeRy;1;0x0000", # Device supports recovery mode
+        PRIVATE_OBJECTS_1:      "3", # Number of relays
     },
 
     "callbacks": {
@@ -111,7 +112,7 @@ Modbus({
         # Write the infeed config
         (WRITE_MULTIPLE_REGISTERS,
             u16(0x08), u16(3), u8(6),
-                u16(0,2),    # 0=Don't care, 1=DC, 2=AC, 
+                u16(0,2),    # 0=Don't care, 1=DC, 2=AC,
                 u16(0,3000), # Lower threshold
                 u16(0,3000), # Upper threshold
             "on_write_infeed_config"),
