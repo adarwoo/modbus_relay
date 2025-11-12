@@ -3,7 +3,7 @@
 
 #include <boost/sml.hpp>
 
-#include <asx/ulog.hpp>
+#include <ulog.h>
 #include <asx/ioport.hpp>
 #include <asx/reactor.hpp>
 

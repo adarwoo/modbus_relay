@@ -16,7 +16,7 @@
 #include <utility>
 #include <chrono>
 
-#include <asx/ulog.hpp>
+#include <ulog.h>
 #include <asx/ioport.hpp>
 #include <asx/timer.hpp>
 #include <asx/reactor.hpp>

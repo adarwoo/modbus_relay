@@ -6,7 +6,7 @@
 #include <avr/interrupt.h>
 
 #include <asx/reactor.hpp>
-#include <asx/ulog.hpp>
+#include <ulog.h>
 
 #include "counters.hpp"
 

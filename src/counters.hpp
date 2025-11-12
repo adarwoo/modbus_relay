@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <array>
 
-#include <asx/ulog.hpp>
+#include <ulog.h>
 #include <asx/eeprom.hpp>
 
 #include <avr/io.h>

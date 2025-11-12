@@ -1,5 +1,5 @@
 #include <asx/eeprom.hpp>
-#include <asx/ulog.hpp>
+#include <ulog.h>
 
 #include <config.hpp>
 

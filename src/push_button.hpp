@@ -10,7 +10,7 @@
 #include <asx/timer.hpp>
 #include <asx/debouncer.hpp>
 #include <asx/ioport.hpp>
-#include <asx/ulog.hpp>
+#include <ulog.h>
 
 #include "net.hpp"
 #include "state.hpp"

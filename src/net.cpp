@@ -5,11 +5,11 @@
  * Implement all modbus callback functions
  */
 #include <avr/io.h>
+#include <ulog.h>
 
 #include <chrono>
 
 #include <asx/reactor.hpp>
-#include <asx/ulog.hpp>
 
 #include "estop.hpp"
 #include "infeed.hpp"
@@ -380,7 +380,7 @@ namespace net {
          watchdog_timer = react_on_watchdog.delay( std::chrono::seconds(per) );
       }
    }
-   
+
    /**
     * Called at start, and during recovery mode activation/deactivation
     * by the state manager.
@@ -390,12 +390,12 @@ namespace net {
       dg::set_device_address( config::get_config().address );
       modbus_slave::init();
    }
-   
+
    void reset_settings() {
       ULOG_MILE("Resetting network");
-      
+
       // Set the modbus install ID
-      auto device_address = 
+      auto device_address =
          state::is_in_recovery_mode() ? RECOVERY_DEVICE_ID : config::get_config().address;
 
       ULOG_INFO("Device Address: {}", device_address);

@@ -2,8 +2,8 @@
  * Relay modbus device main entry point.
  * The relays are initialised by the static constructor
  */
+#include <ulog.h>
 #include <asx/reactor.hpp>
-#include <asx/ulog.hpp>
 
 #include "counters.hpp"
 #include "relay.hpp"

@@ -6,7 +6,7 @@
 #include <algorithm>
 
 #include <asx/hw_timer.hpp>
-#include <asx/ulog.hpp>
+#include <ulog.h>
 
 #include "counters.hpp"
 #include "leds.hpp"
