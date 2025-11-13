@@ -180,16 +180,41 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="asx\" />
+    <Folder Include="asx\import\" />
+    <Folder Include="asx\import\ulog\" />
+    <Folder Include="asx\import\ulog\conf\" />
+    <Folder Include="asx\import\ulog\include\" />
+    <Folder Include="asx\import\ulog\src\" />
     <Folder Include="asx\include\" />
     <Folder Include="asx\include\assembler\" />
     <Folder Include="asx\include\asx\" />
     <Folder Include="asx\include\bit_handling\" />
     <Folder Include="asx\include\sim\" />
     <Folder Include="asx\include\sim\avr\" />
+    <Folder Include="asx\src\" />
+    <Folder Include="asx\src\" />
     <Folder Include="conf\" />
     <Folder Include="src\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="asx\import\ulog\conf\conf_ulog.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\import\ulog\include\ulog.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\import\ulog\include\ulog.hpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\import\ulog\include\ulog_port.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\import\ulog\src\ulog.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\import\ulog\src\ulog_asx.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="asx\include\alert.h">
       <SubType>compile</SubType>
     </Compile>
@@ -355,6 +380,12 @@
     <Compile Include="asx\include\typestring.hpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="asx\src\alert.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="asx\src\_ccp.s">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="conf\conf_board.h">
       <SubType>compile</SubType>
     </Compile>
@@ -429,6 +460,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="asx\import\ulog\.gitignore">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="asx\import\ulog\LICENSE">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="asx\import\ulog\README.md">
+      <SubType>compile</SubType>
+    </None>
     <None Include="conf\datagram.conf.py">
       <SubType>compile</SubType>
     </None>
