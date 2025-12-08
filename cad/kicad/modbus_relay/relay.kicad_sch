@@ -4456,12 +4456,13 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "V_IN"
-			(at 182.88 55.88 0)
+		(property "Value" "VIN"
+			(at 185.42 59.6899 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
@@ -4753,12 +4754,13 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "V_IN"
-			(at 115.57 49.53 0)
+		(property "Value" "VIN"
+			(at 118.11 53.3399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" ""
