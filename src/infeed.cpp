@@ -72,6 +72,8 @@ namespace infeed {
             zero_crossings++;
          }
 
+         last_sample = sample;  // Update last_sample for next comparison
+
          if (sample_count >= ADC_SAMPLES_RATE) {
             if (zero_crossings < 5) {
                result = 0;  // Not enough zero crossings, assume no AC signal
@@ -83,6 +85,7 @@ namespace infeed {
 
             abs_sum = 0;
             sample_count = 0;
+            zero_crossings = 0;  // Reset zero crossing counter
             return true;
          }
 
