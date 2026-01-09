@@ -4,7 +4,7 @@
 
 // Define the project preferred log level
 #ifdef NDEBUG
-#   define ULOG_LEVEL ULOG_LEVEL_INFO
+#   define ULOG_LEVEL ULOG_LEVEL_DEBUG0
 #else
 #   define ULOG_LEVEL ULOG_LEVEL_DEBUG3
 #endif
