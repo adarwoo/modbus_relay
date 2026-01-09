@@ -4,10 +4,10 @@
 
 // Define the project preferred log level
 #ifdef NDEBUG
-#   define ULOG_LEVEL ULOG_LEVEL_DEBUG3
+#   define ULOG_LEVEL ULOG_LEVEL_INFO
 #else
 #   define ULOG_LEVEL ULOG_LEVEL_DEBUG3
 #endif
 
 // Override the default queue size (number of messages that can be buffered)
-// #define ULOG_QUEUE_SIZE 64
+#define ULOG_QUEUE_SIZE 256
