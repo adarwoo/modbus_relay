@@ -21,20 +21,13 @@ int main()
 {
    ULOG_MILE("Modbus relay application starting!");
 
-   // Initialize the state manager
-   state::init();
+   /*
+    * Initialize all modules
+    * The order determines the reactor handler priorities
+    */
 
-   // Initialise the configuration system
-   config::init();
-
-   // Initialise the LEDs
-   led::init();
-
-   // Ready the estop
-   estop::init();
-
-   // Ready the stats
-   counter::init();
+   // Ready network handling, the modbus and the UART
+   net::init();
 
    // Ready the relay control
    relay::init();
@@ -45,8 +38,20 @@ int main()
    // Ready the push button
    sw::init();
 
-   // Ready network handling, the modbus and the UART
-   net::init();
+   // Initialize the state manager
+   state::init();
+
+   // Initialise the configuration system
+   config::init();
+
+   // Ready the estop
+   estop::init();
+
+   // Ready the stats
+   counter::init();
+
+   // Initialise the LEDs
+   led::init();
 
    // Run the reactor/scheduler
    asx::reactor::run();
